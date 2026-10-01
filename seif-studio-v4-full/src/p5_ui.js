@@ -305,7 +305,7 @@ function bindUI(){
     }, 30);
   });
   $('signoutBtn').addEventListener('click', async function(){
-    if(!DEMO_MODE){ await signOutAccount(); return; }
+    if(!DEMO_MODE){ if(account.signedIn) await signOutAccount(); else openGate(); return; }
     await store.del(K_ACCESS, false);
     lockStudio();
   });
@@ -432,8 +432,13 @@ function renderAccount(){
   $('acctTxt').textContent = account.signedIn
     ? 'Signed in as ' + (account.email || account.name || 'your Google account') + (account.active ? '' : ' — enter an invite code or subscribe below.')
     : 'Sign in so your subscription and designs follow you to any device.';
-  $('signoutBtn').textContent = 'Sign out';
-  $('signoutBtn').title = 'Sign out of ' + (account.email || 'your account');
+  /* signed out, the header button and the lock bar both lead to Google sign-in */
+  $('signoutBtn').textContent = account.signedIn ? 'Sign out' : 'Sign in';
+  $('signoutBtn').title = account.signedIn ? 'Sign out of ' + (account.email || 'your account') : 'Sign in with Google';
+  $('signoutBtn').classList.toggle('primary', !account.signedIn);
+  $('signoutBtn').classList.toggle('signin', !account.signedIn);   /* stays visible while the studio is locked */
+  $('signoutBtn').classList.toggle('ghost', !!account.signedIn);
+  $('lockBarBtn').textContent = account.signedIn ? 'Unlock' : 'Sign in';
   var small = document.querySelector('#lockBar .lb-txt small');
   if(small) small.textContent = account.signedIn ? 'Enter an invite code or subscribe to use the studio' : 'Sign in with Google to use the studio';
 }
