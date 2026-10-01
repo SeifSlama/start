@@ -1,6 +1,7 @@
 .wrangler/
 node_modules/
 .env
+.dev.vars
 seif-studio-v4-full/server/.env
 seif-studio-v4-full/server/data/
-.dev.vars
+seif-studio-v4-full/dist/

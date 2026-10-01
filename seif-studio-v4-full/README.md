@@ -56,22 +56,32 @@ Point Paymob's transaction-processed callback at `https://your-host/api/webhook`
 `INSECURE_COOKIES=1`. Deploy the server on Cloudflare Workers / Vercel / any Node host; the HTML can sit on the same
 origin (simplest — cookies are `SameSite=Lax`).
 
-### Cloudflare Workers
+### Cloudflare Pages + Firebase (current deployment)
 
-`worker/index.js` is the same API ported to Workers; `wrangler.jsonc` at the repo root deploys it with the static
-files. Codes and sessions live in a Durable Object (`Store`), created on first deploy — nothing to provision.
-`.assetsignore` keeps `server/`, `src/`, `worker/`, `tools/` and the docs off the public site.
+`./build.sh` also writes `dist/`: `index.html`, `assets/` and `_worker.js` (a copy of `worker/index.js`, the same API
+as `server/server.js` ported to Cloudflare). Drag `dist/` (or a zip of it) onto a Cloudflare Pages project's
+upload page; every upload is kept as a deployment you can roll back to.
 
-```
-npx wrangler deploy                       # from the repo root (or connect the repo under Settings → Builds)
-npx wrangler secret put SESSION_SECRET    # 32+ random chars
-npx wrangler secret put ADMIN_TOKEN
-npx wrangler secret put PAYMOB_API_KEY    # and PAYMOB_HMAC, PAYMOB_IFRAME_ID, PAYMOB_INTEGRATION_CARD / _WALLET / _KIOSK
-```
+Codes and subscriptions live in **Firebase Firestore** (`codes`, `sessions`, `orders`), reached with a service
+account. Firestore can stay in production mode with its default deny-all rules: the server's service account
+bypasses them and the browser never talks to Firestore.
 
-Secrets can also be set in the dashboard (Worker → Settings → Variables and Secrets); `PRICE_EGP` is a plain var in
-`wrangler.jsonc`. **Until `SESSION_SECRET` and `ADMIN_TOKEN` are set the site serves the demo build** and `/api/*`
-answers 503. Local dev: put the same keys plus `INSECURE_COOKIES="1"` in `.dev.vars` and run `npx wrangler dev`.
+Pages → Settings → Variables and Secrets (Production), then upload again so they apply:
+
+| Name | Value |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | the whole JSON from Firebase → Project settings → Service accounts → Generate new private key |
+| `SESSION_SECRET` | 32+ random characters |
+| `ADMIN_TOKEN` | the owner panel's password |
+| `PAYMOB_API_KEY`, `PAYMOB_HMAC`, `PAYMOB_IFRAME_ID`, `PAYMOB_INTEGRATION_CARD` / `_WALLET` / `_KIOSK` | from the Paymob dashboard |
+| `PRICE_EGP` | optional, default 100 |
+
+**Until `SESSION_SECRET`, `ADMIN_TOKEN` and `FIREBASE_SERVICE_ACCOUNT` are set the site serves the demo build** and
+`/api/*` answers 503. Point Paymob's callback at `https://<project>.pages.dev/api/webhook`.
+
+Local test against the Firestore emulator: put the secrets plus `INSECURE_COOKIES="1"`,
+`FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"` and `FIREBASE_PROJECT_ID="demo-seif"` in `.dev.vars`, start the emulator,
+then `npx wrangler pages dev dist`.
 
 ## What the studio does
 

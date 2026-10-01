@@ -1,8 +1,0 @@
-# Files Cloudflare must not publish (see wrangler.jsonc at the repo root)
-server/
-src/
-tools/
-build.sh
-*.md
-.env*
-worker/
