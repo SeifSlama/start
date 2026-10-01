@@ -1,0 +1,9 @@
+{
+  // Cloudflare Workers deploy config: serves the demo build of Seif Studio as static files.
+  // The Node server in seif-studio-v4-full/server/ does not run on Workers and is not deployed.
+  "name": "quiet-mountain-ff31",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./seif-studio-v4-full"
+  }
+}

@@ -10,4 +10,6 @@ cd "$(dirname "$0")/src"
   printf '</script>\n'
   cat p1_head.html p2_body.html r_core.js r_models.js r_panels.js p5_ui.js p5b_editor.js p6_tail.html
 } > ../seif-studio.html
-echo "Built seif-studio.html"
+# index.html is the page static hosts (Cloudflare) serve at /
+cp ../seif-studio.html ../index.html
+echo "Built seif-studio.html and index.html"
