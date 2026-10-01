@@ -198,6 +198,9 @@ input[type=range]{accent-color:var(--red)}
 #gate h1 i{font-style:normal;color:var(--red)}
 #gate .tag{margin:10px auto 6px;font-size:14.5px;color:var(--ink2);max-width:460px;line-height:1.55}
 #gate .cats{margin:10px auto 26px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--chalk)}
+.acctbox{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;max-width:660px;margin:0 auto 22px;padding:14px 18px;border:1.5px dashed var(--line);border-radius:12px;text-align:center;font-size:13px}
+.acctbox .speclabel{flex-basis:100%}
+.acctbox .gmsg{flex-basis:100%;margin:0}
 .hangtags{display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
 .hangtag{position:relative;width:310px;background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;padding:34px 24px 26px;text-align:left;box-shadow:6px 6px 0 rgba(30,39,73,.12)}
 .hangtag::before{content:"";position:absolute;top:12px;left:50%;transform:translateX(-50%);width:14px;height:14px;border-radius:50%;background:var(--paper);border:1.5px solid var(--ink)}
@@ -335,6 +338,15 @@ input[type=range]{accent-color:var(--red)}
     <h1 id="gateTitle">UNLOCK SEIF STUDIO<i>.</i></h1>
     <p class="tag">You&rsquo;re browsing in preview. To design on flat panels, assemble the mockup and export print files, unlock the studio below.</p>
     <div class="cats">Tops &middot; Bottoms &middot; Hats &middot; Socks &middot; Bags &middot; Ties &middot; Accessories</div>
+
+    <!-- live build: the account that owns the subscription and the saved designs -->
+    <div id="acctBox" class="acctbox hidden">
+      <div class="speclabel">Your account</div>
+      <span id="acctTxt">Sign in so your subscription and designs follow you to any device.</span>
+      <button id="googleBtn" class="btn primary">Sign in with Google</button>
+      <button id="acctOutBtn" class="btn ghost small hidden">Sign out</button>
+      <div id="acctMsg" class="gmsg" aria-live="polite"></div>
+    </div>
 
     <div class="hangtags">
       <div class="hangtag">
@@ -855,14 +867,46 @@ window.addEventListener('error', function(e){
 /* ---------------- storage ----------------
    window.storage (shared/personal) when the host provides it, localStorage
    otherwise. set() reports {ok, reason} so a full quota is not mistaken for
-   an empty store; the UI shows a persistent strip when saving fails. */
+   an empty store; the UI shows a persistent strip when saving fails.
+   On the live build, once the customer is signed in (store.cloud), personal keys —
+   projects, images, my products — live in their account on the server (/api/data),
+   so their work follows them to any device. Shared keys stay local. */
+var CLOUD_CHUNK = 900000;   /* matches the server's INLINE_MAX / CHUNK_MAX */
 var store = {
   backend: (typeof window !== 'undefined' && window.storage) ? 'host' : (function(){ try { return window.localStorage ? 'local' : 'none'; } catch(e){ return 'none'; } })(),
+  cloud: false,
   ok: true,
   lastError: null,
   _lk: function(key, shared){ return 'ss:' + (shared ? 's:' : 'p:') + key; },
+  _url: function(key, q){ return API_BASE + '/api/data/' + encodeURIComponent(key) + (q || ''); },
+  _req: async function(url, opts){
+    var r = await fetch(url, Object.assign({ credentials: 'include' }, opts || {}));
+    if(!r.ok){ var j = null; try { j = await r.json(); } catch(e){} throw new Error((j && j.error) || ('server error ' + r.status)); }
+    return r;
+  },
+  cloudGet: async function(key){
+    var j = await (await this._req(this._url(key))).json();
+    if(!j.found) return null;
+    if(typeof j.inline === 'string') return JSON.parse(j.inline);
+    var self = this, parts = [];
+    for(var i=0;i<j.n;i++) parts.push(self._req(self._url(key, '?v=' + j.v + '&i=' + i)).then(function(r){ return r.text(); }));
+    return JSON.parse((await Promise.all(parts)).join(''));
+  },
+  cloudSet: async function(key, s){
+    var put = { method: 'PUT', headers: { 'Content-Type': 'text/plain;charset=UTF-8' } };
+    if(s.length <= CLOUD_CHUNK){ await this._req(this._url(key), Object.assign({ body: s }, put)); return; }
+    var v = Array.from(crypto.getRandomValues(new Uint8Array(10)), function(b){ return (b % 36).toString(36); }).join('');
+    var n = Math.ceil(s.length / CLOUD_CHUNK);
+    for(var i=0;i<n;i++) await this._req(this._url(key, '?v=' + v + '&i=' + i), Object.assign({ body: s.slice(i * CLOUD_CHUNK, (i + 1) * CLOUD_CHUNK) }, put));
+    await this._req(this._url(key, '?v=' + v + '&n=' + n + '&size=' + s.length), put);
+  },
+  cloudKeys: async function(prefix){
+    var j = await (await this._req(API_BASE + '/api/data?prefix=' + encodeURIComponent(prefix || ''))).json();
+    return j.keys || [];
+  },
   get: async function(key, shared){
     try {
+      if(this.cloud && !shared) return await this.cloudGet(key);
       if(this.backend === 'host'){ var r = await window.storage.get(key, !!shared); return r ? JSON.parse(r.value) : null; }
       if(this.backend === 'local'){ var v = localStorage.getItem(this._lk(key, shared)); return v ? JSON.parse(v) : null; }
       return null;
@@ -871,7 +915,9 @@ var store = {
   set: async function(key, val, shared){
     var s = JSON.stringify(val);
     try {
-      if(this.backend === 'host'){
+      if(this.cloud && !shared){
+        await this.cloudSet(key, s);
+      } else if(this.backend === 'host'){
         var r = await window.storage.set(key, s, !!shared);
         if(!r){ return this._fail('write rejected'); }
       } else if(this.backend === 'local'){
@@ -894,7 +940,8 @@ var store = {
   },
   del: async function(key, shared){
     try {
-      if(this.backend === 'host') await window.storage.delete(key, !!shared);
+      if(this.cloud && !shared) await this._req(this._url(key), { method: 'DELETE' });
+      else if(this.backend === 'host') await window.storage.delete(key, !!shared);
       else if(this.backend === 'local') localStorage.removeItem(this._lk(key, shared));
     } catch(e){}
   },
@@ -3781,8 +3828,8 @@ function bindUI(){
     }, 30);
   });
   $('signoutBtn').addEventListener('click', async function(){
+    if(!DEMO_MODE){ await signOutAccount(); return; }
     await store.del(K_ACCESS, false);
-    if(!DEMO_MODE) fetch(API_BASE + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
     lockStudio();
   });
 
@@ -3846,6 +3893,8 @@ function openGate(){
   setTimeout(function(){ try { $('inviteInput').focus(); } catch(e){} }, 50);
 }
 async function grant(method){
+  /* live build: start over signed in, so the studio loads this account's designs */
+  if(!DEMO_MODE){ location.reload(); return; }
   await store.set(K_ACCESS, { m:method, ts:Date.now() }, false);
   closeModal('payModal'); closeModal('adminModal');
   $('inviteInput').value = ''; $('inviteBtn').disabled = false;
@@ -3862,7 +3911,109 @@ async function api(path, body, opts){
 }
 async function checkSession(){
   if(DEMO_MODE){ var acc = await store.get(K_ACCESS, false); return !!acc; }
-  try { var s = await api('/api/session'); return !!s.active; } catch(e){ return false; }
+  try { account = await api('/api/session'); } catch(e){ account = { signedIn: false, active: false }; }
+  store.cloud = !!account.signedIn;
+  renderAccount();
+  return !!account.active;
+}
+
+/* ============================================================
+   ACCOUNT (live build) — Google sign-in through Firebase Authentication.
+   The browser only uses Firebase to prove who the customer is; the server swaps the
+   ID token for its own session cookie, and everything else goes through /api.
+   ============================================================ */
+var account = { signedIn: false, active: false };
+var FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
+var firebaseReady = null;
+function loadScript(src){
+  return new Promise(function(res, rej){
+    var s = document.createElement('script'); s.src = src; s.onload = res;
+    s.onerror = function(){ rej(new Error('could not load ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+/* loaded ahead of the click: a popup opened after an await is blocked by browsers */
+function loadFirebase(){
+  if(!firebaseReady){
+    firebaseReady = loadScript(FIREBASE_SDK + 'firebase-app-compat.js')
+      .then(function(){ return loadScript(FIREBASE_SDK + 'firebase-auth-compat.js'); })
+      .then(function(){
+        if(!firebase.apps.length) firebase.initializeApp(CFG.firebase);
+        var auth = firebase.auth();
+        if(CFG.authEmulator) auth.useEmulator(CFG.authEmulator, { disableWarnings: true });
+        return auth.setPersistence(firebase.auth.Auth.Persistence.NONE).then(function(){ return auth; });
+      });
+    firebaseReady.catch(function(){ firebaseReady = null; });
+  }
+  return firebaseReady;
+}
+function renderAccount(){
+  if(DEMO_MODE) return;
+  $('acctBox').classList.remove('hidden');
+  $('googleBtn').classList.toggle('hidden', !!account.signedIn);
+  $('acctOutBtn').classList.toggle('hidden', !account.signedIn);
+  $('acctTxt').textContent = account.signedIn
+    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + (account.active ? '' : ' — enter an invite code or subscribe below.')
+    : 'Sign in so your subscription and designs follow you to any device.';
+  $('signoutBtn').textContent = 'Sign out';
+  $('signoutBtn').title = 'Sign out of ' + (account.email || 'your account');
+  var small = document.querySelector('#lockBar .lb-txt small');
+  if(small) small.textContent = account.signedIn ? 'Enter an invite code or subscribe to use the studio' : 'Sign in with Google to use the studio';
+}
+async function signInAccount(){
+  var btn = $('googleBtn');
+  var auth = window.firebase && firebase.apps.length ? firebase.auth() : null;
+  if(!auth){ gmsg('acctMsg', 'Still loading Google sign-in — try again in a moment.'); loadFirebase().catch(function(){}); return; }
+  btn.disabled = true; gmsg('acctMsg', 'Waiting for Google…', true);
+  try {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    var cred = await auth.signInWithPopup(provider);
+    account = await api('/api/login', { idToken: await cred.user.getIdToken() });
+    auth.signOut().catch(function(){});
+    if(account.active){ gmsg('acctMsg', 'Welcome back — loading your designs…', true); location.reload(); return; }
+    store.cloud = true;
+    renderAccount();
+    gmsg('acctMsg', 'Signed in. Now unlock the studio with an invite code or a subscription.', true);
+  } catch(e){
+    var code = e && e.code;
+    gmsg('acctMsg', code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' ? 'Sign-in was cancelled.'
+      : code === 'auth/popup-blocked' ? 'Your browser blocked the Google window — allow pop-ups for this site and try again.'
+      : 'Could not sign in: ' + (e.message || 'unknown error'));
+  }
+  btn.disabled = false;
+}
+async function signOutAccount(){
+  await fetch(API_BASE + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
+  location.reload();
+}
+function needAccount(msgId){
+  if(DEMO_MODE || account.signedIn) return false;
+  gmsg(msgId, 'Sign in with Google first (above), so your access is saved to your account.');
+  $('googleBtn').focus();
+  return true;
+}
+/* designs saved in this browser before the customer had an account move into it once,
+   then leave the browser so they cannot end up in someone else's account later */
+async function migrateLocalWork(){
+  if(store.backend !== 'local') return;
+  var keys = store.keys('seifstudio:', false).filter(function(k){ return k !== K_ACCESS; });
+  if(!keys.length) return;
+  $('saveStatus').textContent = 'MOVING YOUR DESIGNS TO YOUR ACCOUNT…';
+  try {
+    var have = {};
+    (await store.cloudKeys('seifstudio:')).forEach(function(k){ have[k] = 1; });
+    for(var i=0;i<keys.length;i++){
+      if(have[keys[i]]) continue;
+      var raw = localStorage.getItem(store._lk(keys[i], false));
+      if(raw) await store.cloudSet(keys[i], raw);
+    }
+    keys.forEach(function(k){ localStorage.removeItem(store._lk(k, false)); });
+    $('saveStatus').textContent = '';
+  } catch(e){
+    $('saveStatus').textContent = '';
+    onStoreStatus(false, 'could not move the designs saved in this browser to your account (' + e.message + '); they are kept here and will be retried');
+  }
 }
 function bindLock(){
   $('lockShield').addEventListener('click', function(e){ e.preventDefault(); openGate(); });
@@ -3881,6 +4032,7 @@ function bindLock(){
 function bindGate(){
   $('inviteBtn').addEventListener('click', async function(){
     var code = $('inviteInput').value.trim().toUpperCase();
+    if(needAccount('inviteMsg')) return;
     if(!code){ gmsg('inviteMsg','Type your invite code first.'); return; }
     this.disabled = true;
     var btn = this;
@@ -3901,13 +4053,19 @@ function bindGate(){
       gmsg('inviteMsg','Code accepted — welcome in.', true);
       setTimeout(function(){ grant('invite'); }, 350);
     } catch(e){
-      gmsg('inviteMsg', e.status === 429 ? 'Too many attempts — try again in an hour.' : 'That code isn’t valid or was revoked.');
+      gmsg('inviteMsg', e.status === 429 ? 'Too many attempts — try again in an hour.'
+        : e.status === 401 ? 'Your sign-in expired — sign in with Google again.'
+        : /already used/.test(e.message) ? 'You already used this code on your account.'
+        : 'That code isn’t valid or was revoked.');
       btn.disabled = false;
     }
   });
   $('inviteInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('inviteBtn').click(); });
+  $('googleBtn').addEventListener('click', signInAccount);
+  $('acctOutBtn').addEventListener('click', signOutAccount);
 
   $('payOpenBtn').addEventListener('click', function(){
+    if(needAccount('payOpenMsg')) return;
     $('payPrice').textContent = PRICE + PRICE_PERIOD;
     $('payDemo').classList.toggle('hidden', !DEMO_MODE);
     $('payFrameWrap').classList.add('hidden');
@@ -4803,6 +4961,10 @@ async function maybeOnboard(){
   $('obGo').onclick = async function(){ await store.set('seifstudio:onboarded', { ts: Date.now() }, false); closeModal('onboard'); };
 }
 async function init(){
+  /* the session decides where personal data lives (account or this browser), so it comes first */
+  var active = await checkSession();
+  if(!DEMO_MODE && !account.signedIn) loadFirebase().catch(function(){});
+  if(active) await migrateLocalWork();
   await loadGarmentColors();
   await loadCustomProducts();
   bindProjectProduct('tee');
@@ -4818,7 +4980,7 @@ async function init(){
   bindSheet();
   bindTurntable();
   if(typeof bindEditor === 'function') bindEditor();
-  var active = await checkSession();
+  renderAccount();
   $('boot').style.display = 'none';
   $('demoBanner').classList.toggle('hidden', !DEMO_MODE);
   showStudio();

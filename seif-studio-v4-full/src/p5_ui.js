@@ -305,8 +305,8 @@ function bindUI(){
     }, 30);
   });
   $('signoutBtn').addEventListener('click', async function(){
+    if(!DEMO_MODE){ await signOutAccount(); return; }
     await store.del(K_ACCESS, false);
-    if(!DEMO_MODE) fetch(API_BASE + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
     lockStudio();
   });
 
@@ -370,6 +370,8 @@ function openGate(){
   setTimeout(function(){ try { $('inviteInput').focus(); } catch(e){} }, 50);
 }
 async function grant(method){
+  /* live build: start over signed in, so the studio loads this account's designs */
+  if(!DEMO_MODE){ location.reload(); return; }
   await store.set(K_ACCESS, { m:method, ts:Date.now() }, false);
   closeModal('payModal'); closeModal('adminModal');
   $('inviteInput').value = ''; $('inviteBtn').disabled = false;
@@ -386,7 +388,109 @@ async function api(path, body, opts){
 }
 async function checkSession(){
   if(DEMO_MODE){ var acc = await store.get(K_ACCESS, false); return !!acc; }
-  try { var s = await api('/api/session'); return !!s.active; } catch(e){ return false; }
+  try { account = await api('/api/session'); } catch(e){ account = { signedIn: false, active: false }; }
+  store.cloud = !!account.signedIn;
+  renderAccount();
+  return !!account.active;
+}
+
+/* ============================================================
+   ACCOUNT (live build) — Google sign-in through Firebase Authentication.
+   The browser only uses Firebase to prove who the customer is; the server swaps the
+   ID token for its own session cookie, and everything else goes through /api.
+   ============================================================ */
+var account = { signedIn: false, active: false };
+var FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
+var firebaseReady = null;
+function loadScript(src){
+  return new Promise(function(res, rej){
+    var s = document.createElement('script'); s.src = src; s.onload = res;
+    s.onerror = function(){ rej(new Error('could not load ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+/* loaded ahead of the click: a popup opened after an await is blocked by browsers */
+function loadFirebase(){
+  if(!firebaseReady){
+    firebaseReady = loadScript(FIREBASE_SDK + 'firebase-app-compat.js')
+      .then(function(){ return loadScript(FIREBASE_SDK + 'firebase-auth-compat.js'); })
+      .then(function(){
+        if(!firebase.apps.length) firebase.initializeApp(CFG.firebase);
+        var auth = firebase.auth();
+        if(CFG.authEmulator) auth.useEmulator(CFG.authEmulator, { disableWarnings: true });
+        return auth.setPersistence(firebase.auth.Auth.Persistence.NONE).then(function(){ return auth; });
+      });
+    firebaseReady.catch(function(){ firebaseReady = null; });
+  }
+  return firebaseReady;
+}
+function renderAccount(){
+  if(DEMO_MODE) return;
+  $('acctBox').classList.remove('hidden');
+  $('googleBtn').classList.toggle('hidden', !!account.signedIn);
+  $('acctOutBtn').classList.toggle('hidden', !account.signedIn);
+  $('acctTxt').textContent = account.signedIn
+    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + (account.active ? '' : ' — enter an invite code or subscribe below.')
+    : 'Sign in so your subscription and designs follow you to any device.';
+  $('signoutBtn').textContent = 'Sign out';
+  $('signoutBtn').title = 'Sign out of ' + (account.email || 'your account');
+  var small = document.querySelector('#lockBar .lb-txt small');
+  if(small) small.textContent = account.signedIn ? 'Enter an invite code or subscribe to use the studio' : 'Sign in with Google to use the studio';
+}
+async function signInAccount(){
+  var btn = $('googleBtn');
+  var auth = window.firebase && firebase.apps.length ? firebase.auth() : null;
+  if(!auth){ gmsg('acctMsg', 'Still loading Google sign-in — try again in a moment.'); loadFirebase().catch(function(){}); return; }
+  btn.disabled = true; gmsg('acctMsg', 'Waiting for Google…', true);
+  try {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    var cred = await auth.signInWithPopup(provider);
+    account = await api('/api/login', { idToken: await cred.user.getIdToken() });
+    auth.signOut().catch(function(){});
+    if(account.active){ gmsg('acctMsg', 'Welcome back — loading your designs…', true); location.reload(); return; }
+    store.cloud = true;
+    renderAccount();
+    gmsg('acctMsg', 'Signed in. Now unlock the studio with an invite code or a subscription.', true);
+  } catch(e){
+    var code = e && e.code;
+    gmsg('acctMsg', code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' ? 'Sign-in was cancelled.'
+      : code === 'auth/popup-blocked' ? 'Your browser blocked the Google window — allow pop-ups for this site and try again.'
+      : 'Could not sign in: ' + (e.message || 'unknown error'));
+  }
+  btn.disabled = false;
+}
+async function signOutAccount(){
+  await fetch(API_BASE + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
+  location.reload();
+}
+function needAccount(msgId){
+  if(DEMO_MODE || account.signedIn) return false;
+  gmsg(msgId, 'Sign in with Google first (above), so your access is saved to your account.');
+  $('googleBtn').focus();
+  return true;
+}
+/* designs saved in this browser before the customer had an account move into it once,
+   then leave the browser so they cannot end up in someone else's account later */
+async function migrateLocalWork(){
+  if(store.backend !== 'local') return;
+  var keys = store.keys('seifstudio:', false).filter(function(k){ return k !== K_ACCESS; });
+  if(!keys.length) return;
+  $('saveStatus').textContent = 'MOVING YOUR DESIGNS TO YOUR ACCOUNT…';
+  try {
+    var have = {};
+    (await store.cloudKeys('seifstudio:')).forEach(function(k){ have[k] = 1; });
+    for(var i=0;i<keys.length;i++){
+      if(have[keys[i]]) continue;
+      var raw = localStorage.getItem(store._lk(keys[i], false));
+      if(raw) await store.cloudSet(keys[i], raw);
+    }
+    keys.forEach(function(k){ localStorage.removeItem(store._lk(k, false)); });
+    $('saveStatus').textContent = '';
+  } catch(e){
+    $('saveStatus').textContent = '';
+    onStoreStatus(false, 'could not move the designs saved in this browser to your account (' + e.message + '); they are kept here and will be retried');
+  }
 }
 function bindLock(){
   $('lockShield').addEventListener('click', function(e){ e.preventDefault(); openGate(); });
@@ -405,6 +509,7 @@ function bindLock(){
 function bindGate(){
   $('inviteBtn').addEventListener('click', async function(){
     var code = $('inviteInput').value.trim().toUpperCase();
+    if(needAccount('inviteMsg')) return;
     if(!code){ gmsg('inviteMsg','Type your invite code first.'); return; }
     this.disabled = true;
     var btn = this;
@@ -425,13 +530,19 @@ function bindGate(){
       gmsg('inviteMsg','Code accepted — welcome in.', true);
       setTimeout(function(){ grant('invite'); }, 350);
     } catch(e){
-      gmsg('inviteMsg', e.status === 429 ? 'Too many attempts — try again in an hour.' : 'That code isn’t valid or was revoked.');
+      gmsg('inviteMsg', e.status === 429 ? 'Too many attempts — try again in an hour.'
+        : e.status === 401 ? 'Your sign-in expired — sign in with Google again.'
+        : /already used/.test(e.message) ? 'You already used this code on your account.'
+        : 'That code isn’t valid or was revoked.');
       btn.disabled = false;
     }
   });
   $('inviteInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('inviteBtn').click(); });
+  $('googleBtn').addEventListener('click', signInAccount);
+  $('acctOutBtn').addEventListener('click', signOutAccount);
 
   $('payOpenBtn').addEventListener('click', function(){
+    if(needAccount('payOpenMsg')) return;
     $('payPrice').textContent = PRICE + PRICE_PERIOD;
     $('payDemo').classList.toggle('hidden', !DEMO_MODE);
     $('payFrameWrap').classList.add('hidden');
@@ -1327,6 +1438,10 @@ async function maybeOnboard(){
   $('obGo').onclick = async function(){ await store.set('seifstudio:onboarded', { ts: Date.now() }, false); closeModal('onboard'); };
 }
 async function init(){
+  /* the session decides where personal data lives (account or this browser), so it comes first */
+  var active = await checkSession();
+  if(!DEMO_MODE && !account.signedIn) loadFirebase().catch(function(){});
+  if(active) await migrateLocalWork();
   await loadGarmentColors();
   await loadCustomProducts();
   bindProjectProduct('tee');
@@ -1342,7 +1457,7 @@ async function init(){
   bindSheet();
   bindTurntable();
   if(typeof bindEditor === 'function') bindEditor();
-  var active = await checkSession();
+  renderAccount();
   $('boot').style.display = 'none';
   $('demoBanner').classList.toggle('hidden', !DEMO_MODE);
   showStudio();

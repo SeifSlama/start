@@ -58,30 +58,52 @@ origin (simplest — cookies are `SameSite=Lax`).
 
 ### Cloudflare Pages + Firebase (current deployment)
 
-`./build.sh` also writes `dist/`: `index.html`, `assets/` and `_worker.js` (a copy of `worker/index.js`, the same API
-as `server/server.js` ported to Cloudflare). Drag `dist/` (or a zip of it) onto a Cloudflare Pages project's
-upload page; every upload is kept as a deployment you can roll back to.
+`./build.sh` also writes `dist/`: `index.html`, `assets/` and `_worker.js` (a copy of `worker/index.js`). Drag
+`dist/` (or a zip of it) onto a Cloudflare Pages project's upload page; every upload is kept as a deployment you can
+roll back to. `server/server.js` is the older Node build: invite cookies only, no accounts or saved designs.
 
-Codes and subscriptions live in **Firebase Firestore** (`codes`, `sessions`, `orders`), reached with a service
-account. Firestore can stay in production mode with its default deny-all rules: the server's service account
-bypasses them and the browser never talks to Firestore.
+**Accounts.** Customers sign in with Google (Firebase Authentication in the browser, SDK loaded from gstatic). The
+server verifies the Firebase ID token once and sets its own signed cookie carrying the uid. Invite codes and
+payments activate the *account*, so access and designs follow the customer to any device.
+
+**Saved designs.** On the live build, once signed in, the client's personal store (projects, images, my products)
+goes to `/api/data` instead of `localStorage`. Values over 900 KB (images) are sent in 900 KB chunks and published
+as a version once complete. Designs saved in a browser before signing in move into the account on first unlock and
+are then removed from that browser. Shared keys (owner photos, panel mapping, colours) stay in `localStorage`.
+
+Firestore (production mode, default deny-all rules — only the server's service account reads or writes it):
+
+| Path | Holds |
+|---|---|
+| `accounts/{uid}` | email, name, `active`, `plan`, `expiresAt`, `code`, `paidAt` |
+| `accounts/{uid}/data/{id}` | one stored key (`k`), inline JSON or the chunk version `v` + count `n` |
+| `accounts/{uid}/chunks/{id.v.i}` | chunk `i` of version `v` |
+| `codes/{CODE}` | invite codes |
+| `orders/{orderId}` | Paymob order → uid, `paid` (a repeated webhook is ignored) |
+
+One-time Firebase setup: **Authentication → Sign-in method → Google → Enable**; **Authentication → Settings →
+Authorized domains → add** `<project>.pages.dev` (and any custom domain); **Project settings → Your apps → Web (`</>`)**
+to get the `apiKey`.
 
 Pages → Settings → Variables and Secrets (Production), then upload again so they apply:
 
-| Name | Value |
-|---|---|
-| `FIREBASE_SERVICE_ACCOUNT` | the whole JSON from Firebase → Project settings → Service accounts → Generate new private key |
-| `SESSION_SECRET` | 32+ random characters |
-| `ADMIN_TOKEN` | the owner panel's password |
-| `PAYMOB_API_KEY`, `PAYMOB_HMAC`, `PAYMOB_IFRAME_ID`, `PAYMOB_INTEGRATION_CARD` / `_WALLET` / `_KIOSK` | from the Paymob dashboard |
-| `PRICE_EGP` | optional, default 100 |
+| Name | Type | Value |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | Secret | the whole JSON from Project settings → Service accounts → Generate new private key |
+| `SESSION_SECRET` | Secret | 32+ random characters |
+| `ADMIN_TOKEN` | Secret | the owner panel's password |
+| `FIREBASE_API_KEY` | Text | the web app's `apiKey` (public by design) |
+| `PAYMOB_API_KEY`, `PAYMOB_HMAC`, `PAYMOB_IFRAME_ID`, `PAYMOB_INTEGRATION_CARD` / `_WALLET` / `_KIOSK` | Secret | from the Paymob dashboard |
+| `PRICE_EGP` | Text | optional, default 100 |
 
 **Until `SESSION_SECRET`, `ADMIN_TOKEN` and `FIREBASE_SERVICE_ACCOUNT` are set the site serves the demo build** and
 `/api/*` answers 503. Point Paymob's callback at `https://<project>.pages.dev/api/webhook`.
 
-Local test against the Firestore emulator: put the secrets plus `INSECURE_COOKIES="1"`,
-`FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"` and `FIREBASE_PROJECT_ID="demo-seif"` in `.dev.vars`, start the emulator,
-then `npx wrangler pages dev dist`.
+Local test against the Firebase emulators (`firebase emulators:start --only auth,firestore --project demo-seif`): put
+the secrets plus `FIREBASE_API_KEY="fake"`, `INSECURE_COOKIES="1"`, `FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"`,
+`FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9099"` and `FIREBASE_PROJECT_ID="demo-seif"` in `.dev.vars`, then
+`npx wrangler pages dev dist`. With `FIREBASE_AUTH_EMULATOR_HOST` set the server accepts the emulator's unsigned
+tokens, so never set it in production.
 
 ## What the studio does
 
