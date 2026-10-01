@@ -56,6 +56,23 @@ Point Paymob's transaction-processed callback at `https://your-host/api/webhook`
 `INSECURE_COOKIES=1`. Deploy the server on Cloudflare Workers / Vercel / any Node host; the HTML can sit on the same
 origin (simplest — cookies are `SameSite=Lax`).
 
+### Cloudflare Workers
+
+`worker/index.js` is the same API ported to Workers; `wrangler.jsonc` at the repo root deploys it with the static
+files. Codes and sessions live in a Durable Object (`Store`), created on first deploy — nothing to provision.
+`.assetsignore` keeps `server/`, `src/`, `worker/`, `tools/` and the docs off the public site.
+
+```
+npx wrangler deploy                       # from the repo root (or connect the repo under Settings → Builds)
+npx wrangler secret put SESSION_SECRET    # 32+ random chars
+npx wrangler secret put ADMIN_TOKEN
+npx wrangler secret put PAYMOB_API_KEY    # and PAYMOB_HMAC, PAYMOB_IFRAME_ID, PAYMOB_INTEGRATION_CARD / _WALLET / _KIOSK
+```
+
+Secrets can also be set in the dashboard (Worker → Settings → Variables and Secrets); `PRICE_EGP` is a plain var in
+`wrangler.jsonc`. **Until `SESSION_SECRET` and `ADMIN_TOKEN` are set the site serves the demo build** and `/api/*`
+answers 503. Local dev: put the same keys plus `INSECURE_COOKIES="1"` in `.dev.vars` and run `npx wrangler dev`.
+
 ## What the studio does
 
 - **Design mode** — the *panel sheet* lays the product out as flat cards, sized to scale (a tee: front, back, two

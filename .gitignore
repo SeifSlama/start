@@ -3,3 +3,4 @@ node_modules/
 .env
 seif-studio-v4-full/server/.env
 seif-studio-v4-full/server/data/
+.dev.vars
