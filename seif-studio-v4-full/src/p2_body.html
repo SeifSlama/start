@@ -1,0 +1,507 @@
+<body>
+
+<div id="boot">LOADING THE STUDIO&hellip;</div>
+<div id="errbox" role="alert"></div>
+<div id="storageWarn" class="warnstrip hidden" role="alert"></div>
+
+<!-- ================= PREVIEW LOCK ================= -->
+<!-- Transparent shield over the studio: visitors can look, but any click opens the unlock modal. -->
+<div id="lockShield" aria-hidden="true"></div>
+<div id="lockBar" role="status">
+  <span class="lb-txt">&#128274; Preview mode<small>Enter an invite code or subscribe to use the studio</small></span>
+  <button id="lockBarBtn" class="btn">Unlock</button>
+</div>
+
+<!-- ================= GATE (unlock modal) ================= -->
+<div class="modal" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <div class="card">
+    <button class="x" data-close="gate" aria-label="Close">&times;</button>
+    <div class="speclabel" style="margin-bottom:10px">Spec sheet no. 001 &middot; Studio locked</div>
+    <h1 id="gateTitle">UNLOCK SEIF STUDIO<i>.</i></h1>
+    <p class="tag">You&rsquo;re browsing in preview. To design on flat panels, assemble the mockup and export print files, unlock the studio below.</p>
+    <div class="cats">Tops &middot; Bottoms &middot; Hats &middot; Socks &middot; Bags &middot; Ties &middot; Accessories</div>
+
+    <div class="hangtags">
+      <div class="hangtag">
+        <div class="speclabel">Access A</div>
+        <h3>Have an invite?</h3>
+        <p>Codes are issued personally by Seif. Enter yours to unlock the studio.</p>
+        <input id="inviteInput" class="field" placeholder="SEIF-XXXX-XXXX" autocomplete="off" spellcheck="false" style="text-transform:uppercase;font-family:var(--mono)" aria-label="Invite code">
+        <div id="inviteMsg" class="gmsg" aria-live="polite"></div>
+        <button id="inviteBtn" class="btn primary" style="width:100%;margin-top:6px">Unlock the studio</button>
+      </div>
+
+      <div class="hangtag">
+        <div class="speclabel">Access B</div>
+        <h3>Get instant access</h3>
+        <p class="price" id="priceTag">100 EGP &middot; PER MONTH</p>
+        <ul>
+          <li>All 16 garment mockups &middot; every photographed view</li>
+          <li>Flat panel artboards &middot; layers, text, patterns</li>
+          <li>300 DPI print-ready panel files</li>
+        </ul>
+        <button id="payOpenBtn" class="btn red" style="width:100%">Subscribe</button>
+        <div class="gmsg" id="payOpenMsg" aria-live="polite"></div>
+      </div>
+    </div>
+    <footer><button id="adminOpenBtn">Owner access &middot; admin</button></footer>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <header class="bar">
+    <div class="wordmark">SEIF STUDIO<i>.</i><small>2D apparel mockups</small></div>
+    <div id="demoBanner" class="demobanner hidden" title="Nothing enforced in client JavaScript is enforced. A server must supply SEIF_CONFIG before launch.">DEMO MODE &mdash; access is not enforced</div>
+    <div class="seg modeseg" id="modeSeg" role="radiogroup" aria-label="Workspace">
+      <button data-mode="design" role="radio" aria-checked="true" class="on">Design</button>
+      <button data-mode="preview" role="radio" aria-checked="false">Preview</button>
+    </div>
+    <div class="spacer"></div>
+    <span id="saveStatus" class="speclabel savestatus" aria-live="polite"></span>
+    <div class="histbtns">
+      <button id="undoBtn" class="btn ghost small" title="Undo" aria-label="Undo" disabled>&#8630;</button>
+      <button id="redoBtn" class="btn ghost small" title="Redo" aria-label="Redo" disabled>&#8631;</button>
+    </div>
+    <button id="myProductsBtn" class="btn ghost small">My products</button>
+    <button id="exportBtn" class="btn primary small">Export</button>
+    <button id="signoutBtn" class="btn ghost small" title="Lock the studio">Lock</button>
+  </header>
+
+  <div id="resumeStrip" class="resumestrip hidden" role="status">
+    <span id="resumeTxt"></span>
+    <button id="resumeYes" class="btn small primary">Continue</button>
+    <button id="resumeNo" class="btn small ghost">Start fresh</button>
+  </div>
+
+  <main>
+    <nav id="rack" aria-label="Garment catalog"></nav>
+
+    <section id="stage">
+      <!-- DESIGN: panel sheet -->
+      <div id="panelSheet" class="stagepane">
+        <div class="sheethead">
+          <div>
+            <span class="speclabel" id="psSku">SS-01 &middot; TOPS</span>
+            <div class="sheettitle" id="psName">T-Shirt</div>
+            <span class="speclabel" id="psMeta" style="color:var(--ink2)">4 PANELS</span>
+          </div>
+          <div class="sheethead-actions">
+            <button id="psPreviewBtn" class="btn small">Assemble &rarr;</button>
+          </div>
+        </div>
+        <div id="panelCards" class="panelcards"></div>
+        <p class="tiny" id="psHint">Each card is one flat piece the factory prints, sized to scale. Open a panel to design on it.</p>
+      </div>
+
+      <!-- DESIGN: artboard editor -->
+      <div id="artboard" class="stagepane hidden">
+        <div class="abtoolbar" id="abToolbar" role="toolbar" aria-label="Artboard tools">
+          <button id="abBackBtn" class="btn ghost small" title="Back to the panel sheet (Esc)">&larr; Panels</button>
+          <span class="abtitle" id="abTitle">Front &middot; 32 &times; 42 cm</span>
+          <span class="spacer"></span>
+          <button id="abUploadBtn" class="btn small">Upload image</button>
+          <input type="file" id="abFile" accept="image/*" class="hidden">
+          <button id="abTextBtn" class="btn small">Add text</button>
+          <div class="menuwrap">
+            <button id="abShapeBtn" class="btn small" aria-haspopup="true">Add shape &#9662;</button>
+            <div class="menu" id="abShapeMenu">
+              <button data-shape="rect">Rectangle</button>
+              <button data-shape="ellipse">Ellipse</button>
+              <button data-shape="line">Line</button>
+            </div>
+          </div>
+          <div class="menuwrap">
+            <button id="abAlignBtn" class="btn small ghost" aria-haspopup="true">Align &#9662;</button>
+            <div class="menu" id="abAlignMenu">
+              <button data-align="left">Left</button>
+              <button data-align="center">Centre</button>
+              <button data-align="right">Right</button>
+              <button data-align="top">Top</button>
+              <button data-align="middle">Middle</button>
+              <button data-align="bottom">Bottom</button>
+              <hr>
+              <button data-align="hdist">Distribute horizontally</button>
+              <button data-align="vdist">Distribute vertically</button>
+            </div>
+          </div>
+          <button id="abFitBtn" class="btn small ghost" title="Scale the selected layer to fill the safe area">Fit to safe area</button>
+          <button id="abTileBtn" class="btn small ghost" title="Repeat the selected layer across the whole panel">Tile as pattern</button>
+          <span class="speclabel abzoom" id="abZoom">100%</span>
+        </div>
+        <div id="abStage">
+          <canvas id="abCanvas" aria-label="Artboard"></canvas>
+          <div id="abEmpty" class="abempty hidden">
+            <b>This panel is blank.</b>
+            Drop an image here, or use Upload image / Add text above.
+          </div>
+        </div>
+      </div>
+
+      <!-- PREVIEW: assembled garment -->
+      <section id="floor" class="stagepane hidden">
+        <div id="three"></div>
+        <div id="specline">
+          <span class="speclabel" id="specSku">SS-01 &middot; TOPS</span>
+          <span class="name" id="specName">T-Shirt</span>
+          <span class="speclabel" id="specFab" style="color:var(--ink2)">180 GSM COTTON</span>
+        </div>
+        <div id="floorhint" class="speclabel">Drag to turn the garment &middot; assembled from the flat panels</div>
+        <div id="turnRow" class="turnrow hidden">
+          <button id="turnPrev" class="btn ghost small" aria-label="Turn left">&#9664;</button>
+          <input type="range" id="turnSlider" min="0" max="0" value="0" aria-label="Turntable angle">
+          <button id="turnNext" class="btn ghost small" aria-label="Turn right">&#9654;</button>
+          <span class="speclabel" id="turnLabel">FRONT</span>
+        </div>
+        <button id="editPanelsBtn" class="btn small floorbtn">&larr; Edit panels</button>
+        <div id="perfLine" class="speclabel perfline hidden"></div>
+      </section>
+    </section>
+
+    <aside id="sheet">
+      <div class="sheethandle" id="sheetHandle" aria-hidden="true"><span></span></div>
+
+      <!-- right pane: PANEL SHEET -->
+      <div id="sheetSheet" class="sheetpane">
+        <div class="sec">
+          <span class="speclabel">01 &middot; Colorway</span>
+          <div class="swatches" id="swatches" role="listbox" aria-label="Garment colour"></div>
+          <div class="rowline"><label for="customColor">Custom dye</label><input type="color" id="customColor" value="#1E2749"></div>
+          <div class="tiny" id="colorNameLine"></div>
+        </div>
+        <div class="sec">
+          <span class="speclabel">02 &middot; Fabric note</span>
+          <input id="fabricNote" class="field" placeholder="e.g. 240 GSM ringspun, enzyme wash" maxlength="80">
+        </div>
+        <div class="sec">
+          <span class="speclabel">03 &middot; Project</span>
+          <button id="newProjectBtn" class="btn ghost small" style="width:100%">New project</button>
+          <p class="tiny">Work is kept per garment: switch to the hoodie and back and the tee design is still here. Autosaves 2 seconds after every change.</p>
+        </div>
+      </div>
+
+      <!-- right pane: ARTBOARD EDITOR -->
+      <div id="sheetEditor" class="sheetpane hidden">
+        <div class="sec">
+          <span class="speclabel">Layers</span>
+          <div id="layerList" class="layerlist" role="listbox" aria-label="Layers"></div>
+          <p class="tiny" id="layerEmpty">No layers yet. Upload an image or add text to start.</p>
+          <div class="rowline" style="margin-top:8px">
+            <label for="techSel" style="width:70px">Technique</label>
+            <select id="techSel" class="field" style="flex:1;padding:6px 8px">
+              <option value="dtg">DTG</option>
+              <option value="screen">Screen print</option>
+              <option value="embroidery">Embroidery</option>
+              <option value="vinyl">Vinyl</option>
+            </select>
+          </div>
+          <div id="techWarn" class="tiny warn"></div>
+        </div>
+        <div class="sec" id="inspector">
+          <span class="speclabel">Inspector</span>
+          <p class="tiny" id="inspEmpty">Select a layer to edit it.</p>
+          <div id="inspBody" class="hidden">
+            <div class="grid2">
+              <label>X<input type="number" id="inX" class="field"></label>
+              <label>Y<input type="number" id="inY" class="field"></label>
+              <label>W<input type="number" id="inW" class="field" min="1"></label>
+              <label>H<input type="number" id="inH" class="field" min="1"></label>
+              <label>Rotate<input type="number" id="inRot" class="field" step="1"></label>
+              <label>Opacity<input type="range" id="inOp" class="slider" min="0" max="100"></label>
+            </div>
+            <div class="rowline"><label for="inBlend" style="width:70px">Blend</label>
+              <select id="inBlend" class="field" style="flex:1;padding:6px 8px">
+                <option value="source-over">Normal</option>
+                <option value="multiply">Multiply</option>
+                <option value="screen">Screen</option>
+                <option value="overlay">Overlay</option>
+                <option value="darken">Darken</option>
+                <option value="lighten">Lighten</option>
+              </select>
+            </div>
+            <div id="inDpi" class="tiny"></div>
+
+            <div id="inText" class="hidden">
+              <textarea id="inTxt" class="field" rows="2" placeholder="Text" style="resize:vertical"></textarea>
+              <div class="rowline"><label for="inFont" style="width:70px">Font</label>
+                <select id="inFont" class="field" style="flex:1;padding:6px 8px">
+                  <option value="Archivo">Archivo</option>
+                  <option value="Bricolage Grotesque">Bricolage</option>
+                  <option value="IBM Plex Mono">Plex Mono</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Impact">Impact</option>
+                  <option value="Script">Script</option>
+                </select>
+                <select id="inWeight" class="field" style="width:84px;padding:6px 8px">
+                  <option value="400">400</option><option value="500">500</option><option value="600">600</option><option value="700">700</option><option value="800">800</option>
+                </select>
+              </div>
+              <div class="grid2">
+                <label>Size<input type="number" id="inSize" class="field" min="8"></label>
+                <label>Tracking<input type="number" id="inTrack" class="field" step="1"></label>
+                <label>Line height<input type="number" id="inLH" class="field" step="0.05" min="0.6"></label>
+                <label>Align<select id="inAlign" class="field" style="padding:6px 8px"><option value="left">Left</option><option value="center">Centre</option><option value="right">Right</option></select></label>
+              </div>
+              <div class="rowline"><label style="width:70px">Fill</label><input type="color" id="inFill"><label style="margin-left:10px">Stroke</label><input type="color" id="inStroke"><input type="number" id="inStrokeW" class="field" min="0" style="width:64px" title="Stroke width"></div>
+              <div class="rowline"><label for="inCurve" style="width:70px">Arc</label><input type="range" id="inCurve" class="slider" min="-100" max="100"><span class="tiny" id="inCurveV" style="width:36px;margin:0;text-align:right">0</span></div>
+            </div>
+
+            <div id="inShape" class="hidden">
+              <div class="rowline"><label style="width:70px">Fill</label><input type="color" id="inSFill"><label style="margin-left:10px">Stroke</label><input type="color" id="inSStroke"><input type="number" id="inSStrokeW" class="field" min="0" style="width:64px" title="Stroke width"></div>
+            </div>
+
+            <div id="inTile" class="hidden">
+              <span class="speclabel" style="margin:10px 0 6px">Pattern</span>
+              <div class="rowline"><label for="inTileGap" style="width:70px">Spacing</label><input type="range" id="inTileGap" class="slider" min="0" max="200"></div>
+              <div class="rowline"><label for="inTileRot" style="width:70px">Rotation</label><input type="range" id="inTileRot" class="slider" min="-90" max="90"></div>
+              <label class="rowline" style="cursor:pointer"><input type="checkbox" id="inTileOff" style="width:auto;flex:none"><span class="tiny" style="margin:0">Offset alternate rows</span></label>
+              <button id="inTileStop" class="btn ghost small" style="width:100%;margin-top:8px">Stop tiling</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- right pane: PREVIEW -->
+      <div id="sheetPreview" class="sheetpane hidden">
+        <div class="sec">
+          <span class="speclabel">01 &middot; View</span>
+          <div class="seg" id="viewSeg" role="radiogroup" aria-label="Garment view"></div>
+          <p class="tiny">Only views with a real garment photo are offered. Drag the garment to turn it through every angle.</p>
+        </div>
+        <div class="sec">
+          <span class="speclabel">02 &middot; Colorway</span>
+          <div class="swatches" id="swatches2" role="listbox" aria-label="Garment colour"></div>
+          <div class="rowline"><label for="customColor2">Custom dye</label><input type="color" id="customColor2" value="#1E2749"></div>
+        </div>
+        <div class="sec">
+          <span class="speclabel">03 &middot; Fabric</span>
+          <div class="seg" id="fabricSeg" role="radiogroup" aria-label="Fabric">
+            <button data-fab="cotton" role="radio" aria-checked="true" class="on">Cotton</button>
+            <button data-fab="fleece" role="radio" aria-checked="false">Fleece</button>
+            <button data-fab="nylon" role="radio" aria-checked="false">Nylon</button>
+          </div>
+          <label class="rowline" style="cursor:pointer;margin-top:12px"><input type="checkbox" id="followFabric" style="width:auto;flex:none"><span style="font-size:12.5px">Follow the fabric</span></label>
+          <div class="rowline" id="followRow"><label for="followStrength" style="width:70px">Strength</label><input type="range" id="followStrength" class="slider" min="0" max="20" value="8"></div>
+        </div>
+        <div class="sec" id="fitSec">
+          <span class="speclabel">04 &middot; Fit (placeholder only)</span>
+          <div class="seg" id="fitSeg" role="radiogroup" aria-label="Fit">
+            <button data-f="slim" role="radio" aria-checked="false">Slim</button>
+            <button data-f="regular" role="radio" aria-checked="true" class="on">Regular</button>
+            <button data-f="oversized" role="radio" aria-checked="false">Oversized</button>
+          </div>
+        </div>
+        <div class="sec">
+          <span class="speclabel">05 &middot; Trim / accent (placeholder only)</span>
+          <div class="seg" id="accentSeg" role="radiogroup" aria-label="Trim colour">
+            <button data-a="auto" role="radio" aria-checked="true" class="on">Auto</button>
+            <button data-a="custom" role="radio" aria-checked="false">Custom</button>
+          </div>
+          <div class="rowline hidden" id="accentRow"><label for="accentColor">Trim color</label><input type="color" id="accentColor" value="#C3423F"></div>
+        </div>
+        <div class="sec">
+          <button id="contactSheetBtn" class="btn ghost small" style="width:100%">Multi-colour sheet</button>
+          <p class="tiny">Renders this design across every garment colour as one contact sheet PNG.</p>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<!-- ================= ONBOARDING ================= -->
+<div class="modal" id="onboard" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+  <div class="card">
+    <div class="speclabel">First time here</div>
+    <h3 id="obTitle">Three steps, thirty seconds</h3>
+    <ol class="obsteps">
+      <li><b>Pick a garment</b> from the rack on the left.</li>
+      <li><b>Design each flat panel</b> &mdash; a tee is four artboards: front, back, two sleeves. Layer logos, text and patterns on each one.</li>
+      <li><b>Assemble &amp; export</b> &mdash; Preview maps the panels onto the photographed garment; Export gives you mockups and 300 DPI print files.</li>
+    </ol>
+    <button id="obGo" class="btn primary" style="width:100%">Got it</button>
+    <div class="gmsg"></div>
+  </div>
+</div>
+
+<!-- ================= EXPORT MODAL ================= -->
+<div class="modal" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exTitle">
+  <div class="card">
+    <button class="x" data-close="exportModal" aria-label="Close">&times;</button>
+    <h3 id="exTitle">Export</h3>
+    <div class="sub">Pick what to produce. Multi-file exports download one after another.</div>
+    <label class="exrow"><input type="checkbox" id="exMock" checked><span><b>Mockup images</b><small>Every photographed view at 2400 px, PNG</small></span></label>
+    <div class="exsub" id="exMockOpts">
+      <label class="rowline"><input type="radio" name="exBg" value="transparent" checked style="width:auto;flex:none"><span class="tiny" style="margin:0">Transparent background</span></label>
+      <label class="rowline"><input type="radio" name="exBg" value="studio" style="width:auto;flex:none"><span class="tiny" style="margin:0">White studio background with contact shadow</span></label>
+      <label class="rowline"><input type="checkbox" id="exWm" style="width:auto;flex:none"><span class="tiny" style="margin:0">Corner watermark</span></label>
+    </div>
+    <label class="exrow"><input type="checkbox" id="exPrint" checked><span><b>Print-ready panel files</b><small>One transparent PNG per designed panel at 300 DPI</small></span></label>
+    <label class="exrow"><input type="checkbox" id="exTech"><span><b>Tech pack</b><small>Printable sheet: mockups, panels, colour, layer table</small></span></label>
+    <label class="exrow"><input type="checkbox" id="exProj"><span><b>Project file</b><small>project.json &mdash; reopen it here later</small></span></label>
+    <div id="exWarn" class="tiny warn"></div>
+    <button id="exGo" class="btn primary" style="width:100%;margin-top:12px">Export</button>
+    <div id="exProgress" class="gmsg" aria-live="polite"></div>
+    <hr style="border:none;border-top:1.5px solid var(--line);margin:16px 0">
+    <div class="rowline">
+      <button id="exOpenBtn" class="btn ghost small" style="flex:1">Open project&hellip;</button>
+      <input type="file" id="exOpenFile" accept="application/json,.json" class="hidden">
+    </div>
+    <div id="exOpenMsg" class="gmsg"></div>
+  </div>
+</div>
+
+<!-- ================= CHECKOUT MODAL ================= -->
+<div class="modal top" id="payModal" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+  <div class="card">
+    <button class="x" data-close="payModal" aria-label="Close">&times;</button>
+    <h3 id="payTitle">Checkout</h3>
+    <div class="sub">Seif Studio &middot; monthly subscription &middot; <b id="payPrice">100 EGP/month</b></div>
+    <div id="payDemo" class="demoflag hidden"><b>Demo build.</b> No payment provider is connected, so nothing is charged and access is not enforced. The deployed build takes payment through the server (Paymob card, Fawry, Vodafone Cash).</div>
+    <div id="payFrameWrap" class="hidden"><iframe id="payFrame" title="Payment" style="width:100%;height:420px;border:1.5px solid var(--line);border-radius:8px"></iframe></div>
+    <div id="payMethods" class="paylines">
+      <button class="btn red" data-pay="card" style="width:100%">Pay by card</button>
+      <button class="btn" data-pay="fawry" style="width:100%">Fawry &middot; pay at outlet</button>
+      <button class="btn" data-pay="wallet" style="width:100%">Vodafone Cash</button>
+    </div>
+    <div id="payMsg" class="gmsg" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- ================= ADMIN MODAL ================= -->
+<div class="modal top" id="adminModal" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+  <div class="card wide">
+    <button class="x" data-close="adminModal" aria-label="Close">&times;</button>
+    <h3 id="adminTitle">Owner panel</h3>
+    <div id="adminLock">
+      <div class="sub">Enter the owner PIN to manage invites, photos and panel mapping.</div>
+      <input id="pinInput" class="field" type="password" placeholder="Owner PIN" autocomplete="off" aria-label="Owner PIN">
+      <div id="pinMsg" class="gmsg"></div>
+      <button id="pinBtn" class="btn primary" style="width:100%;margin-top:8px">Open panel</button>
+    </div>
+    <div id="adminPanel" class="hidden">
+      <div class="tabs">
+        <button id="adTabCodes" class="on">Invites</button>
+        <button id="adTabPhotos">Photos &amp; mapping</button>
+        <button id="adTabColors">Colours</button>
+      </div>
+
+      <div id="adCodes">
+        <div class="sub" id="adCodesSub">Invite codes are checked by the server. Revoked codes stop working immediately.</div>
+        <button id="genBtn" class="btn primary small" style="width:100%">Generate new invite code</button>
+        <div id="codeList" style="margin-top:14px"></div>
+      </div>
+
+      <div id="adPhotos" class="hidden">
+        <div class="sub" style="margin-bottom:10px"><b>1 &middot; Garment photo.</b> Upload a light grey or white garment on a plain background, click the background to key it out, save. <b>2 &middot; Map panels.</b> Drag the four corners of each panel onto the photo.</div>
+        <div class="rowline">
+          <label for="peProduct" style="width:52px">Product</label>
+          <select id="peProduct" class="field" style="flex:1;padding:7px 10px"></select>
+        </div>
+        <div class="rowline" style="margin-top:8px">
+          <label for="peView" style="width:52px">View</label>
+          <select id="peView" class="field" style="flex:1;padding:7px 10px"></select>
+        </div>
+        <p class="tiny" id="peStatusLine" style="margin-top:8px">No photo yet &mdash; using the illustrated placeholder.</p>
+
+        <div class="tabs" style="margin-top:10px">
+          <button id="peStagePhoto" class="on">Photo</button>
+          <button id="peStageMap">Map panels</button>
+        </div>
+
+        <div id="pePhotoStage">
+          <input type="file" id="peFile" accept="image/*" class="hidden">
+          <button id="peUploadBtn" class="btn ghost small" style="width:100%">Upload a photo&hellip;</button>
+          <canvas id="photoEditCanvas" width="370" height="370" aria-label="Photo editor"></canvas>
+          <p class="tiny" id="peStatus">Upload a photo to begin. Click the background to remove it.</p>
+          <button id="peSaveBtn" class="btn primary small" style="width:100%;margin-top:10px" disabled>Save photo</button>
+          <button id="peRemoveBtn" class="btn ghost small hidden" style="width:100%;margin-top:8px">Remove photo &mdash; revert to placeholder</button>
+        </div>
+
+        <div id="peMapStage" class="hidden">
+          <div class="seg wrap" id="pePanelSeg" aria-label="Panel to map"></div>
+          <canvas id="mapCanvas" width="370" height="370" aria-label="Panel mapping"></canvas>
+          <p class="tiny" id="mapStatus">Drag the corners. Clockwise from top-left.</p>
+          <div class="rowline">
+            <button id="mapSnapBtn" class="btn ghost small" style="flex:1">Snap to rectangle</button>
+            <button id="mapResetBtn" class="btn ghost small" style="flex:1">Reset</button>
+            <button id="mapCopyBtn" class="btn ghost small hidden" style="flex:1">Copy from front</button>
+          </div>
+          <div class="rowline">
+            <select id="mapAddSel" class="field" style="flex:1;padding:6px 8px"></select>
+            <button id="mapAddBtn" class="btn ghost small">Add to view</button>
+            <button id="mapDropBtn" class="btn ghost small">Remove</button>
+          </div>
+          <button id="mapSaveBtn" class="btn primary small" style="width:100%;margin-top:10px">Save mapping</button>
+          <div id="mapMsg" class="gmsg"></div>
+        </div>
+      </div>
+
+      <div id="adColors" class="hidden">
+        <div class="sub">Named garment colours shown to every client. Name, hex, optional Pantone TCX.</div>
+        <div id="colorRows"></div>
+        <div class="rowline">
+          <input id="colName" class="field" placeholder="Name" style="flex:1">
+          <input id="colHex" type="color" value="#1E2749" aria-label="Hex">
+          <input id="colTcx" class="field" placeholder="TCX" style="width:90px">
+          <button id="colAddBtn" class="btn ghost small">Add</button>
+        </div>
+        <div id="colMsg" class="gmsg"></div>
+      </div>
+
+      <hr style="border:none;border-top:1.5px solid var(--line);margin:20px 0">
+      <button id="adminEnterBtn" class="btn ghost small" style="width:100%">Enter the studio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MY PRODUCTS ================= -->
+<div class="modal" id="myProductsModal" role="dialog" aria-modal="true" aria-labelledby="mpTitle">
+  <div class="card">
+    <button class="x" data-close="myProductsModal" aria-label="Close">&times;</button>
+    <h3 id="mpTitle">My products</h3>
+
+    <div id="mpList">
+      <div class="sub">Bring your own blank product &mdash; upload a photo, key the background, mark the print panel, and it&rsquo;s fully yours: recolour it, design on it, assemble it. Private to you.</div>
+      <div id="mpListItems"></div>
+      <button id="mpAddBtn" class="btn primary small" style="width:100%;margin-top:12px">+ Add a product</button>
+    </div>
+
+    <div id="mpCreate" class="hidden">
+      <div class="sub" id="mpCreateSub">Upload a photo of your product on a plain, evenly lit background.</div>
+      <input id="mpName" class="field" type="text" placeholder="Product name (e.g. Canvas Tote)" maxlength="40" aria-label="Product name">
+      <div class="rowline">
+        <label style="width:110px">Print panel size</label>
+        <input id="npWcm" class="field" type="number" min="1" max="200" value="30" style="width:70px" aria-label="Panel width cm"><span class="tiny" style="margin:0">&times;</span>
+        <input id="npHcm" class="field" type="number" min="1" max="200" value="35" style="width:70px" aria-label="Panel height cm"><span class="tiny" style="margin:0">cm</span>
+      </div>
+
+      <div class="seg" id="npViewSeg" style="margin-top:10px">
+        <button data-v="front" class="on">Front</button>
+        <button data-v="back" id="npViewBack" class="hidden">Back</button>
+      </div>
+      <label class="rowline" style="margin-top:6px;cursor:pointer">
+        <input type="checkbox" id="npHasBack" style="width:auto;flex:none">
+        <span class="tiny" style="margin:0">This product also has a back view</span>
+      </label>
+
+      <input type="file" id="npFile" accept="image/*" class="hidden">
+      <button id="npUploadBtn" class="btn ghost small" style="width:100%;margin-top:8px">Upload a photo&hellip;</button>
+
+      <canvas id="npCanvas" width="370" height="370" aria-label="Product photo editor"></canvas>
+      <p class="tiny" id="npStatus">Enter a name and upload a photo to begin.</p>
+
+      <div class="seg" id="npModeSeg">
+        <button id="npModeKeyBtn" class="on" data-m="key">Remove background</button>
+        <button id="npModeRectBtn" data-m="rect">Set print panel</button>
+      </div>
+
+      <button id="npSaveViewBtn" class="btn primary small" style="width:100%;margin-top:10px" disabled>Save this view</button>
+      <div class="rowline" style="margin-top:10px">
+        <button id="npCancelBtn" class="btn ghost small" style="flex:1">Cancel</button>
+        <button id="npDoneBtn" class="btn primary small" style="flex:1" disabled>Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>

@@ -1,0 +1,100 @@
+# Seif Studio v4 — panel-based 2D apparel mockups
+
+A garment is a set of **flat panels** (the pieces a factory prints, with real cm sizes). The brand owner designs
+each panel on its own artboard; the app assembles the finished panels back onto the photographed garment for the
+mockup, and exports each panel as a 300 DPI print file.
+
+Single-file web app, no bundler, no npm packages in the client. `build.sh` concatenates `src/` into
+`seif-studio.html`.
+
+## Source layout (concat order)
+
+| File | What |
+|---|---|
+| `src/p0_config.js` | `window.SEIF_CONFIG` default (`{demo:true}`). The server injects the real config ahead of it. |
+| `src/p1_head.html` | CSS — paper / tech-pack identity, panel sheet, artboard editor, responsive rules (bottom sheet under 900 px) |
+| `src/p2_body.html` | Markup — lock/gate, header (Design / Preview), rack, panel sheet, artboard editor, preview floor, right pane, modals (export, admin, my products, onboarding, checkout) |
+| `src/r_core.js` | Engine — storage wrapper, project + layer API, `renderArtboard()`, `recolorGarment()` (luminance ramp), `compositeView()` (24×24 affine quad mapping, silhouette clip, fold shading, optional displacement), history, autosave, exports, DPI / technique analysis, named colours |
+| `src/r_models.js` | 16 vector garment drawings — **placeholders** shown until a photo is uploaded |
+| `src/r_panels.js` | `PANEL_SETS` (panels per product, cm sizes), `PANEL_PLACEMENTS` (quads per product+view, stored), default quads, quad geometry |
+| `src/p5_ui.js` | UI wiring — rack, swatches, modes, access (demo or server), admin (invites · photos · panel mapping · colours), my products, export, resume strip, bottom sheet, boot |
+| `src/p5b_editor.js` | Panel sheet cards + the artboard editor (handles, rotate, snap, layer list, inspector, align, tile, keyboard, pinch) |
+| `src/p6_tail.html` | closing tags |
+
+`NOTES.md` is the Phase 0 audit of the v3 engine this replaced.
+
+## Rebuild after edits
+
+```
+./build.sh
+```
+
+## Run it
+
+Open `seif-studio.html` directly for the **demo build**: access is not enforced (amber banner), the invite code and
+owner PIN are both `DEMO`, everything is stored in the browser (`localStorage`, or the host's `window.storage` when
+present). Add `?debug=1` to draw the panel quads and safe areas over the assembled mockup and show composite timings.
+
+### Deployed build (Phase 11)
+
+Nothing enforced in client JavaScript is enforced. `server/server.js` is a dependency-free Node server that:
+
+- serves `seif-studio.html` with `SEIF_CONFIG = {demo:false}` injected — the bundle cannot be flipped back to demo by a client flag;
+- `POST /api/redeem {code}` → signed httpOnly session cookie; codes live in `server/data/codes.json` with use counts and expiry and are never sent to the client;
+- `GET /api/session` → `{active, plan, expiresAt}`; the client shows the studio only if `active`;
+- `GET/POST /api/admin/codes` behind `Authorization: Bearer $ADMIN_TOKEN` (the owner panel asks for the token where the PIN used to be);
+- `POST /api/checkout {method: card|wallet|fawry}` → Paymob order + payment key → card iframe URL, Vodafone Cash redirect, or Fawry reference;
+- `POST /api/webhook` ← Paymob transaction callback, HMAC-SHA512 verified, activates the subscription (31 days);
+- rate limits `/api/redeem` to 10 attempts per IP per hour.
+
+```
+cp server/.env.example server/.env   # fill in SESSION_SECRET, ADMIN_TOKEN, Paymob keys
+cd server && node server.js          # http://localhost:8787
+```
+
+Point Paymob's transaction-processed callback at `https://your-host/api/webhook`. Local dev over plain http needs
+`INSECURE_COOKIES=1`. Deploy the server on Cloudflare Workers / Vercel / any Node host; the HTML can sit on the same
+origin (simplest — cookies are `SameSite=Lax`).
+
+## What the studio does
+
+- **Design mode** — the *panel sheet* lays the product out as flat cards, sized to scale (a tee: front, back, two
+  sleeves). Opening a card gives a full-width *artboard*: checkerboard, cut line, dashed 5 % safe area, a layer stack
+  (images, text with tracking / line-height / arc / stroke, shapes), drag / resize / rotate with snapping, align &
+  distribute, fit to safe area, tile as pattern, per-panel print technique (DTG · screen · embroidery · vinyl) with
+  warnings, DPI badges (green ≥ 300 / amber / red < 150).
+- **Preview mode** — `compositeView()` maps every artboard through its quad onto the recoloured garment photo, clips
+  it to the fabric and shades it with the photo's own folds. Fabric presets (cotton / fleece / nylon), optional
+  "Follow the fabric" displacement, named garment colours, multi-colour contact sheet.
+- **Export** — mockup PNGs (2400 px, transparent or studio background, optional watermark), print-ready panel PNGs at
+  300 DPI (`PRINT_tee_front_32x42cm_300dpi.png` = 3780 × 4961), a printable tech pack, and `project.json` (re-openable,
+  version-checked).
+- **Never losing work** — undo / redo (gestures coalesce to one step), autosave 2 s after every change with a
+  "Continue where you left off" strip on boot, honest storage-failure warning, per-product designs that survive
+  switching garments, `beforeunload` guard.
+- **Owner panel** — invite codes, garment photo upload (chroma key), per-panel quad mapping with draggable corners
+  (snap / reset / copy-from-front), named colour list.
+- **My products** — clients bring their own blank product (photo + panel size + print area), private to them.
+
+## Photography
+
+The compositor is only as good as the source photos: light grey or white garment, flat lay or ghost mannequin shot
+straight on, soft light with one key direction, no blown highlights, plain background with clear colour separation,
+≥ 2400 px. Views: front, back, optional left / right side and a detail shot.
+
+## Turntable renders (built-in garment photos)
+
+`assets/<product>/<view>.png` are luminance + alpha renders shipped next to the HTML; the compositor recolours
+them and maps the panels through per-view quads (`DEFAULT_PLACEMENTS` in `r_panels.js`, editable in the owner
+panel). Views are turntable frames — `front`, `turn_030`, `turn_060`, `side_left`, `turn_120`, `turn_150`, `back`,
+`turn_210`, `turn_240`, `side_right`, `turn_300`, `turn_330`, plus `detail` — and Preview lets the client drag the
+garment through every frame that exists. The tee ships with 8 frames.
+
+To add a product's renders: export the turntable as transparent PNGs named by view, then
+
+```
+node tools/prep-photos.js <folder-of-renders> assets/<productId> 1600
+```
+
+and list the views in `BUILTIN_PHOTOS` (`r_core.js`). **Deploy the `assets/` folder next to the HTML** — the
+renders are not embedded in the single file (4 MB for the tee).
