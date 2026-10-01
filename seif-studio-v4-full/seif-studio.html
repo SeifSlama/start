@@ -8,10 +8,12 @@ window.SEIF_CONFIG = window.SEIF_CONFIG || { demo: true };
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seif Studio - 2D Apparel Mockups</title>
+<title>Seif Studio - 3D Apparel Design</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<!-- design fonts for text on garments (files download only when a font is used) -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Bungee&family=Black+Ops+One&family=Rubik+Mono+One&family=Righteous&family=Monoton&family=Press+Start+2P&family=Permanent+Marker&family=Pacifico&family=Lobster&family=Caveat:wght@400;700&family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Lalezar&family=Reem+Kufi:wght@400;700&family=Changa:wght@400;700;800&family=El+Messiri:wght@400;700&family=Rakkas&family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Marhey:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#ECEDE8; --panel:#FBFBF7; --ink:#1E2749; --ink2:#5A6178;
@@ -230,6 +232,59 @@ input[type=range]{accent-color:var(--red)}
 @keyframes lockshake{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 6px))}75%{transform:translateX(calc(-50% + 6px))}}
 #lockBar.shake{animation:lockshake .35s ease}
 
+/* ---------- 3D studio ---------- */
+#studio3d{background:radial-gradient(ellipse at 50% 40%,#ffffff 0%,#f4f4ef 58%,#e6e7e0 100%);overflow:hidden}
+.gl3dhost{position:absolute;inset:0;touch-action:none}
+.gl3dhost canvas{display:block;outline:none;touch-action:none;cursor:grab}
+.s3dnote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);text-align:center;max-width:80%;line-height:1.6}
+.s3dtools{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;background:rgba(251,251,247,.94);border:1.5px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(30,39,73,.12);z-index:5}
+.s3dtools button{width:56px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;border-radius:10px;color:var(--ink);cursor:pointer;font-size:10px;font-weight:600}
+.s3dtools button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.s3dtools button:hover{background:#EFEFE8}
+.s3dtools button.on{background:var(--ink);color:#fff}
+.s3dviews{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:2px;background:rgba(251,251,247,.94);border:1.5px solid var(--line);border-radius:999px;padding:4px;z-index:5;max-width:calc(100% - 24px);overflow-x:auto;scrollbar-width:none}
+.s3dviews::-webkit-scrollbar{display:none}
+.s3dviews button{border:0;background:transparent;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.s3dviews button:hover{color:var(--ink);background:#EFEFE8}
+.s3dviews button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.s3dpop{position:absolute;left:88px;top:50%;transform:translateY(-50%);width:300px;max-height:72%;overflow-y:auto;background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;padding:12px;z-index:6;box-shadow:0 14px 40px rgba(30,39,73,.2)}
+.stickgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+.stickgrid button{aspect-ratio:1;border:1.5px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center}
+.stickgrid button:hover{border-color:var(--ink)}
+.stickgrid button canvas{width:100%;height:100%}
+.stickgrid.emoji button{font-size:22px;line-height:1}
+.s3dhint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);white-space:nowrap;color:var(--ink2);pointer-events:none}
+.s3dmsg{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;max-width:80%;z-index:7;box-shadow:0 8px 24px rgba(30,39,73,.25)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 10px}
+.chips button{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.chips button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chips button .n{font-family:var(--mono);font-size:9.5px;opacity:.75;margin-left:4px}
+.brushseg{flex-wrap:wrap}
+.brushseg button{flex:1 0 30%}
+.minisw{display:flex;gap:4px;margin-left:8px;flex-wrap:wrap}
+.minisw button{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(30,39,73,.25);cursor:pointer;padding:0}
+.fillgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 10px}
+.fillgrid button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:3px 3px 4px;cursor:pointer;font-size:10px;font-weight:600;color:var(--ink2)}
+.fillgrid button canvas{width:100%;aspect-ratio:1.4;display:block;border-radius:7px;margin-bottom:3px}
+.fillgrid button.on{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 2px rgba(30,39,73,.15)}
+.actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:4px}
+.actgrid .btn{padding:7px 4px;font-size:11.5px}
+.stylegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.stylegrid button{height:46px;border:1.5px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;font-size:17px;line-height:1;overflow:hidden;white-space:nowrap;padding:0 4px;color:#1E2749}
+.stylegrid button:hover{border-color:var(--ink)}
+.s3dtools button[aria-expanded="true"]{background:#E4E5DD}
+#studio3d.hot .gl3dhost{outline:2px dashed var(--ink);outline-offset:-12px;border-radius:18px}
+.s3dnote .btn{margin:12px 4px 0;text-transform:none;letter-spacing:0;font-family:inherit}
+@media (max-width:900px){
+  .s3dtools{left:8px;right:8px;top:auto;bottom:66px;transform:none;flex-direction:row;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+  .s3dtools::-webkit-scrollbar{display:none}
+  .s3dtools button{width:50px;height:48px;flex:none}
+  .s3dviews{top:8px}
+  .s3dpop{left:8px;right:8px;width:auto;top:auto;bottom:126px;transform:none;max-height:46vh}
+  .s3dhint{display:none}
+  .s3dmsg{bottom:126px}
+}
+
 /* ---------- free trial (live build) ---------- */
 .rackitem.trial-locked{opacity:.55}
 .rackitem.trial-locked::after{content:"PRO";margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--red)}
@@ -340,6 +395,13 @@ input[type=range]{accent-color:var(--red)}
   .sheethandle{display:flex;justify-content:center;padding:10px 0 6px;flex:none;cursor:grab;touch-action:none}
   .sheethandle span{width:44px;height:5px;border-radius:3px;background:var(--line)}
   .sheetpane{overflow-y:auto;flex:1;min-height:0;padding-bottom:20px}
+  /* 3D: the tool options and the layers scroll together, one sheet */
+  #sheet.s3d{display:block;overflow-y:auto;overscroll-behavior:contain}
+  #sheet.s3d .sheethandle{position:sticky;top:0;background:var(--panel);z-index:2}
+  #sheet.s3d .sheetpane{overflow:visible;flex:none;min-height:0;padding-bottom:0}
+  /* the tools ride on top of a half-open sheet */
+  #app:has(#sheet.half) .s3dtools{bottom:calc(46vh + 10px)}
+  #app:has(#sheet.half) .s3dpop{bottom:calc(46vh + 70px);max-height:30vh}
   .sheetpane .sec:first-child{padding-top:0}
   #lockBar{bottom:66px}
   .modal{padding:10px}
@@ -394,7 +456,7 @@ input[type=range]{accent-color:var(--red)}
         <p class="price" id="priceTag">100 EGP &middot; PER MONTH</p>
         <ul>
           <li>All 16 garment mockups &middot; every photographed view</li>
-          <li>Flat panel artboards &middot; layers, text, patterns</li>
+          <li>3D T-shirt studio &middot; design anywhere on it</li>
           <li>300 DPI print-ready panel files</li>
         </ul>
         <button id="payOpenBtn" class="btn red" style="width:100%">Subscribe</button>
@@ -408,9 +470,10 @@ input[type=range]{accent-color:var(--red)}
 <!-- ================= APP ================= -->
 <div id="app">
   <header class="bar">
-    <div class="wordmark">SEIF STUDIO<i>.</i><small>2D apparel mockups</small></div>
+    <div class="wordmark">SEIF STUDIO<i>.</i><small>3D apparel studio</small></div>
     <div id="demoBanner" class="demobanner hidden" title="Nothing enforced in client JavaScript is enforced. A server must supply SEIF_CONFIG before launch.">DEMO MODE &mdash; access is not enforced</div>
     <div class="seg modeseg" id="modeSeg" role="radiogroup" aria-label="Workspace">
+      <button data-mode="3d" role="radio" aria-checked="false" class="hidden">3D</button>
       <button data-mode="design" role="radio" aria-checked="true" class="on">Design</button>
       <button data-mode="preview" role="radio" aria-checked="false">Preview</button>
     </div>
@@ -500,6 +563,35 @@ input[type=range]{accent-color:var(--red)}
         </div>
       </div>
 
+      <!-- 3D STUDIO: the tee as a hollow garment you turn and design on -->
+      <section id="studio3d" class="stagepane hidden">
+        <div id="gl3d" class="gl3dhost"></div>
+        <div id="s3dLoading" class="s3dnote">Loading the 3D studio&hellip;</div>
+        <div id="s3dFail" class="s3dnote hidden"></div>
+        <div class="s3dtools" id="s3dTools" role="toolbar" aria-label="Design tools">
+          <button data-tool="select" class="on" title="Select &amp; move (V)" aria-label="Select and move"><svg viewBox="0 0 22 22"><path d="M6 3.5l11 6.6-4.6 1.4-2.3 4.4z"/></svg><span>Move</span></button>
+          <button data-tool="text" title="Add text (T)" aria-label="Add text"><svg viewBox="0 0 22 22"><path d="M5 5.5h12M11 5.5V17"/></svg><span>Text</span></button>
+          <button data-tool="image" title="Add an image (I)" aria-label="Add an image"><svg viewBox="0 0 22 22"><rect x="3.5" y="4.5" width="15" height="13" rx="2"/><path d="M3.5 14.5l4.5-4.5 4 4 2.5-2.5 4 4"/><circle cx="14.5" cy="8.5" r="1.3"/></svg><span>Image</span></button>
+          <button data-tool="sticker" title="Shapes &amp; emoji (S)" aria-label="Shapes and emoji"><svg viewBox="0 0 22 22"><path d="M11 3.5l2.3 4.8 5.2.6-3.9 3.6 1.1 5.1-4.7-2.6-4.7 2.6 1.1-5.1-3.9-3.6 5.2-.6z"/></svg><span>Sticker</span></button>
+          <button data-tool="brush" title="Paint on the tee (B)" aria-label="Brush"><svg viewBox="0 0 22 22"><path d="M15 3.8l3.2 3.2-8 8-3.2-3.2z"/><path d="M6.6 12.4c-2 .1-3.1 1.6-3.1 3.6v2.5H6c2 0 3.5-1.3 3.5-3.3"/></svg><span>Brush</span></button>
+          <button data-tool="eraser" title="Erase paint (E)" aria-label="Eraser"><svg viewBox="0 0 22 22"><path d="M4.5 13.5l7.5-7.5 5.5 5.5-6.5 6.5H8.5z"/><path d="M9 18h9.5"/></svg><span>Eraser</span></button>
+          <button data-tool="fill" title="Fill a piece with colour or a pattern (F)" aria-label="Fill"><svg viewBox="0 0 22 22"><path d="M4.5 11l6-6 7 7-6 6z"/><path d="M4.5 11h13"/><path d="M19 15.5s1.8 2.1 1.8 3.2a1.8 1.8 0 0 1-3.6 0c0-1.1 1.8-3.2 1.8-3.2z"/></svg><span>Fill</span></button>
+        </div>
+        <div class="s3dviews" id="s3dViews" role="group" aria-label="Camera views">
+          <button data-view="front">Front</button><button data-view="back">Back</button><button data-view="left">Left</button><button data-view="right">Right</button>
+          <button data-view="top">Top</button><button data-view="armpit">Underarm</button><button data-view="bottom">Below</button>
+          <button id="s3dSpin" aria-pressed="false" title="Spin the tee">&#10227; Spin</button>
+        </div>
+        <div class="s3dpop hidden" id="s3dStickers" role="dialog" aria-label="Shapes and emoji">
+          <div class="rowline" style="margin:0 0 6px"><span class="speclabel" style="flex:1">Shapes</span><input type="color" id="stickColor" value="#C3423F" aria-label="Shape colour"><div class="minisw" id="stickSw"></div></div>
+          <div class="stickgrid" id="stickShapes"></div>
+          <div class="speclabel" style="margin-top:10px">Emoji</div><div class="stickgrid emoji" id="stickEmoji"></div>
+        </div>
+        <div id="s3dHint" class="s3dhint speclabel">Drag to turn the tee &middot; scroll to zoom &middot; right-drag to pan</div>
+        <input type="file" id="s3dFile" accept="image/*" class="hidden">
+        <div id="s3dMsg" class="s3dmsg hidden" role="status"></div>
+      </section>
+
       <!-- PREVIEW: assembled garment -->
       <section id="floor" class="stagepane hidden">
         <div id="three"></div>
@@ -542,10 +634,59 @@ input[type=range]{accent-color:var(--red)}
         </div>
       </div>
 
+      <!-- right pane: 3D STUDIO -->
+      <div id="sheet3d" class="sheetpane hidden">
+        <div class="sec" id="optSelect">
+          <span class="speclabel">Design on the tee</span>
+          <p class="tiny" id="s3dSelHelp" style="margin-top:0">Click a design to select it and drag to move it &mdash; right across the seams onto the next piece. Corners resize, the red dot turns it. Drag bare fabric to turn the tee; it can go anywhere, under the arms too.</p>
+          <div id="s3dSelActs" class="actgrid hidden">
+            <button type="button" class="btn small ghost" data-act="dup" title="Duplicate (Ctrl+D)">Duplicate</button>
+            <button type="button" class="btn small ghost" data-act="other" title="Put a copy in the same place on the other side">Other side</button>
+            <button type="button" class="btn small ghost" data-act="centre" title="Centre it across the piece">Centre</button>
+            <button type="button" class="btn small ghost" data-act="tile" title="Repeat it across the whole piece">Pattern</button>
+            <button type="button" class="btn small ghost" data-act="up" title="Bring forward">Forward</button>
+            <button type="button" class="btn small ghost" data-act="down" title="Send backward">Backward</button>
+          </div>
+          <div id="s3dTextStyles" class="hidden">
+            <textarea id="s3dTxt" class="field" rows="2" placeholder="Your text" aria-label="Text" style="resize:vertical;margin-top:10px;width:100%"></textarea>
+            <span class="speclabel" style="margin-top:12px;display:block">Text style</span>
+            <div class="stylegrid" id="textStyleGrid" role="group" aria-label="Text styles"></div>
+          </div>
+        </div>
+        <div class="sec hidden" id="optBrush">
+          <span class="speclabel">Brush</span>
+          <div class="seg wrap brushseg" id="brushStyles" role="radiogroup" aria-label="Brush style"></div>
+          <div class="rowline"><label for="brushColor" style="width:64px">Colour</label><input type="color" id="brushColor" value="#C3423F"><div class="minisw" id="brushSw"></div></div>
+          <div class="rowline"><label for="brushSize" style="width:64px">Size</label><input type="range" id="brushSize" class="slider" min="1" max="60" value="8"><span class="tiny" id="brushSizeV" style="width:52px;margin:0;text-align:right">0.8 cm</span></div>
+          <div class="rowline"><label for="brushOp" style="width:64px">Opacity</label><input type="range" id="brushOp" class="slider" min="5" max="100" value="100"></div>
+          <label class="rowline" style="cursor:pointer"><input type="checkbox" id="brushMirror" style="width:auto;flex:none"><span style="font-size:12.5px">Mirror left &harr; right</span></label>
+          <p class="tiny hidden" id="eraserNote">The eraser cuts through everything on that piece, down to the fabric.</p>
+        </div>
+        <div class="sec hidden" id="optFill">
+          <span class="speclabel">Fill</span>
+          <div class="fillgrid" id="fillKinds" role="radiogroup" aria-label="Fill pattern"></div>
+          <div class="rowline"><label style="width:64px">Colours</label><input type="color" id="fillC1" value="#1E2749"><input type="color" id="fillC2" value="#F4F4F0"><label class="tiny" style="margin:0 0 0 4px;display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="fillUse3" style="width:auto">3rd</label><input type="color" id="fillC3" value="#C3423F"></div>
+          <div class="rowline"><label for="fillAngle" style="width:64px">Angle</label><input type="range" id="fillAngle" class="slider" min="-90" max="90" value="0"></div>
+          <div class="rowline"><label for="fillScale" style="width:64px">Scale</label><input type="range" id="fillScale" class="slider" min="1" max="20" value="4"><span class="tiny" id="fillScaleV" style="width:52px;margin:0;text-align:right">4 cm</span></div>
+          <p class="tiny">Click any piece of the tee to fill it.</p>
+          <div class="grid2"><button id="fillAllBtn" class="btn small primary">Fill the whole tee</button><button id="fillClearBtn" class="btn small ghost">Remove fills</button></div>
+        </div>
+        <div class="sec">
+          <span class="speclabel">Colorway</span>
+          <div class="swatches" id="swatches3" role="listbox" aria-label="Garment colour"></div>
+          <div class="rowline"><label for="customColor3">Custom dye</label><input type="color" id="customColor3" value="#1E2749"></div>
+        </div>
+        <div class="sec">
+          <button id="contactSheet3dBtn" class="btn ghost small" style="width:100%">Multi-colour sheet</button>
+          <p class="tiny">Your design on the tee in every garment colour, as one PNG.</p>
+        </div>
+      </div>
+
       <!-- right pane: ARTBOARD EDITOR -->
       <div id="sheetEditor" class="sheetpane hidden">
         <div class="sec">
           <span class="speclabel">Layers</span>
+          <div id="s3dChips" class="chips hidden" role="tablist" aria-label="Pieces of the tee"></div>
           <div id="layerList" class="layerlist" role="listbox" aria-label="Layers"></div>
           <p class="tiny" id="layerEmpty">No layers yet. Upload an image or add text to start.</p>
           <div class="rowline" style="margin-top:8px">
@@ -581,6 +722,7 @@ input[type=range]{accent-color:var(--red)}
                 <option value="lighten">Lighten</option>
               </select>
             </div>
+            <div class="rowline" id="inFlipRow"><label style="width:70px">Flip</label><button id="inFlipX" class="btn ghost small" type="button">&harr; Mirror</button><button id="inFlipY" class="btn ghost small" type="button">&varr; Upside down</button></div>
             <div id="inDpi" class="tiny"></div>
 
             <div id="inText" class="hidden">
@@ -606,10 +748,44 @@ input[type=range]{accent-color:var(--red)}
               </div>
               <div class="rowline"><label style="width:70px">Fill</label><input type="color" id="inFill"><label style="margin-left:10px">Stroke</label><input type="color" id="inStroke"><input type="number" id="inStrokeW" class="field" min="0" style="width:64px" title="Stroke width"></div>
               <div class="rowline"><label for="inCurve" style="width:70px">Arc</label><input type="range" id="inCurve" class="slider" min="-100" max="100"><span class="tiny" id="inCurveV" style="width:36px;margin:0;text-align:right">0</span></div>
+              <label class="rowline" style="cursor:pointer"><input type="checkbox" id="inGrad" style="width:auto;flex:none"><span style="font-size:12.5px;flex:1">Gradient to</span><input type="color" id="inFill2" value="#C3423F"></label>
+              <label class="rowline" style="cursor:pointer"><input type="checkbox" id="inShadowOn" style="width:auto;flex:none"><span style="font-size:12.5px;flex:1">Shadow / glow</span><input type="color" id="inShadowC" value="#000000"></label>
+              <div id="inShadowRow" class="grid2 hidden">
+                <label>Blur<input type="range" id="inShadowB" class="slider" min="0" max="60" value="12"></label>
+                <label>Offset<input type="range" id="inShadowO" class="slider" min="-40" max="40" value="6"></label>
+              </div>
             </div>
 
             <div id="inShape" class="hidden">
+              <div class="rowline"><label for="inShapeKind" style="width:70px">Shape</label><select id="inShapeKind" class="field" style="flex:1;padding:6px 8px"></select></div>
               <div class="rowline"><label style="width:70px">Fill</label><input type="color" id="inSFill"><label style="margin-left:10px">Stroke</label><input type="color" id="inSStroke"><input type="number" id="inSStrokeW" class="field" min="0" style="width:64px" title="Stroke width"></div>
+              <label class="rowline" style="cursor:pointer"><input type="checkbox" id="inSGrad" style="width:auto;flex:none"><span style="font-size:12.5px;flex:1">Gradient to</span><input type="color" id="inSFill2" value="#1E2749"></label>
+            </div>
+
+            <div id="inImage" class="hidden">
+              <span class="speclabel" style="margin:10px 0 6px">Adjust</span>
+              <div class="grid2">
+                <label>Brightness<input type="range" id="fxBright" class="slider" min="0" max="200" value="100"></label>
+                <label>Contrast<input type="range" id="fxContrast" class="slider" min="0" max="200" value="100"></label>
+                <label>Saturation<input type="range" id="fxSat" class="slider" min="0" max="300" value="100"></label>
+                <label>Hue<input type="range" id="fxHue" class="slider" min="-180" max="180" value="0"></label>
+                <label>Black &amp; white<input type="range" id="fxGray" class="slider" min="0" max="100" value="0"></label>
+                <label>Blur<input type="range" id="fxBlur" class="slider" min="0" max="20" value="0"></label>
+              </div>
+              <div class="grid2" style="margin-top:6px"><button id="fxInvert" class="btn ghost small" type="button">Invert colours</button><button id="fxReset" class="btn ghost small" type="button">Reset</button></div>
+              <button id="fxKnock" class="btn small" type="button" style="width:100%;margin-top:6px">Remove white background</button>
+            </div>
+
+            <div id="inPath" class="hidden">
+              <div class="rowline"><label for="inPathStyle" style="width:70px">Brush</label><select id="inPathStyle" class="field" style="flex:1;padding:6px 8px"></select></div>
+              <div class="rowline"><label style="width:70px">Colour</label><input type="color" id="inPathColor"><label for="inPathSize" style="margin-left:10px">Size</label><input type="range" id="inPathSize" class="slider" min="1" max="120"></div>
+            </div>
+
+            <div id="inFillL" class="hidden">
+              <div class="rowline"><label for="inFillKind" style="width:70px">Pattern</label><select id="inFillKind" class="field" style="flex:1;padding:6px 8px"></select></div>
+              <div class="rowline"><label style="width:70px">Colours</label><input type="color" id="inFC1"><input type="color" id="inFC2"><label class="tiny" style="margin:0 0 0 4px;display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="inFUse3" style="width:auto">3rd</label><input type="color" id="inFC3"></div>
+              <div class="rowline"><label for="inFAngle" style="width:70px">Angle</label><input type="range" id="inFAngle" class="slider" min="-90" max="90"></div>
+              <div class="rowline"><label for="inFScale" style="width:70px">Scale</label><input type="range" id="inFScale" class="slider" min="1" max="20"></div>
             </div>
 
             <div id="inTile" class="hidden">
@@ -676,9 +852,9 @@ input[type=range]{accent-color:var(--red)}
     <div class="speclabel">First time here</div>
     <h3 id="obTitle">Three steps, thirty seconds</h3>
     <ol class="obsteps">
-      <li><b>Pick a garment</b> from the rack on the left.</li>
-      <li><b>Design each flat panel</b> &mdash; a tee is four artboards: front, back, two sleeves. Layer logos, text and patterns on each one.</li>
-      <li><b>Assemble &amp; export</b> &mdash; Preview maps the panels onto the photographed garment; Export gives you mockups and 300 DPI print files.</li>
+      <li><b>Turn the tee</b> &mdash; drag it to look at it from any side: front, back, over the shoulders, under the arms.</li>
+      <li><b>Design right on it</b> &mdash; text, images, stickers, brushes and fills go anywhere, even across the seams. Drag a design to move it.</li>
+      <li><b>Export</b> &mdash; 3D mockups from every angle and print files for each sewn piece.</li>
     </ol>
     <button id="obGo" class="btn primary" style="width:100%">Got it</button>
     <div class="gmsg"></div>
@@ -691,13 +867,13 @@ input[type=range]{accent-color:var(--red)}
     <button class="x" data-close="exportModal" aria-label="Close">&times;</button>
     <h3 id="exTitle">Export</h3>
     <div class="sub">Pick what to produce. Multi-file exports download one after another.</div>
-    <label class="exrow"><input type="checkbox" id="exMock" checked><span><b>Mockup images</b><small>Every photographed view at 2400 px, PNG</small></span></label>
+    <label class="exrow"><input type="checkbox" id="exMock" checked><span><b>Mockup images</b><small id="exMockNote">Every photographed view at 2400 px, PNG</small></span></label>
     <div class="exsub" id="exMockOpts">
       <label class="rowline"><input type="radio" name="exBg" value="transparent" checked style="width:auto;flex:none"><span class="tiny" style="margin:0">Transparent background</span></label>
       <label class="rowline"><input type="radio" name="exBg" value="studio" style="width:auto;flex:none"><span class="tiny" style="margin:0">White studio background with contact shadow</span></label>
       <label class="rowline"><input type="checkbox" id="exWm" style="width:auto;flex:none"><span class="tiny" style="margin:0">Corner watermark</span></label>
     </div>
-    <label class="exrow"><input type="checkbox" id="exPrint" checked><span><b>Print-ready panel files</b><small>One transparent PNG per designed panel at 300 DPI</small></span></label>
+    <label class="exrow"><input type="checkbox" id="exPrint" checked><span><b>Print-ready panel files</b><small id="exPrintNote">One transparent PNG per designed panel at 300 DPI</small></span></label>
     <label class="exrow"><input type="checkbox" id="exTech"><span><b>Tech pack</b><small>Printable sheet: mockups, panels, colour, layer table</small></span></label>
     <label class="exrow"><input type="checkbox" id="exProj"><span><b>Project file</b><small>project.json &mdash; reopen it here later</small></span></label>
     <div id="exWarn" class="tiny warn"></div>
@@ -896,7 +1072,7 @@ var API_BASE      = CFG.apiBase || '';
 var K_ACCESS  = 'seifstudio:access';
 var K_INVITES = 'seifstudio:invites';
 var DEBUG     = /[?&]debug=1/.test(location.search);
-var PROJECT_VERSION = 4;
+var PROJECT_VERSION = 5;   /* 5: the tee's panels became full pattern pieces (3D); 4 still opens */
 
 function $(id){ return document.getElementById(id); }
 
@@ -1039,9 +1215,7 @@ function viewById(id){ for(var i=0;i<VIEWS.length;i++){ if(VIEWS[i].id === id) r
 /* Built-in garment renders shipped next to the HTML (assets/<product>/<view>.png,
    luminance + alpha, made with tools/prep-photos.js). An admin upload in
    storage overrides them. */
-var BUILTIN_PHOTOS = {
-  tee: { front:1, turn_030:1, turn_060:1, side_left:1, turn_120:1, turn_150:1, back:1, side_right:1 }
-};
+var BUILTIN_PHOTOS = {};      /* the tee is 3D now; other garments still map onto uploaded photos */
 function builtinPhotoUrl(productId, view){
   return (BUILTIN_PHOTOS[productId] && BUILTIN_PHOTOS[productId][view]) ? (CFG.assetBase || 'assets/') + productId + '/' + view + '.png' : null;
 }
@@ -1484,7 +1658,7 @@ function addTextLayer(panelId, opts){
   var panel = panelById(project.productId, panelId); if(!panel) return null;
   var ab = artboardSize(panel);
   var l = baseLayer('text');
-  l.text = 'YOUR TEXT'; l.font = 'Archivo'; l.weight = 700; l.size = Math.round(ab.w * 0.1);
+  l.text = 'YOUR TEXT'; l.font = 'Archivo'; l.weight = 700; l.size = Math.round(Math.min(ab.w * 0.1, ab.h * 0.5));
   l.tracking = 0; l.lineHeight = 1.1; l.align = 'center'; l.fill = '#1E2749'; l.stroke = null; l.strokeW = 0; l.curve = 0;
   l.name = 'Text';
   if(opts) Object.keys(opts).forEach(function(k){ l[k] = opts[k]; });
@@ -1498,11 +1672,25 @@ function addShapeLayer(panelId, opts){
   var ab = artboardSize(panel);
   var l = baseLayer('shape');
   l.shape = 'rect'; l.fill = '#C3423F'; l.stroke = null; l.strokeW = 0;
-  l.w = Math.round(ab.w * 0.4); l.h = Math.round(ab.w * 0.4);
+  l.w = Math.round(Math.min(ab.w, ab.h) * 0.4); l.h = l.w;
   l.x = Math.round((ab.w - l.w) / 2); l.y = Math.round((ab.h - l.h) / 2);
   if(opts) Object.keys(opts).forEach(function(k){ l[k] = opts[k]; });
-  l.name = l.shape === 'ellipse' ? 'Ellipse' : (l.shape === 'line' ? 'Line' : 'Rectangle');
+  var sh = SHAPES.filter(function(x){ return x.id === l.shape; })[0];
+  l.name = sh ? sh.label : 'Shape';
   return insertLayer(panelId, l, 'Add shape');
+}
+/* a fill covers the whole panel and sits under everything else on it */
+function addFillLayer(panelId, opts){
+  var panel = panelById(project.productId, panelId); if(!panel) return null;
+  var ab = artboardSize(panel), l = baseLayer('fill');
+  l.x = 0; l.y = 0; l.w = ab.w; l.h = ab.h; l.fill = 'solid'; l.c1 = '#1E2749'; l.c2 = '#FFFFFF'; l.angle = 0;
+  l.scale = Math.round(4 * ab.pxPerCm); l.seed = Math.floor(Math.random() * 1000) + 1;
+  if(opts) Object.keys(opts).forEach(function(k){ l[k] = opts[k]; });
+  var f = FILLS.filter(function(x){ return x.id === l.fill; })[0];
+  l.name = (f ? f.label : 'Fill') + ' fill';
+  var ls = layersFor(panelId), at = 0;
+  while(at < ls.length && ls[at].type === 'fill') at++;
+  return insertLayer(panelId, l, 'Add fill', at);
 }
 function insertLayer(panelId, l, label, index){
   var ls = layersFor(panelId);
@@ -1573,6 +1761,18 @@ function setPanelTechnique(panelId, t){
 /* ---------- text metrics ---------- */
 var _measureCtx = null;
 function fontString(l){ return (l.weight || 400) + ' ' + (l.size || 100) + 'px ' + fontFamilyCss(l.font); }
+/* design fonts: system ones plus Google Fonts (Latin and Arabic), loaded on first use */
+var DESIGN_FONTS = [
+  { f:'Archivo', g:'Latin' }, { f:'Bricolage Grotesque', g:'Latin' }, { f:'Bebas Neue', g:'Latin' }, { f:'Anton', g:'Latin' },
+  { f:'Bungee', g:'Latin' }, { f:'Black Ops One', g:'Latin' }, { f:'Rubik Mono One', g:'Latin' }, { f:'Righteous', g:'Latin' },
+  { f:'Monoton', g:'Latin' }, { f:'Press Start 2P', g:'Latin' }, { f:'Permanent Marker', g:'Latin' }, { f:'Pacifico', g:'Latin' },
+  { f:'Lobster', g:'Latin' }, { f:'Caveat', g:'Latin' }, { f:'IBM Plex Mono', g:'Latin' }, { f:'Georgia', g:'Latin' },
+  { f:'Impact', g:'Latin' }, { f:'Script', g:'Latin' },
+  { f:'Cairo', g:'Arabic' }, { f:'Tajawal', g:'Arabic' }, { f:'Lalezar', g:'Arabic' }, { f:'Reem Kufi', g:'Arabic' },
+  { f:'Changa', g:'Arabic' }, { f:'El Messiri', g:'Arabic' }, { f:'Rakkas', g:'Arabic' }, { f:'Aref Ruqaa', g:'Arabic' },
+  { f:'Amiri', g:'Arabic' }, { f:'Marhey', g:'Arabic' },
+  { f:'Emoji', g:'Emoji' }
+];
 function fontFamilyCss(f){
   var map = {
     'Archivo': "'Archivo', system-ui, sans-serif",
@@ -1580,9 +1780,44 @@ function fontFamilyCss(f){
     'IBM Plex Mono': "'IBM Plex Mono', ui-monospace, monospace",
     'Georgia': "Georgia, 'Times New Roman', serif",
     'Impact': "Impact, 'Arial Black', sans-serif",
-    'Script': "'Brush Script MT', 'Segoe Script', cursive"
+    'Script': "'Brush Script MT', 'Segoe Script', cursive",
+    'Emoji': "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif"
   };
   return map[f] || ("'" + f + "', sans-serif");
+}
+var fontPending = {};
+/* canvas text needs the font file first; draw with the fallback now, redraw once it lands */
+function ensureFont(l){
+  if(!document.fonts || !document.fonts.check) return;
+  var f = fontString(l);
+  try { if(document.fonts.check(f)) return; } catch(e){ return; }
+  if(fontPending[f]) return;
+  fontPending[f] = 1;
+  document.fonts.load(f, l.text || 'A').then(function(){
+    textCache = {}; artboardCache = {};
+    refitTextLayers();
+    if(typeof onFontsLoaded === 'function') onFontsLoaded();
+  }).catch(function(){});
+}
+/* text boxes measured while a font was still loading have the fallback's width; the height
+   does not depend on the font, so keep it and give every text its real width again */
+function refitTextLayers(){
+  Object.keys(project.work || {}).forEach(function(pid){
+    var w = project.work[pid]; if(!w || !w.panels) return;
+    Object.keys(w.panels).forEach(function(pk){
+      var changed = false;
+      (w.panels[pk].layers || []).forEach(function(l){
+        if(l.type !== 'text') return;
+        var m = textNaturalSize(l); if(!(m.w > 0 && m.h > 0 && l.h > 0)) return;
+        var nw = m.w * l.h / m.h;
+        if(Math.abs(nw - l.w) < 0.5) return;
+        var cx = l.x + l.w / 2; l.w = nw; l.x = cx - nw / 2; changed = true;
+      });
+      if(!changed) return;
+      if(pid === project.productId) bumpRev(pk);
+      else { var k = pid + '|' + pk; panelRev[k] = (panelRev[k] || 0) + 1; projectDirty = true; }
+    });
+  });
 }
 function textLines(l){ return String(l.text || '').split('\n'); }
 function measureLine(ctx, l, line){
@@ -1619,6 +1854,15 @@ function drawTextNatural(ctx, l, nat){
   ctx.font = fontString(l);
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = l.fill || '#000';
+  if(l.fill2){
+    var gr = ctx.createLinearGradient(0, 0, 0, nat.h);
+    gr.addColorStop(0, l.fill || '#000'); gr.addColorStop(1, l.fill2);
+    ctx.fillStyle = gr;
+  }
+  if(l.shadow && l.shadow.color){
+    ctx.shadowColor = l.shadow.color; ctx.shadowBlur = (l.shadow.blur || 0) * (ctx._k || 1);
+    ctx.shadowOffsetX = (l.shadow.x || 0) * (ctx._k || 1); ctx.shadowOffsetY = (l.shadow.y || 0) * (ctx._k || 1);
+  }
   var stroke = l.stroke && l.strokeW > 0;
   if(stroke){ ctx.strokeStyle = l.stroke; ctx.lineWidth = l.strokeW; ctx.lineJoin = 'round'; }
   var lines = textLines(l), size = l.size || 100, lh = size * (l.lineHeight || 1.1), tr = l.tracking || 0;
@@ -1665,15 +1909,24 @@ function drawTextNatural(ctx, l, nat){
 /* per-layer raster cache for text (keyed by the properties that change its pixels) */
 var textCache = {};
 function textLayerKey(l){
-  return [l.text, l.font, l.weight, l.size, l.tracking, l.lineHeight, l.align, l.fill, l.stroke, l.strokeW, l.curve].join('|');
+  return [l.text, l.font, l.weight, l.size, l.tracking, l.lineHeight, l.align, l.fill, l.fill2, l.stroke, l.strokeW, l.curve,
+          l.shadow ? [l.shadow.color, l.shadow.blur, l.shadow.x, l.shadow.y].join(',') : ''].join('|');
 }
-function textRaster(l){
-  var key = textLayerKey(l);
+/* margin around the text box that a shadow or glow needs, in artboard units */
+function textPad(l){ return l.shadow && l.shadow.color ? Math.ceil((l.shadow.blur || 0) * 1.5 + Math.max(Math.abs(l.shadow.x || 0), Math.abs(l.shadow.y || 0))) : 0; }
+/* rs = raster scale: text is rasterised at the size it is drawn, so print files stay sharp */
+function textRaster(l, rs){
+  rs = Math.max(0.5, Math.min(12, Math.ceil((rs || 1) * 2) / 2));
+  var key = textLayerKey(l) + '@' + rs;
   if(textCache[key]) return textCache[key];
-  var nat = textNaturalSize(l);
-  var c = document.createElement('canvas'); c.width = nat.w; c.height = nat.h;
-  drawTextNatural(c.getContext('2d'), l, nat);
-  c._nat = nat;
+  ensureFont(l);
+  var nat = textNaturalSize(l), pad = textPad(l);
+  var c = document.createElement('canvas');
+  c.width = Math.max(1, Math.ceil((nat.w + pad * 2) * rs)); c.height = Math.max(1, Math.ceil((nat.h + pad * 2) * rs));
+  var g = c.getContext('2d');
+  g.scale(rs, rs); g.translate(pad, pad); g._k = rs;
+  drawTextNatural(g, l, nat);
+  c._nat = nat; c._pad = pad;
   var keys = Object.keys(textCache);
   if(keys.length > 40) delete textCache[keys[0]];
   textCache[key] = c;
@@ -1686,6 +1939,15 @@ var artboardCache = {}; /* productId|panelId|px|rev|technique -> canvas */
    whole artboard (an all-over print). ab = artboard size in artboard units. */
 function drawLayer(ctx, l, s, ab){
   if(l.visible === false) return;
+  if(l.type === 'fill'){
+    if(!ab) return;
+    ctx.save();
+    ctx.globalAlpha = l.opacity === undefined ? 1 : l.opacity;
+    ctx.globalCompositeOperation = l.blend || 'source-over';
+    drawFill(ctx, l, ab.w * s, ab.h * s, s);
+    ctx.restore();
+    return;
+  }
   if(l.tile && ab){
     var stepX = l.w * (1 + (l.tile.gap || 0)), stepY = l.h * (1 + (l.tile.gap || 0));
     if(stepX < 8 || stepY < 8) return;
@@ -1710,25 +1972,239 @@ function drawLayer(ctx, l, s, ab){
   ctx.globalCompositeOperation = l.blend || 'source-over';
   ctx.translate((l.x + l.w/2) * s, (l.y + l.h/2) * s);
   ctx.rotate((l.rot || 0) * Math.PI / 180);
+  if(l.flipX || l.flipY) ctx.scale(l.flipX ? -1 : 1, l.flipY ? -1 : 1);
+  var fl = layerFilter(l, s); if(fl) ctx.filter = fl;
   var w = l.w * s, h = l.h * s;
   if(l.type === 'image' && l.src){
     ctx.drawImage(l.src, -w/2, -h/2, w, h);
   } else if(l.type === 'text'){
-    var r = textRaster(l);
-    ctx.drawImage(r, -w/2, -h/2, w, h);
+    var nat = textNaturalSize(l), k = w / Math.max(1, nat.w), r = textRaster(l, k), pad = (r._pad || 0) * k;
+    ctx.drawImage(r, -w/2 - pad, -h/2 - pad, w + pad * 2, h + pad * 2);
   } else if(l.type === 'shape'){
     ctx.fillStyle = l.fill || '#000';
+    if(l.fill2){ var sg = ctx.createLinearGradient(0, -h/2, 0, h/2); sg.addColorStop(0, l.fill || '#000'); sg.addColorStop(1, l.fill2); ctx.fillStyle = sg; }
     var stroke = l.stroke && l.strokeW > 0;
-    if(stroke){ ctx.strokeStyle = l.stroke; ctx.lineWidth = l.strokeW * s; }
+    if(stroke){ ctx.strokeStyle = l.stroke; ctx.lineWidth = l.strokeW * s; ctx.lineJoin = 'round'; }
     ctx.beginPath();
-    if(l.shape === 'ellipse') ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
-    else if(l.shape === 'line'){ ctx.rect(-w/2, -Math.max(1, h/2), w, Math.max(2, h)); }
-    else ctx.rect(-w/2, -h/2, w, h);
-    ctx.fill();
+    shapePath(ctx, l.shape, w, h);
+    ctx.fill(l.shape === 'ring' ? 'evenodd' : 'nonzero');
     if(stroke) ctx.stroke();
+  } else if(l.type === 'path'){
+    drawPath(ctx, l, s);
   }
   ctx.restore();
 }
+/* blur is in artboard units, so it looks the same on screen, on the tee and in the 300 DPI file */
+function layerFilter(l, s){
+  var f = l.fx; if(!f) return '';
+  var out = [];
+  if(f.brightness !== undefined && f.brightness !== 100) out.push('brightness(' + f.brightness + '%)');
+  if(f.contrast !== undefined && f.contrast !== 100) out.push('contrast(' + f.contrast + '%)');
+  if(f.saturate !== undefined && f.saturate !== 100) out.push('saturate(' + f.saturate + '%)');
+  if(f.hue) out.push('hue-rotate(' + f.hue + 'deg)');
+  if(f.gray) out.push('grayscale(' + f.gray + '%)');
+  if(f.invert) out.push('invert(' + f.invert + '%)');
+  if(f.blur) out.push('blur(' + Math.round(f.blur * (s || 1) * 10) / 10 + 'px)');
+  return out.join(' ');
+}
+
+/* ---------- sticker shapes: drawn centred in a w x h box ---------- */
+var SHAPES = [
+  { id:'rect', label:'Square' }, { id:'ellipse', label:'Circle' }, { id:'triangle', label:'Triangle' }, { id:'star', label:'Star' },
+  { id:'heart', label:'Heart' }, { id:'bolt', label:'Bolt' }, { id:'burst', label:'Burst' }, { id:'crown', label:'Crown' },
+  { id:'flame', label:'Flame' }, { id:'drop', label:'Drop' }, { id:'moon', label:'Moon' }, { id:'sparkle', label:'Sparkle' },
+  { id:'arrow', label:'Arrow' }, { id:'speech', label:'Speech' }, { id:'hexagon', label:'Hexagon' }, { id:'ring', label:'Ring' },
+  { id:'plus', label:'Plus' }, { id:'diamond', label:'Diamond' }, { id:'line', label:'Line' }
+];
+function shapePath(ctx, kind, w, h){
+  var i, n, a, r;
+  function P(x, y){ return [x * w, y * h]; }
+  function poly(pts){ pts.forEach(function(q, k){ var p = P(q[0], q[1]); if(k) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); }
+  switch(kind){
+    case 'ellipse': ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI * 2); break;
+    case 'line': ctx.rect(-w/2, -Math.max(1, h/2), w, Math.max(2, h)); break;
+    case 'triangle': poly([[0, -0.5], [0.5, 0.5], [-0.5, 0.5]]); break;
+    case 'diamond': poly([[0, -0.5], [0.5, 0], [0, 0.5], [-0.5, 0]]); break;
+    case 'hexagon': var hx = []; for(i = 0; i < 6; i++){ a = Math.PI / 3 * i; hx.push([Math.cos(a) * 0.5, Math.sin(a) * 0.5]); } poly(hx); break;
+    case 'star': case 'burst': case 'sparkle':
+      n = kind === 'star' ? 5 : (kind === 'burst' ? 16 : 4);
+      var inner = kind === 'star' ? 0.2 : (kind === 'burst' ? 0.36 : 0.12), pts = [];
+      for(i = 0; i < n * 2; i++){ a = Math.PI * i / n - Math.PI / 2; r = i % 2 ? inner : 0.5; pts.push([Math.cos(a) * r, Math.sin(a) * r]); }
+      if(kind === 'sparkle'){
+        pts.forEach(function(q, k){ var p = P(q[0], q[1]); if(!k){ ctx.moveTo(p[0], p[1]); return; } var prev = P(pts[k-1][0], pts[k-1][1]); ctx.quadraticCurveTo(0, 0, p[0], p[1]); });
+        ctx.quadraticCurveTo(0, 0, P(pts[0][0], pts[0][1])[0], P(pts[0][0], pts[0][1])[1]); ctx.closePath();
+      } else poly(pts);
+      break;
+    case 'heart':
+      ctx.moveTo(0, 0.5 * h);
+      ctx.bezierCurveTo(-0.62 * w, 0.02 * h, -0.5 * w, -0.52 * h, 0, -0.22 * h);
+      ctx.bezierCurveTo(0.5 * w, -0.52 * h, 0.62 * w, 0.02 * h, 0, 0.5 * h); ctx.closePath(); break;
+    case 'bolt': poly([[0.1, -0.5], [-0.32, 0.06], [-0.02, 0.06], [-0.12, 0.5], [0.32, -0.08], [0.02, -0.08], [0.18, -0.5]]); break;
+    case 'crown': poly([[-0.5, 0.42], [-0.5, -0.32], [-0.25, 0.02], [0, -0.48], [0.25, 0.02], [0.5, -0.32], [0.5, 0.42]]); break;
+    case 'flame':
+      ctx.moveTo(0, 0.5 * h);
+      ctx.bezierCurveTo(-0.5 * w, 0.48 * h, -0.5 * w, -0.05 * h, -0.18 * w, -0.25 * h);
+      ctx.bezierCurveTo(-0.12 * w, -0.05 * h, -0.02 * w, -0.02 * h, 0.02 * w, -0.12 * h);
+      ctx.bezierCurveTo(0.04 * w, -0.32 * h, -0.02 * w, -0.42 * h, 0.06 * w, -0.5 * h);
+      ctx.bezierCurveTo(0.42 * w, -0.3 * h, 0.52 * w, 0.42 * h, 0, 0.5 * h); ctx.closePath(); break;
+    case 'drop':
+      ctx.moveTo(0, -0.5 * h);
+      ctx.bezierCurveTo(0.12 * w, -0.25 * h, 0.5 * w, 0.02 * h, 0.5 * w, 0.18 * h);
+      ctx.arc(0, 0.18 * h, 0.5 * Math.min(w, h * 0.64), 0, Math.PI, false);
+      ctx.bezierCurveTo(-0.5 * w, 0.02 * h, -0.12 * w, -0.25 * h, 0, -0.5 * h); ctx.closePath(); break;
+    case 'moon':
+      ctx.ellipse(0, 0, w/2, h/2, 0, Math.PI * 0.5, Math.PI * 1.5, false);
+      ctx.ellipse(-0.1 * w, 0, w * 0.32, h / 2, 0, Math.PI * 1.5, Math.PI * 0.5, true); ctx.closePath(); break;
+    case 'arrow': poly([[-0.5, -0.14], [0.08, -0.14], [0.08, -0.4], [0.5, 0], [0.08, 0.4], [0.08, 0.14], [-0.5, 0.14]]); break;
+    case 'plus': poly([[-0.16, -0.5], [0.16, -0.5], [0.16, -0.16], [0.5, -0.16], [0.5, 0.16], [0.16, 0.16], [0.16, 0.5], [-0.16, 0.5], [-0.16, 0.16], [-0.5, 0.16], [-0.5, -0.16], [-0.16, -0.16]]); break;
+    case 'ring': ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI * 2); ctx.moveTo(w * 0.28, 0); ctx.ellipse(0, 0, w * 0.28, h * 0.28, 0, 0, Math.PI * 2); break;
+    case 'speech':
+      var rr = Math.min(w, h) * 0.18, bw = w, bh = h * 0.78, x0 = -bw/2, y0 = -h/2;
+      ctx.moveTo(x0 + rr, y0); ctx.lineTo(x0 + bw - rr, y0); ctx.quadraticCurveTo(x0 + bw, y0, x0 + bw, y0 + rr);
+      ctx.lineTo(x0 + bw, y0 + bh - rr); ctx.quadraticCurveTo(x0 + bw, y0 + bh, x0 + bw - rr, y0 + bh);
+      ctx.lineTo(-0.05 * w, y0 + bh); ctx.lineTo(-0.28 * w, h / 2); ctx.lineTo(-0.22 * w, y0 + bh);
+      ctx.lineTo(x0 + rr, y0 + bh); ctx.quadraticCurveTo(x0, y0 + bh, x0, y0 + bh - rr);
+      ctx.lineTo(x0, y0 + rr); ctx.quadraticCurveTo(x0, y0, x0 + rr, y0); ctx.closePath(); break;
+    default: ctx.rect(-w/2, -h/2, w, h);
+  }
+}
+
+/* ---------- brush strokes: points relative to the box centre as first drawn (bw x bh) ---------- */
+var BRUSHES = [
+  { id:'pen', label:'Pen' }, { id:'marker', label:'Marker' }, { id:'airbrush', label:'Airbrush' },
+  { id:'neon', label:'Neon' }, { id:'calligraphy', label:'Calligraphy' }, { id:'dots', label:'Dots' }
+];
+var _sprites = {};
+function softDot(color){
+  if(_sprites[color]) return _sprites[color];
+  var c = document.createElement('canvas'); c.width = c.height = 64;
+  var g = c.getContext('2d'), rgb = hexToRgb(color), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(' + rgb.join(',') + ',1)'); gr.addColorStop(0.45, 'rgba(' + rgb.join(',') + ',0.55)'); gr.addColorStop(1, 'rgba(' + rgb.join(',') + ',0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  _sprites[color] = c; return c;
+}
+function seededRandom(seed){ var t = (seed >>> 0) || 1; return function(){ t += 0x6D2B79F5; var r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+function drawPath(ctx, l, s){
+  var pts = l.pts || []; if(!pts.length) return;
+  var sx = s * l.w / (l.bw || l.w || 1), sy = s * l.h / (l.bh || l.h || 1), k = Math.sqrt(Math.abs(sx * sy));
+  ctx.scale(sx, sy);
+  var size = l.size || 10, color = l.color || '#1E2749', style = l.style || 'pen';
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = color; ctx.lineWidth = size;
+  function trace(){
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    if(pts.length === 1){ ctx.lineTo(pts[0][0] + 0.01, pts[0][1]); return; }
+    for(var i = 1; i < pts.length - 1; i++){
+      var mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+    ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+  }
+  if(style === 'marker'){ ctx.lineCap = 'square'; ctx.lineJoin = 'bevel'; trace(); ctx.stroke(); return; }
+  if(style === 'dots'){ ctx.setLineDash([0.001, size * 1.9]); trace(); ctx.stroke(); ctx.setLineDash([]); return; }
+  if(style === 'neon'){
+    ctx.shadowColor = color; ctx.shadowBlur = size * 1.6 * k;
+    trace(); ctx.stroke(); ctx.stroke();
+    ctx.shadowBlur = size * 0.6 * k; ctx.strokeStyle = mixHex(color, '#FFFFFF', 0.72); ctx.lineWidth = size * 0.38;
+    trace(); ctx.stroke();
+    ctx.shadowBlur = 0; return;
+  }
+  if(style === 'calligraphy'){
+    var a = -0.7, nx = Math.cos(a) * size / 2, ny = Math.sin(a) * size / 2;
+    ctx.fillStyle = color;
+    for(var i = 1; i < pts.length; i++){
+      var p0 = pts[i - 1], p1 = pts[i];
+      ctx.beginPath(); ctx.moveTo(p0[0] + nx, p0[1] + ny); ctx.lineTo(p1[0] + nx, p1[1] + ny); ctx.lineTo(p1[0] - nx, p1[1] - ny); ctx.lineTo(p0[0] - nx, p0[1] - ny); ctx.closePath(); ctx.fill();
+    }
+    return;
+  }
+  if(style === 'airbrush'){
+    var rnd = seededRandom(l.seed || 7), dot = softDot(color), step = Math.max(0.5, size * 0.16);
+    ctx.globalAlpha *= 0.22;
+    for(var j = 0; j < pts.length; j++){
+      var q0 = pts[Math.max(0, j - 1)], q1 = pts[j], d = Math.hypot(q1[0] - q0[0], q1[1] - q0[1]), n = Math.max(1, Math.ceil(d / step));
+      for(var m = 0; m < n; m++){
+        var t = j ? m / n : 0, x = q0[0] + (q1[0] - q0[0]) * t, y = q0[1] + (q1[1] - q0[1]) * t;
+        for(var e = 0; e < 3; e++){
+          var rr = size * (0.35 + rnd() * 0.45), ang = rnd() * Math.PI * 2, off = size * 0.35 * Math.sqrt(rnd());
+          ctx.drawImage(dot, x + Math.cos(ang) * off - rr, y + Math.sin(ang) * off - rr, rr * 2, rr * 2);
+        }
+      }
+    }
+    return;
+  }
+  trace(); ctx.stroke();
+}
+
+/* ---------- fills: a whole panel in a colour, gradient or pattern ---------- */
+var FILLS = [
+  { id:'solid', label:'Solid' }, { id:'linear', label:'Gradient' }, { id:'radial', label:'Radial' }, { id:'stripes', label:'Stripes' },
+  { id:'dots', label:'Polka dots' }, { id:'checker', label:'Checker' }, { id:'grid', label:'Grid' }, { id:'waves', label:'Waves' },
+  { id:'halftone', label:'Halftone' }, { id:'camo', label:'Camo' }, { id:'tiedye', label:'Tie-dye' }
+];
+function drawFill(ctx, l, W, H, s){
+  var c1 = l.c1 || '#1E2749', c2 = l.c2 || '#FFFFFF', c3 = l.c3 || c2, u = Math.max(2, (l.scale || 60) * s), ang = (l.angle || 0) * Math.PI / 180;
+  var kind = l.fill || 'solid';
+  if(kind === 'solid'){ ctx.fillStyle = c1; ctx.fillRect(0, 0, W, H); return; }
+  if(kind === 'linear'){
+    var L = Math.abs(W * Math.cos(ang)) + Math.abs(H * Math.sin(ang)), dx = Math.cos(ang) * L / 2, dy = Math.sin(ang) * L / 2;
+    var g = ctx.createLinearGradient(W/2 - dx, H/2 - dy, W/2 + dx, H/2 + dy);
+    g.addColorStop(0, c1); if(l.c3){ g.addColorStop(0.5, c2); g.addColorStop(1, c3); } else g.addColorStop(1, c2);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); return;
+  }
+  if(kind === 'radial'){
+    var rg = ctx.createRadialGradient(W/2, H * 0.42, 0, W/2, H * 0.42, Math.max(W, H) * 0.72);
+    rg.addColorStop(0, c1); if(l.c3){ rg.addColorStop(0.5, c2); rg.addColorStop(1, c3); } else rg.addColorStop(1, c2);
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H); return;
+  }
+  ctx.fillStyle = c1; ctx.fillRect(0, 0, W, H);
+  if(kind === 'camo' || kind === 'tiedye'){ ctx.drawImage(noiseFill(kind, c1, c2, c3, W / u, H / u, l.seed || 3), 0, 0, W, H); return; }
+  var R = Math.hypot(W, H);
+  ctx.save(); ctx.translate(W/2, H/2); ctx.rotate(ang);
+  ctx.fillStyle = c2; ctx.strokeStyle = c2;
+  var i, j, n = Math.ceil(R / u / 2) + 1;
+  if(kind === 'stripes'){ for(i = -n; i <= n; i++) ctx.fillRect(i * u, -R, u / 2, R * 2); }
+  else if(kind === 'dots'){ for(j = -n; j <= n; j++) for(i = -n; i <= n; i++){ ctx.beginPath(); ctx.arc(i * u + (j % 2 ? u / 2 : 0), j * u * 0.87, u * 0.27, 0, Math.PI * 2); ctx.fill(); } }
+  else if(kind === 'checker'){ for(j = -n; j <= n; j++) for(i = -n; i <= n; i++) if((i + j) % 2 === 0) ctx.fillRect(i * u, j * u, u, u); }
+  else if(kind === 'grid'){ ctx.lineWidth = Math.max(1, u * 0.08); for(i = -n; i <= n; i++){ ctx.beginPath(); ctx.moveTo(i * u, -R); ctx.lineTo(i * u, R); ctx.moveTo(-R, i * u); ctx.lineTo(R, i * u); ctx.stroke(); } }
+  else if(kind === 'waves'){
+    ctx.lineWidth = u * 0.32; ctx.lineCap = 'round';
+    for(j = -n; j <= n; j++){ ctx.beginPath(); for(var x = -R; x <= R; x += u / 8){ var y = j * u + Math.sin(x / u * Math.PI * 2) * u * 0.22; if(x === -R) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); }
+  }
+  else if(kind === 'halftone'){
+    for(j = -n; j <= n; j++) for(i = -n; i <= n; i++){
+      var t2 = Math.min(1, Math.max(0, (j * u + R / 2) / R)), rr = u * 0.48 * t2;
+      if(rr < 0.4) continue;
+      ctx.beginPath(); ctx.arc(i * u + (j % 2 ? u / 2 : 0), j * u, rr, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+/* camo blobs and tie-dye swirls: computed small, scaled up smooth */
+var _noiseCache = {};
+function noiseFill(kind, c1, c2, c3, cellsW, cellsH, seed){
+  var key = [kind, c1, c2, c3, Math.round(cellsW * 10), Math.round(cellsH * 10), seed].join('|');
+  if(_noiseCache[key]) return _noiseCache[key];
+  var gw = 360, gh = Math.max(8, Math.round(gw * cellsH / Math.max(0.01, cellsW))), c = document.createElement('canvas'); c.width = gw; c.height = gh;
+  var g = c.getContext('2d'), img = g.createImageData(gw, gh), A = hexToRgb(c1), B = hexToRgb(c2), C = hexToRgb(c3), x, y;
+  var f = cellsW / gw, ox = seed * 13.7, oy = seed * 7.3;
+  for(y = 0; y < gh; y++) for(x = 0; x < gw; x++){
+    var col, i = (y * gw + x) * 4;
+    if(kind === 'camo'){
+      var n1 = fbm(x * f * 1.3 + ox, y * f * 1.3 + oy), n2 = fbm(x * f * 1.3 + ox + 40, y * f * 1.3 + oy + 40);
+      col = n1 > 0.56 ? B : (n2 > 0.58 ? C : (n1 < 0.36 ? mixRgb(A, [0, 0, 0], 0.25) : A));
+    } else {
+      var cx = x - gw / 2, cy = y - gh / 2, r = Math.hypot(cx, cy) / gw * cellsW, a = Math.atan2(cy, cx);
+      var v = 0.5 + 0.5 * Math.sin(a * 3 + r * 2.4 + fbm(x * f + ox, y * f + oy) * 4);
+      col = v < 0.5 ? mixRgb(A, B, v * 2) : mixRgb(B, C, (v - 0.5) * 2);
+    }
+    img.data[i] = col[0]; img.data[i + 1] = col[1]; img.data[i + 2] = col[2]; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  var keys = Object.keys(_noiseCache); if(keys.length > 12) delete _noiseCache[keys[0]];
+  _noiseCache[key] = c;
+  return c;
+}
+function mixRgb(a, b, t){ return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
 /* exact = {w,h}: force the output pixel size (the 300 DPI exporter computes it from cm
    so a 32x42 cm panel is 3780x4961, not a rounding of the working size) */
 function renderArtboard(panelId, px, productId, exact){
@@ -1747,6 +2223,9 @@ function renderArtboard(panelId, px, productId, exact){
   ctx.imageSmoothingQuality = 'high';
   pw.layers.forEach(function(l){ drawLayer(ctx, l, s, ab); });
   if(pw.technique === 'embroidery' && pw.layers.length) applyEmbroidery(c);
+  /* one canvas per panel and size: older revisions go (a drag on the 3D tee makes one per frame) */
+  var stale = productId + '|' + panelId + '|' + px + '|';
+  Object.keys(artboardCache).forEach(function(k){ if(k.indexOf(stale) === 0) delete artboardCache[k]; });
   var keys = Object.keys(artboardCache);
   if(keys.length > 48) delete artboardCache[keys[0]];
   artboardCache[key] = c;
@@ -1757,10 +2236,18 @@ function renderPanelThumb(panelId, px, color){
   var art = renderArtboard(panelId, px);
   if(!art) return null;
   var c = document.createElement('canvas'); c.width = art.width; c.height = art.height;
-  var ctx = c.getContext('2d');
+  var ctx = c.getContext('2d'), panel = panelById(project.productId, panelId);
+  if(panel && panel.outline){ outlinePath(ctx, panel, c.width / panel.w_cm, c.height / panel.h_cm); ctx.clip(); }
   ctx.fillStyle = color || project.garmentColor; ctx.fillRect(0, 0, c.width, c.height);
   ctx.drawImage(art, 0, 0);
   return c;
+}
+/* a pattern piece's cut line as a canvas path, kx/ky = pixels per cm */
+function outlinePath(ctx, panel, kx, ky, ox, oy){
+  ox = ox || 0; oy = oy || 0;
+  ctx.beginPath();
+  panel.outline.forEach(function(q, i){ if(i) ctx.lineTo(ox + q[0] * kx, oy + q[1] * ky); else ctx.moveTo(ox + q[0] * kx, oy + q[1] * ky); });
+  ctx.closePath();
 }
 
 /* ---------- print techniques ---------- */
@@ -2312,7 +2799,28 @@ function loadImageFromData(data){
 }
 /* restore a serialised project; images from inline srcData or the image store.
    Fails loudly on a version mismatch rather than half-loading. */
+/* v4 designed the tee on print-area rectangles (front/back 32x42 cm, sleeves 10x9 cm); v5 designs
+   on the whole pattern piece. Old layers keep their real size and land where the print area sat. */
+var V4_TEE_AREAS = { front: { w:32, h:42, top:11 }, back: { w:32, h:42, top:7 }, sleeve_l: { w:10, h:9, top:3.5 }, sleeve_r: { w:10, h:9, top:3.5 } };
+function migrateV4(obj){
+  var tee = obj.work && obj.work.tee;
+  if(tee && tee.panels) Object.keys(tee.panels).forEach(function(pk){
+    var area = V4_TEE_AREAS[pk], piece = panelById('tee', pk); if(!area || !piece) return;
+    var oldK = PANEL_PX / Math.max(area.w, area.h), newK = artboardSize(piece).pxPerCm, r = newK / oldK;
+    var ox = (piece.w_cm - area.w) / 2, oy = area.top;
+    (tee.panels[pk].layers || []).forEach(function(l){
+      l.x = Math.round((l.x / oldK + ox) * newK); l.y = Math.round((l.y / oldK + oy) * newK);
+      l.w = Math.max(1, Math.round(l.w * r)); l.h = Math.max(1, Math.round(l.h * r));
+      if(l.size) l.size = Math.max(4, Math.round(l.size * r));
+      if(l.strokeW) l.strokeW = Math.round(l.strokeW * r * 10) / 10;
+      if(l.tracking) l.tracking = Math.round(l.tracking * r * 10) / 10;
+    });
+  });
+  obj.version = 5;
+  return obj;
+}
 async function restoreProject(obj){
+  if(obj && obj.version === 4) obj = migrateV4(JSON.parse(JSON.stringify(obj)));
   if(!obj || obj.version !== PROJECT_VERSION) throw new Error('This project file is version ' + (obj && obj.version) + '; this build reads version ' + PROJECT_VERSION + '.');
   var work = {};
   var pids = Object.keys(obj.work || {});
@@ -2408,7 +2916,7 @@ function printPxFor(panel){
   var w = Math.round(panel.w_cm / 2.54 * 300), h = Math.round(panel.h_cm / 2.54 * 300), capped = false;
   var m = Math.max(w, h);
   if(m > 6000){ var s = 6000 / m; w = Math.round(w*s); h = Math.round(h*s); capped = true; }
-  return { w:w, h:h, px: Math.max(w, h), capped: capped };
+  return { w:w, h:h, px: Math.max(w, h), capped: capped, dpi: Math.round(Math.max(w, h) / (Math.max(panel.w_cm, panel.h_cm) / 2.54)) };
 }
 function canvasToBlob(c){
   return new Promise(function(res){ if(c.toBlob) c.toBlob(res, 'image/png'); else res(null); });
@@ -3259,6 +3767,458 @@ PRODUCTS.push({
 var PRODUCTS_BY_ID = {};
 PRODUCTS.forEach(function(p){ PRODUCTS_BY_ID[p.id] = p; });
 /* ============================================================
+   SEIF STUDIO — 3D T-SHIRT GEOMETRY (procedural, ghost mannequin)
+
+   The tee is built the way a factory builds it: flat pattern pieces —
+   front, back, two sleeves, a neck rib — "sewn" into a hollow shell.
+   Every vertex knows where it sits on its flat piece (cm), so the
+   texture coordinates ARE the print pattern: whatever is painted on the
+   3D surface lands exactly on the piece that gets printed and sewn,
+   seams and underarms included.
+
+   Units: cm, size M. y up (hem at 0), z toward the viewer (front),
+   x to the viewer's right in the front view.
+     body   a generalised cylinder: an ellipse per height (half-width a(y),
+            half-depth b(y), front and back each their own depth), closed
+            over the shoulders by a rounded "roof" that meets on the
+            shoulder seam, with armholes and the neckline cut away.
+     sleeve lofted from the armhole loop to the cuff along the arm axis.
+     rib    a folded band standing on the neckline.
+   Pure maths, no three.js — the viewer turns these arrays into meshes.
+   ============================================================ */
+var TEE3D = (function(){
+  var D = Math.PI / 180;
+  var M = {
+    AP: 46.5,             /* underarm height */
+    SP: 67.5,             /* shoulder point height */
+    TOP: 72,              /* high point shoulder (neck point) */
+    neckHalf: 8.5, neckFrontY: 63.5, neckBackY: 70.5,
+    shoulderHalf: 23,
+    chestHalf: 20.8, hemFlare: 0.6,
+    frontDepth: 12.9, backDepth: 12.0, hemDepth: 12.7, frontTop: 6.2, backTop: 5.6,
+    roofR: 6.4,           /* how far below the shoulder seam the roof starts to round over */
+    ahDeepY: 53.5, ahDeepTheta: 63 * D,
+    armAngle: 47 * D, armForward: 0.12,
+    sleeveTop: 20, cuffR: 6.15,
+    ribH: 2.0, ribT: 0.34, hemTurn: 0.7, hemT: 0.42
+  };
+  function clamp(t, a, b){ return t < a ? a : (t > b ? b : t); }
+  function smooth(t){ t = clamp(t, 0, 1); return t * t * (3 - 2 * t); }
+
+  /* ---------- the body surface ---------- */
+  function halfW(y){
+    if(y <= M.AP){ var k = 1 - y / M.AP; return M.chestHalf + M.hemFlare * k * k; }
+    return M.chestHalf + (M.shoulderHalf - M.chestHalf) * smooth((y - M.AP) / (M.SP - M.AP));
+  }
+  function depth(y, back){
+    var chest = back ? M.backDepth : M.frontDepth, top = back ? M.backTop : M.frontTop, b;
+    if(y < 34){ var k = 1 - y / 34; b = chest + (M.hemDepth - chest) * k * k; }
+    else b = chest;
+    /* the upper chest slopes back to the collar; the upper back stays fuller (shoulder blades) */
+    var from = back ? 50 : 46;
+    if(y > from) b -= (chest - top) * smooth((y - from) / (M.TOP - from));
+    return b;
+  }
+  /* shoulder seam: straight from the neck point to the shoulder point (extended inside the neck) */
+  function seamY(x){ return M.TOP - (Math.abs(x) - M.neckHalf) * (M.TOP - M.SP) / (M.shoulderHalf - M.neckHalf); }
+  function roof(d){ if(d <= 0) return 0; if(d >= M.roofR) return 1; var u = 1 - d / M.roofR; return Math.sqrt(1 - u * u); }
+  /* front: theta from centre front, + toward +x.  back: theta from centre back, + toward -x */
+  /* soft drape: hem waves, side folds and the diagonal drag lines from the underarms.
+     A function of the angle around the body and the height only, so front and back agree
+     on every seam, and everything stitched to the body (sleeves, rib, hem) samples it too. */
+  function drape(phi, y, x){
+    var k, d = 0;
+    if(y < 20){ k = 1 - y / 20; d += k * k * (0.42 * Math.sin(6 * phi + 0.7) + 0.2 * Math.sin(11 * phi + 2.1) + 0.12 * Math.sin(17 * phi + 0.4)); }
+    var side = Math.pow(Math.abs(Math.sin(phi)), 6);
+    if(y > 6 && y < 44) d += side * 0.3 * Math.sin(y * 0.42 + phi * 2.0) * Math.sin(Math.PI * (y - 6) / 38);
+    var ax = Math.abs(x);
+    if(y > 33 && y < 52 && ax > 7){
+      var env = Math.sin(Math.PI * (y - 33) / 19) * smooth((ax - 7) / 8) * (1 - smooth((ax - 19) / 3));
+      d += env * 0.32 * Math.sin((y + ax * 0.9) * 0.62 + (phi > 0 ? 0.4 : 1.3));
+    }
+    d += 0.12 * Math.sin(phi * 3 + y * 0.11 + 1.7) * Math.sin(y * 0.07);
+    return d * (1 - smooth((y - 54) / 6));
+  }
+  function bodyPoint(back, th, y){
+    var a = halfW(y), x = (back ? -1 : 1) * a * Math.sin(th);
+    var z = depth(y, back) * Math.cos(th) * roof(seamY(x) - y);
+    z = back ? -z : z;
+    z += 0.55 * smooth((y - 30) / 14) * (1 - smooth((y - 58) / 10));   /* the chest sits slightly forward */
+    var r = Math.hypot(x, z);
+    if(r > 1e-6){
+      var dd = drape(Math.atan2(x, z), y, x);
+      x += x / r * dd; z += z / r * dd;
+    }
+    return [x, y, z];
+  }
+
+  /* ---------- outlines in (theta, y) ---------- */
+  function neckX(y, back){
+    var top = M.TOP, low = back ? M.neckBackY : M.neckFrontY;
+    if(y <= low) return 0;
+    var t = (top - y) / (top - low);
+    return M.neckHalf * Math.sqrt(Math.max(0, 1 - t * t));
+  }
+  var thNeck = Math.asin(M.neckHalf / M.shoulderHalf);
+  /* height of the panel's top edge at |theta|: the neckline inside the neck point, the shoulder seam outside */
+  function topY(th, back){
+    th = Math.abs(th);
+    if(th >= thNeck) return Math.max(M.SP, seamY(M.shoulderHalf * Math.sin(th)));
+    var lo = back ? M.neckBackY : M.neckFrontY, hi = M.TOP;
+    for(var i = 0; i < 34; i++){
+      var mid = (lo + hi) / 2, t = Math.asin(clamp(neckX(mid, back) / halfW(mid), 0, 1));
+      if(t < th) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+  /* armhole: an ellipse in (theta, y) from the underarm (90°, AP) via the deepest point to the shoulder point (90°, SP) */
+  function armS(th){ return clamp((90 * D - Math.abs(th)) / (90 * D - M.ahDeepTheta), 0, 1); }
+  function armLow(th){ var s = armS(th); return M.ahDeepY - (M.ahDeepY - M.AP) * Math.sqrt(1 - s * s); }
+  function armHigh(th){ var s = armS(th); return M.ahDeepY + (M.SP - M.ahDeepY) * Math.sqrt(1 - s * s); }
+
+  /* ---------- flattening tables: (theta, y) -> pattern (u, v) in cm ---------- */
+  function flatTable(back){
+    /* rows every 0.5 cm, then every 0.06 cm over the shoulders, where the cloth turns over the
+       top (the roof meets the seam with a vertical tangent) and a coarse table would make the
+       shoulder seam of the flat pattern zig-zag */
+    var NT = 181, dth = 90 * D / (NT - 1), Y1 = 60, dy1 = 0.5, K1 = Math.round(Y1 / dy1), dy2 = 0.06;
+    var NY = K1 + Math.ceil((M.TOP - Y1) / dy2) + 1;
+    function yOf(k){ return k <= K1 ? k * dy1 : Math.min(M.TOP, Y1 + (k - K1) * dy2); }
+    function rowOf(y){ return y <= Y1 ? y / dy1 : K1 + (y - Y1) / dy2; }
+    var U = new Float32Array(NT * NY), V = new Float32Array(NT * NY);
+    for(var k = 0; k < NY; k++){
+      var y = yOf(k), prev = bodyPoint(back, 0, y), acc = 0;
+      U[k * NT] = 0;
+      for(var j = 1; j < NT; j++){
+        var p = bodyPoint(back, j * dth, y);
+        acc += Math.hypot(p[0] - prev[0], p[1] - prev[1], p[2] - prev[2]);
+        U[k * NT + j] = acc; prev = p;
+      }
+    }
+    for(var j2 = 0; j2 < NT; j2++){
+      var th = j2 * dth, prev2 = bodyPoint(back, th, 0), acc2 = 0;
+      V[j2] = 0;
+      for(var k2 = 1; k2 < NY; k2++){
+        var y0 = yOf(k2 - 1), y1 = yOf(k2), SUB = Math.max(1, Math.ceil((y1 - y0) / 0.17));
+        for(var s = 1; s <= SUB; s++){
+          var p2 = bodyPoint(back, th, y0 + (y1 - y0) * s / SUB);
+          acc2 += Math.hypot(p2[0] - prev2[0], p2[1] - prev2[1], p2[2] - prev2[2]);
+          prev2 = p2;
+        }
+        V[k2 * NT + j2] = acc2;
+      }
+    }
+    function lookup(T, th, y){
+      var sg = th < 0 ? -1 : 1, a = Math.min(Math.abs(th) / dth, NT - 1.0001), b = clamp(rowOf(y), 0, NY - 1.0001);
+      var j = Math.floor(a), k = Math.floor(b), fa = a - j, fb = b - k;
+      var v00 = T[k * NT + j], v01 = T[k * NT + j + 1], v10 = T[(k + 1) * NT + j], v11 = T[(k + 1) * NT + j + 1];
+      return (v00 * (1 - fa) * (1 - fb) + v01 * fa * (1 - fb) + v10 * (1 - fa) * fb + v11 * fa * fb) * sg;
+    }
+    return { u: function(th, y){ return lookup(U, th, y); }, v: function(th, y){ return Math.abs(lookup(V, th, y)); } };
+  }
+
+  /* ---------- small vector helpers ---------- */
+  function sub(a, b){ return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function add(a, b){ return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+  function mul(a, k){ return [a[0] * k, a[1] * k, a[2] * k]; }
+  function dot(a, b){ return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function cross(a, b){ return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+  function len(a){ return Math.hypot(a[0], a[1], a[2]); }
+  function norm(a){ var l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+  function lerp3(a, b, t){ return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+
+  /* ---------- mesh accumulation ---------- */
+  function Mesh(){ this.pos = []; this.uv = []; this.idx = []; this.pat = []; }
+  Mesh.prototype.vert = function(p, pu, pv){ this.pos.push(p[0], p[1], p[2]); this.pat.push(pu || 0, pv || 0); return this.pos.length / 3 - 1; };
+  /* grid of rows x cols vertex indices -> two triangles per cell, the face normals along `out`.
+     The winding is decided once for the whole grid (an area-weighted vote), never per triangle:
+     a sliver's own normal is noise (columns crowd together at the armhole and neck), and one
+     sliver wound the wrong way is a pinhole in the cloth. */
+  Mesh.prototype.grid = function(G, rows, cols, outFn){
+    var P = this.pos, I = this.idx, tris = [], vote = 0, r, c;
+    function pt(i){ return [P[i*3], P[i*3+1], P[i*3+2]]; }
+    function add3(t){
+      var pa = pt(t[0]), pb = pt(t[1]), pc = pt(t[2]), n = cross(sub(pb, pa), sub(pc, pa));
+      if(len(n) < 1e-9) return;                                 /* drop degenerate cells (shoulder point) */
+      vote += dot(n, outFn(mul(add(add(pa, pb), pc), 1 / 3)));
+      tris.push(t);
+    }
+    for(r = 0; r < rows - 1; r++) for(c = 0; c < cols - 1; c++){
+      var a = G[r][c], b = G[r][c + 1], d = G[r + 1][c], e = G[r + 1][c + 1];
+      add3([a, b, e]); add3([a, e, d]);
+    }
+    tris.forEach(function(t){ if(vote < 0) I.push(t[0], t[2], t[1]); else I.push(t[0], t[1], t[2]); });
+  };
+
+  /* outward direction for the body: away from the body axis, up over the shoulders */
+  function bodyOut(p){ var o = [p[0], 0, p[2] - 0.6]; if(p[1] > 60) o[1] = (p[1] - 60) * 0.6; return o; }
+
+  /* ---------- one body panel (front or back) ---------- */
+  function buildBody(back){
+    var flat = flatTable(back), m = new Mesh();
+    var cols = [], NC = 81, i;
+    for(i = 0; i < NC; i++) cols.push(-90 * D + 180 * D * i / (NC - 1));
+    [thNeck, -thNeck, M.ahDeepTheta, -M.ahDeepTheta, 0].forEach(function(t){ cols.push(t); });
+    cols.sort(function(a, b){ return a - b; });
+    cols = cols.filter(function(t, k){ return k === 0 || t - cols[k - 1] > 0.15 * D; });
+    /* refine: where the neckline or armhole runs steeply, add columns until its points are < 0.85 cm apart */
+    function edgePts(t){
+      var out = [bodyPoint(back, t, topY(t, back))];
+      if(Math.abs(t) >= M.ahDeepTheta - 1e-9){ out.push(bodyPoint(back, t, armLow(t))); out.push(bodyPoint(back, t, armHigh(t))); }
+      return out;
+    }
+    for(var pass = 0; pass < 14; pass++){
+      var next = [cols[0]], added = 0;
+      for(var q = 1; q < cols.length; q++){
+        var a0 = edgePts(cols[q - 1]), a1 = edgePts(cols[q]), gap = 0;
+        for(var e = 0; e < Math.min(a0.length, a1.length); e++) gap = Math.max(gap, len(sub(a0[e], a1[e])));
+        if(gap > 0.85 && cols[q] - cols[q - 1] > 0.02 * D){ next.push((cols[q - 1] + cols[q]) / 2); added++; }
+        next.push(cols[q]);
+      }
+      cols = next;
+      if(!added) break;
+    }
+    var NL = 62, NU = 30;
+    function lowTop(th){ return Math.abs(th) <= M.ahDeepTheta ? M.ahDeepY : armLow(th); }
+    function upBot(th){ return Math.abs(th) <= M.ahDeepTheta ? M.ahDeepY : armHigh(th); }
+    function put(th, y){ return m.vert(bodyPoint(back, th, y), flat.u(th, y), flat.v(th, y)); }
+    var GL = [], GU = [], r, c;
+    for(r = 0; r < NL; r++){ GL.push([]); for(c = 0; c < cols.length; c++) GL[r].push(put(cols[c], lowTop(cols[c]) * r / (NL - 1))); }
+    var B0 = cols.map(upBot), T0 = cols.map(function(t){ return topY(t, back); });
+    for(r = 0; r < NU; r++){ GU.push([]); for(c = 0; c < cols.length; c++) GU[r].push(put(cols[c], B0[c] + (T0[c] - B0[c]) * r / (NU - 1))); }
+    /* the shoulder seams in the flat pattern: the flattening tables are noisy right where the cloth
+       turns over the crest (a few mm of zig-zag), so the top rows are smoothed along each seam,
+       its ends (neck point, shoulder point) held */
+    var cNr = -1, cNl = -1;
+    cols.forEach(function(t, k){ if(Math.abs(t - thNeck) < 1e-9) cNr = k; if(Math.abs(t + thNeck) < 1e-9) cNl = k; });
+    function smoothSeam(row, from, to, passes){
+      for(var it = 0; it < passes; it++){
+        var P = m.pat, old = [];
+        for(var c2 = from; c2 <= to; c2++){ var vi = row[c2]; old.push([P[vi * 2], P[vi * 2 + 1]]); }
+        for(c2 = from + 1; c2 < to; c2++){
+          var k2 = c2 - from, vj = row[c2];
+          P[vj * 2] = (old[k2 - 1][0] + 2 * old[k2][0] + old[k2 + 1][0]) / 4;
+          P[vj * 2 + 1] = (old[k2 - 1][1] + 2 * old[k2][1] + old[k2 + 1][1]) / 4;
+        }
+      }
+    }
+    if(cNr > 0 && cNl >= 0) [[NU - 1, 10], [NU - 2, 6], [NU - 3, 3], [NU - 4, 1]].forEach(function(rp){
+      smoothSeam(GU[rp[0]], cNr, cols.length - 1, rp[1]);
+      smoothSeam(GU[rp[0]], 0, cNl, rp[1]);
+    });
+    m.grid(GL, NL, cols.length, bodyOut);
+    m.grid(GU, NU, cols.length, bodyOut);
+    m.edges = { hem: GL[0].slice(), cols: cols, GL: GL, GU: GU };
+    /* the cut line, walked once round: hem, side seam, armhole, shoulder, neck, shoulder, armhole, side seam */
+    var C = cols.length, cA = -1, cB = -1, o = [];
+    cols.forEach(function(t, k){ if(Math.abs(t + M.ahDeepTheta) < 1e-9) cA = k; if(Math.abs(t - M.ahDeepTheta) < 1e-9) cB = k; });
+    for(c = 0; c < C; c++) o.push(GL[0][c]);
+    for(r = 1; r < NL; r++) o.push(GL[r][C - 1]);
+    for(c = C - 2; c >= cB; c--) o.push(GL[NL - 1][c]);
+    for(c = cB + 1; c < C; c++) o.push(GU[0][c]);
+    for(c = C - 1; c >= 0; c--) o.push(GU[NU - 1][c]);
+    for(c = 1; c <= cA; c++) o.push(GU[0][c]);
+    for(c = cA - 1; c >= 0; c--) o.push(GL[NL - 1][c]);
+    for(r = NL - 2; r >= 1; r--) o.push(GL[r][0]);
+    m.outlineIdx = o;
+    m.flipU = back;          /* the back is read from behind: its pattern runs the other way */
+    return m;
+  }
+
+  /* ---------- the armhole loop (shared by body and sleeve) ---------- */
+  /* side +1 = +x. Front edge from the underarm up to the shoulder point, back edge the same way. */
+  function armEdge(back, side, n){
+    var pts = [], i;
+    for(i = 0; i <= n; i++){                                       /* lower branch: 90° -> deepest */
+      var t = i / n, th = (90 * D) - (90 * D - M.ahDeepTheta) * Math.sin(t * Math.PI / 2);
+      pts.push(bodyPoint(back, side * (back ? -1 : 1) * th, armLow(th)));
+    }
+    for(i = 1; i <= n; i++){                                       /* upper branch: deepest -> 90° */
+      var t2 = i / n, th2 = M.ahDeepTheta + (90 * D - M.ahDeepTheta) * (1 - Math.cos(t2 * Math.PI / 2));
+      pts.push(bodyPoint(back, side * (back ? -1 : 1) * th2, armHigh(th2)));
+    }
+    return pts;
+  }
+  function resample(pts, n){
+    var acc = [0], i;
+    for(i = 1; i < pts.length; i++) acc.push(acc[i - 1] + len(sub(pts[i], pts[i - 1])));
+    var total = acc[acc.length - 1], out = [], j = 1;
+    for(i = 0; i <= n; i++){
+      var s = total * i / n;
+      while(j < acc.length - 1 && acc[j] < s) j++;
+      var f = (s - acc[j - 1]) / ((acc[j] - acc[j - 1]) || 1);
+      out.push(lerp3(pts[j - 1], pts[j], clamp(f, 0, 1)));
+    }
+    return out;
+  }
+
+  /* ---------- sleeve ---------- */
+  function buildSleeve(side){
+    var N = 112, H = N / 2, K = 44, m = new Mesh(), i, k;
+    var front = resample(armEdge(false, side, 160), H), backE = resample(armEdge(true, side, 160), H);
+    var loop = front.slice();                                      /* 0..H: underarm -> front -> shoulder point */
+    for(i = H - 1; i >= 1; i--) loop.push(backE[i]);               /* H+1..N-1: down the back edge */
+    var C = [0, 0, 0]; loop.forEach(function(p){ C = add(C, p); }); C = mul(C, 1 / loop.length);
+    var dir = norm([side * Math.sin(M.armAngle), -Math.cos(M.armAngle), M.armForward]);
+    var up = norm(sub([0, 1, 0], mul(dir, dir[1])));
+    var fr = norm(cross(dir, up)); if(fr[2] < 0) fr = mul(fr, -1);
+    var shoulderPt = loop[H], r = M.cuffR;
+    var lo = 4, hi = 30;
+    for(var it = 0; it < 40; it++){                                 /* cuff distance that gives the target top length */
+      var mid = (lo + hi) / 2, top = add(add(C, mul(dir, mid)), mul(up, r));
+      if(len(sub(top, shoulderPt)) < M.sleeveTop) lo = mid; else hi = mid;
+    }
+    var Cc = add(C, mul(dir, (lo + hi) / 2));
+    var cuff = [];
+    for(i = 0; i < N; i++){ var al = 2 * Math.PI * i / N; cuff.push(add(Cc, add(mul(up, -Math.cos(al) * r), mul(fr, Math.sin(al) * r)))); }
+    var seamDir = norm([side * (M.shoulderHalf - M.neckHalf), -(M.TOP - M.SP), 0]);
+    var rings = [];
+    for(k = 0; k <= K; k++){
+      var s = Math.pow(k / K, 1.15), h00 = 2*s*s*s - 3*s*s + 1, h10 = s*s*s - 2*s*s + s, h01 = -2*s*s*s + 3*s*s, h11 = s*s*s - s*s;
+      var ring = [];
+      for(i = 0; i < N; i++){
+        var P0 = loop[i], P1 = cuff[i], L = len(sub(P1, P0)), al2 = 2 * Math.PI * i / N;
+        var w = Math.pow(Math.max(0, -Math.cos(al2)), 2) * 0.7;
+        var T0 = mul(norm(lerp3(dir, seamDir, w)), L * 1.05), T1 = mul(dir, L * 0.75);
+        var Q = add(add(mul(P0, h00), mul(T0, h10)), add(mul(P1, h01), mul(T1, h11)));
+        var under = Math.pow(Math.max(0, Math.cos(al2)), 3), bulge = Math.sin(Math.PI * s);
+        var fold = bulge * (0.38 * under * Math.sin(al2 * 9 + s * 5) + 0.16 * Math.sin(al2 * 5 + s * 9 + side));
+        var rad = sub(Q, add(C, mul(dir, dot(sub(Q, C), dir))));
+        ring.push(add(Q, mul(norm(rad), fold)));
+      }
+      rings.push(ring);
+    }
+    /* pattern coordinates: u around (0 at the top of the sleeve), v along (0 at the cuff) */
+    var G = [];
+    for(k = 0; k <= K; k++){
+      var ringK = rings[k], arc = [0];
+      for(i = 1; i <= N; i++) arc.push(arc[i - 1] + len(sub(ringK[i % N], ringK[i - 1])));
+      var mid2 = arc[H], row = [];
+      for(i = 0; i <= N; i++){
+        var vAlong = 0;
+        for(var kk = k; kk < K; kk++) vAlong += len(sub(rings[kk][i % N], rings[kk + 1][i % N]));
+        var u = (arc[i] - mid2) * (side > 0 ? 1 : -1);
+        row.push(m.vert(ringK[i % N], u, vAlong));
+      }
+      G.push(row);
+    }
+    var axisOut = function(p){ var q = sub(p, C), t = dot(q, dir); return sub(q, mul(dir, t)); };
+    m.grid(G, K + 1, N + 1, axisOut);
+    m.edges = { loop: loop, cuff: rings[K], dir: dir, C: Cc };
+    var o = [];
+    for(i = 0; i <= N; i++) o.push(G[0][i]);
+    for(k = 1; k <= K; k++) o.push(G[k][N]);
+    for(i = N - 1; i >= 0; i--) o.push(G[K][i]);
+    for(k = K - 1; k >= 1; k--) o.push(G[k][0]);
+    m.outlineIdx = o;
+    return m;
+  }
+
+  /* ---------- neck rib ---------- */
+  function neckLoop(){
+    var pts = [], n = 120, i, th;
+    for(i = 0; i <= n; i++){ th = thNeck * i / n; pts.push(bodyPoint(true, th, topY(th, true))); }          /* CB -> -x neck point */
+    for(i = 1; i <= 2 * n; i++){ th = -thNeck + 2 * thNeck * i / (2 * n); pts.push(bodyPoint(false, th, topY(th, false))); } /* across the front */
+    for(i = 1; i <= n; i++){ th = -thNeck + thNeck * i / n; pts.push(bodyPoint(true, th, topY(th, true))); }  /* +x neck point -> CB */
+    return pts;
+  }
+  function buildRib(){
+    var raw = neckLoop(), N = 200, loop = resample(raw, N), m = new Mesh(), inner = new Mesh(), i;
+    var zc = (bodyPoint(false, 0, M.neckFrontY)[2] + bodyPoint(true, 0, M.neckBackY)[2]) / 2;
+    var arc = [0]; for(i = 1; i <= N; i++) arc.push(arc[i - 1] + len(sub(loop[i], loop[i - 1])));
+    var total = arc[N], G = [[], []], GI = [[], [], [], []];
+    for(i = 0; i <= N; i++){
+      var p = loop[i], inw = norm([-p[0], 0, zc - p[2]]);
+      var upd = norm(add([0, 1, 0], mul(inw, 0.42)));
+      var top = add(p, mul(upd, M.ribH));
+      G[0].push(m.vert(p, arc[i], 0));
+      G[1].push(m.vert(top, arc[i], M.ribH));
+      var foldTop = add(top, add(mul(inw, M.ribT), [0, -0.1, 0]));
+      var foldBot = add(p, add(mul(inw, M.ribT), [0, 0.12, 0]));
+      GI[0].push(inner.vert(top)); GI[1].push(inner.vert(foldTop)); GI[2].push(inner.vert(foldTop)); GI[3].push(inner.vert(foldBot));
+    }
+    var outFn = function(q){ return [q[0], 0.25, q[2] - zc]; };
+    m.grid(G, 2, N + 1, outFn);
+    m.outlineIdx = G[0].concat(G[1].slice().reverse());
+    inner.grid([GI[0], GI[1]], 2, N + 1, function(){ return [0, 1, 0]; });
+    inner.grid([GI[2], GI[3]], 2, N + 1, function(q){ return [-q[0], 0, zc - q[2]]; });
+    m.ribLength = total;
+    return { rib: m, inner: inner };
+  }
+
+  /* ---------- turned-up hem and cuffs (inside, plain fabric) ---------- */
+  /* the rim faces out of the opening (opposite to upVec); the folded strip faces the inside */
+  function turnUp(edge, inwardFn, upVec, outM){
+    var R = [[], []], S = [[], []];
+    edge.forEach(function(p){
+      var inw = inwardFn(p);
+      var a = add(p, mul(inw, M.hemT)), b = add(a, mul(upVec(p), M.hemTurn));
+      R[0].push(outM.vert(p)); R[1].push(outM.vert(a));
+      S[0].push(outM.vert(a)); S[1].push(outM.vert(b));
+    });
+    outM.grid(R, 2, edge.length, function(q){ return mul(upVec(q), -1); });
+    outM.grid(S, 2, edge.length, function(q){ return inwardFn(q); });
+  }
+
+  /* ---------- pattern pieces: normalise to a top-left origin in cm ---------- */
+  function finishPanel(id, label, m, flipU){
+    var n = m.pat.length / 2, i, minU = 1e9, maxU = -1e9, minV = 1e9, maxV = -1e9;
+    for(i = 0; i < n; i++){
+      var u = m.pat[i * 2] * (flipU ? -1 : 1), v = m.pat[i * 2 + 1];
+      if(u < minU) minU = u; if(u > maxU) maxU = u; if(v < minV) minV = v; if(v > maxV) maxV = v;
+    }
+    var W = maxU - minU, Hh = maxV - minV, cm = new Float32Array(n * 2), uv = new Float32Array(n * 2);
+    for(i = 0; i < n; i++){
+      var X = m.pat[i * 2] * (flipU ? -1 : 1) - minU, Y = maxV - m.pat[i * 2 + 1];
+      cm[i * 2] = X; cm[i * 2 + 1] = Y;
+      uv[i * 2] = X / W; uv[i * 2 + 1] = 1 - Y / Hh;
+    }
+    return { id: id, label: label, w_cm: Math.round(W * 10) / 10, h_cm: Math.round(Hh * 10) / 10, W: W, H: Hh,
+             pos: new Float32Array(m.pos), uv: uv, cm: cm, idx: m.idx, outline: outlineFrom(cm, m.outlineIdx) };
+  }
+  /* the cut line in cm, without repeated points (the shoulder point is a collapsed column) */
+  function outlineFrom(cm, list){
+    var out = [];
+    list.forEach(function(i){
+      var q = [Math.round(cm[i * 2] * 100) / 100, Math.round(cm[i * 2 + 1] * 100) / 100], last = out[out.length - 1];
+      if(!last || Math.abs(last[0] - q[0]) > 0.02 || Math.abs(last[1] - q[1]) > 0.02) out.push(q);
+    });
+    return out;
+  }
+  var built = null;
+  function build(){
+    if(built) return built;
+    var front = buildBody(false), back = buildBody(true);
+    var sr = buildSleeve(1), sl = buildSleeve(-1), rb = buildRib();
+    var inside = new Mesh();
+    var bodyIn = function(p){ return norm([-p[0], 0, -p[2]]); };
+    turnUp(front.edges.hem.map(function(i){ return [front.pos[i*3], front.pos[i*3+1], front.pos[i*3+2]]; }), bodyIn, function(){ return [0, 1, 0]; }, inside);
+    turnUp(back.edges.hem.map(function(i){ return [back.pos[i*3], back.pos[i*3+1], back.pos[i*3+2]]; }), bodyIn, function(){ return [0, 1, 0]; }, inside);
+    [sr, sl].forEach(function(s){
+      var ax = s.edges.dir, C = s.edges.C;
+      turnUp(s.edges.cuff.concat([s.edges.cuff[0]]), function(p){ var q = sub(p, C); return norm(mul(sub(q, mul(ax, dot(q, ax))), -1)); },
+             function(){ return mul(ax, -1); }, inside);
+    });
+    built = {
+      panels: [
+        finishPanel('front', 'Front', front, false),
+        finishPanel('back', 'Back', back, false),
+        finishPanel('sleeve_r', 'Right sleeve', sr, false),
+        finishPanel('sleeve_l', 'Left sleeve', sl, false),
+        finishPanel('collar', 'Neck rib', rb.rib, false)
+      ],
+      inside: { pos: new Float32Array(inside.pos.concat(rb.inner.pos)), idx: inside.idx.concat(rb.inner.idx.map(function(i){ return i + inside.pos.length / 3; })) },
+      dims: M
+    };
+    return built;
+  }
+  /* the tee's panels for the editor: real pattern pieces with their cut outlines */
+  function panels(){
+    return build().panels.map(function(p){ return { id: p.id, label: p.label, w_cm: p.w_cm, h_cm: p.h_cm, outline: p.outline, pattern: true }; });
+  }
+  return { build: build, panels: panels, dims: M, bodyPoint: bodyPoint, topY: topY };
+})();
+/* ============================================================
    SEIF STUDIO — panel model
    A garment is a set of flat PANELS: the rectangles a factory
    actually prints, each with a real size in cm. A PLACEMENT is
@@ -3272,12 +4232,9 @@ var PANEL_PX = 1200;   /* working resolution of an artboard's long edge */
 /* A panel is a flat artboard the user designs on.
    w_cm / h_cm are the real printable size and drive export DPI. */
 var PANEL_SETS = {
-  tee: [
-    { id:'front',    label:'Front',        w_cm:32, h_cm:42 },
-    { id:'back',     label:'Back',         w_cm:32, h_cm:42 },
-    { id:'sleeve_l', label:'Left sleeve',  w_cm:10, h_cm:9 },
-    { id:'sleeve_r', label:'Right sleeve', w_cm:10, h_cm:9 }
-  ],
+  /* the tee is 3D: its panels are the real pattern pieces of the 3D shell (r_tee3d.js),
+     each with its cut outline, so a design can go anywhere — side seams and underarms included */
+  tee: TEE3D.panels(),
   longsleeve: [
     { id:'front',    label:'Front',        w_cm:32, h_cm:42 },
     { id:'back',     label:'Back',         w_cm:32, h_cm:42 },
@@ -3362,38 +4319,6 @@ function mirrorQuad(q){
   return [m[1], m[0], m[3], m[2]];
 }
 var DEFAULT_PLACEMENTS = {
-  /* tee: measured on the built-in turntable renders (assets/tee) */
-  'tee|front': [
-    { panel:'front',    quad:rectQuad(485,430,563,740) },
-    { panel:'sleeve_r', quad:[[1160,420],[1330,470],[1300,630],[1130,585]] },
-    { panel:'sleeve_l', quad:[[372,470],[542,420],[572,585],[402,630]] }
-  ],
-  'tee|back': [
-    { panel:'back',     quad:rectQuad(485,380,563,740) },
-    { panel:'sleeve_l', quad:[[1160,420],[1330,470],[1300,630],[1130,585]] },
-    { panel:'sleeve_r', quad:[[372,470],[542,420],[572,585],[402,630]] }
-  ],
-  'tee|turn_030': [
-    { panel:'front',    quad:[[585,440],[1090,470],[1075,1180],[600,1200]] },
-    { panel:'sleeve_r', quad:[[1110,395],[1215,430],[1200,630],[1095,600]] },
-    { panel:'sleeve_l', quad:[[300,450],[520,400],[540,690],[310,720]] }
-  ],
-  'tee|turn_060': [
-    { panel:'front',    quad:[[560,450],[960,480],[950,1190],[575,1210]] },
-    { panel:'sleeve_r', quad:[[930,430],[1160,470],[1150,720],[920,690]] },
-    { panel:'sleeve_l', quad:[[445,470],[585,455],[580,715],[440,700]] }
-  ],
-  'tee|side_left':  [ { panel:'sleeve_l', quad:rectQuad(690,440,240,216) } ],
-  'tee|turn_120': [
-    { panel:'back',     quad:[[745,440],[1035,470],[1025,1200],[755,1220]] },
-    { panel:'sleeve_l', quad:[[485,410],[715,440],[705,710],[475,690]] }
-  ],
-  'tee|turn_150': [
-    { panel:'back',     quad:[[560,460],[1040,430],[1030,1180],[580,1210]] },
-    { panel:'sleeve_l', quad:[[400,440],[560,400],[580,660],[410,690]] },
-    { panel:'sleeve_r', quad:[[1080,420],[1200,450],[1190,650],[1070,620]] }
-  ],
-  'tee|side_right': [ { panel:'sleeve_r', quad:rectQuad(650,430,240,216) } ],
   'longsleeve|front': [
     { panel:'front',    quad:rectQuad(570,430,460,540) },
     { panel:'sleeve_r', quad:rectQuad(1098,480,118,320) },
@@ -3472,6 +4397,9 @@ var DEFAULT_PLACEMENTS = {
   ]
 };
 
+/* products shown as a 3D model instead of photos */
+var PRODUCTS_3D = { tee: true };
+function is3D(productId){ return !!PRODUCTS_3D[productId]; }
 function panelsFor(productId){
   if(PANEL_SETS[productId]) return PANEL_SETS[productId];
   var def = (typeof PRODUCTS_BY_ID !== 'undefined') ? PRODUCTS_BY_ID[productId] : null;
@@ -3674,7 +4602,7 @@ function syncRack(){
 
 /* ---------- swatches (named colours) ---------- */
 function renderSwatches(){
-  ['swatches','swatches2'].forEach(function(hid){
+  ['swatches','swatches2','swatches3'].forEach(function(hid){
     var host = $(hid); if(!host) return;
     host.innerHTML = '';
     GARMENT_COLORS.forEach(function(s){
@@ -3698,15 +4626,38 @@ function syncSwatches(){
     x.classList.toggle('on', on); x.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   var cn = $('colorNameLine'); if(cn) cn.textContent = colorNameFor(project.garmentColor) + ' · ' + project.garmentColor.toUpperCase();
-  ['customColor','customColor2'].forEach(function(id){ var el = $(id); if(el) el.value = project.garmentColor; });
+  ['customColor','customColor2','customColor3'].forEach(function(id){ var el = $(id); if(el) el.value = project.garmentColor; });
 }
 
 /* ---------- modes & panes ---------- */
+/* the tee is designed in 3D (or flat); other garments in flat panels with a photo preview */
+function syncModeButtons(){
+  var three = is3D(project.productId);
+  document.querySelectorAll('#modeSeg button').forEach(function(b){
+    if(b.dataset.mode === '3d') b.classList.toggle('hidden', !three);
+    if(b.dataset.mode === 'preview') b.classList.toggle('hidden', three);
+    if(b.dataset.mode === 'design') b.textContent = three ? 'Flat' : 'Design';
+  });
+  var asm = $('psPreviewBtn'); if(asm) asm.textContent = three ? 'See it in 3D \u2192' : 'Assemble \u2192';
+}
 function setMode(mode){
+  if(mode === '3d' && !is3D(project.productId)) mode = 'design';
+  if(mode === 'preview' && is3D(project.productId)) mode = '3d';
+  if(mode === '3d') state.flat3d = false;
+  var was = state.mode;
   state.mode = mode;
+  syncModeButtons();
   document.querySelectorAll('#modeSeg button').forEach(function(b){
     var on = b.dataset.mode === mode; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false');
   });
+  if(typeof s3dSetVisible === 'function') s3dSetVisible(mode === '3d' && S3D.ready);
+  if(mode === '3d'){
+    if(typeof abClose === 'function' && was !== '3d'){ AB.panel = null; AB.sel = null; state.panel = null; }
+    showPane('3d');
+    if(typeof s3dOpen === 'function') s3dOpen();
+    return;
+  }
+  if(was === '3d'){ AB.panel = null; AB.sel = null; state.panel = null; }
   if(mode === 'preview'){
     showPane('floor');
     if(!mockCanvas) init2D();
@@ -3721,9 +4672,13 @@ function showPane(which){
   $('panelSheet').classList.toggle('hidden', which !== 'sheet');
   $('artboard').classList.toggle('hidden', which !== 'editor');
   $('floor').classList.toggle('hidden', which !== 'floor');
+  $('studio3d').classList.toggle('hidden', which !== '3d');
   $('sheetSheet').classList.toggle('hidden', which !== 'sheet');
-  $('sheetEditor').classList.toggle('hidden', which !== 'editor');
+  $('sheetEditor').classList.toggle('hidden', which !== 'editor' && which !== '3d');
   $('sheetPreview').classList.toggle('hidden', which !== 'floor');
+  $('sheet3d').classList.toggle('hidden', which !== '3d');
+  $('s3dChips').classList.toggle('hidden', which !== '3d');
+  $('sheet').classList.toggle('s3d', which === '3d');
   if(which === 'sheet') renderPanelSheet();
   if(which === 'editor' && typeof abResize === 'function') abResize();
 }
@@ -3804,16 +4759,32 @@ function onProductChanged(id){
   $('specFab').textContent = def.spec;
   $('fabricNote').value = project.fabricNote || '';
   syncRack(); syncSwatches();
+  if(typeof abClose === 'function') abClose(true);
+  /* a 3D garment opens in 3D unless the customer switched it to Flat */
+  if(is3D(id) && !state.flat3d){ setMode('3d'); return; }
+  if(is3D(id) && state.mode !== 'design'){ setMode('design'); return; }
+  if(!is3D(id) && state.mode === '3d'){ setMode('design'); return; }
+  syncModeButtons();
   if(state.mode === 'preview'){ renderViewSeg(); syncFitVisibility(); }
   else showPane('sheet');
-  if(typeof abClose === 'function') abClose(true);
 }
 function onProjectChanged(panelId){
+  $('saveStatus').textContent = 'UNSAVED';
+  if(typeof S3D !== 'undefined' && S3D.ready){
+    s3dMark(panelId);
+    if(S3D.drag) return;                 /* mid-drag on the 3D tee: lists catch up on release */
+    if(state.mode === '3d' && typeof s3dSyncPanelChips === 'function') s3dSyncPanelChips();
+  }
   syncRack();
   if(state.mode === 'design' && !state.panel) renderPanelSheet();
   if(typeof abOnProjectChanged === 'function') abOnProjectChanged(panelId);
   if(state.mode === 'preview') requestRender();
-  $('saveStatus').textContent = 'UNSAVED';
+}
+/* a design font finished loading: every text using it is redrawn */
+function onFontsLoaded(){
+  if(typeof S3D !== 'undefined' && S3D.ready) s3dMarkAll();
+  if(state.mode === 'design'){ if(state.panel && typeof abDraw === 'function') abDraw(); else renderPanelSheet(); }
+  if(state.mode === 'preview') requestRender();
 }
 function onHistoryChanged(){
   var u = $('undoBtn'), r = $('redoBtn');
@@ -3849,11 +4820,14 @@ function onRendered(ms){
 
 /* ---------- main UI ---------- */
 function bindUI(){
-  document.querySelectorAll('#modeSeg button').forEach(function(b){ b.addEventListener('click', function(){ setMode(b.dataset.mode); }); });
+  document.querySelectorAll('#modeSeg button').forEach(function(b){ b.addEventListener('click', function(){
+    if(is3D(project.productId)) state.flat3d = b.dataset.mode === 'design';
+    setMode(b.dataset.mode);
+  }); });
   $('psPreviewBtn').addEventListener('click', function(){ setMode('preview'); });
   $('editPanelsBtn').addEventListener('click', function(){ setMode('design'); });
 
-  ['customColor','customColor2'].forEach(function(id){
+  ['customColor','customColor2','customColor3'].forEach(function(id){
     var el = $(id); if(!el) return;
     el.addEventListener('input', function(){ hBegin('Custom dye'); setGarmentColor(this.value); });
     el.addEventListener('change', function(){ hCommit(); });
@@ -4608,7 +5582,7 @@ var MAP_PX = 370, MAP_S = 370 / 1600, HANDLE_R = 7;
 function pePopulateProducts(){
   var sel = $('peProduct');
   sel.innerHTML = '';
-  PRODUCTS.filter(function(p){ return !p.isCustom; }).forEach(function(p){
+  PRODUCTS.filter(function(p){ return !p.isCustom && !is3D(p.id); }).forEach(function(p){   /* 3D garments need no photos */
     var o = document.createElement('option');
     o.value = p.id; o.textContent = p.name;
     sel.appendChild(o);
@@ -5008,10 +5982,13 @@ function bindExport(){
       if(d !== null && d < 150) warns.push(p.label + ' has artwork at ' + d + ' DPI — it will print blurred.');
       techniqueWarnings(p.id).forEach(function(w){ warns.push(p.label + ': ' + w); });
       var px = printPxFor(p);
-      if(px.capped) warns.push(p.label + ' exceeds 6000 px at 300 DPI; the print file is capped at 6000 px on the long edge.');
+      if(px.capped && layersFor(p.id).length) warns.push(p.label + ' prints at ' + px.dpi + ' DPI: a whole-piece file is capped at 6000 px on its long edge.');
     });
     $('exWarn').textContent = warns.join(' ');
     $('exWm').checked = locked || DEMO_MODE;
+    var three = is3D(project.productId);
+    $('exMockNote').textContent = three ? 'The 3D tee from six angles (front, back, three-quarter, both sides, underarm) at 2048 px, PNG' : 'Every photographed view at 2400 px, PNG';
+    $('exPrintNote').textContent = three ? 'One transparent PNG per sewn piece, cut to its shape, up to 300 DPI' : 'One transparent PNG per designed panel at 300 DPI';
     openModal('exportModal');
   });
   $('exGo').addEventListener('click', runExport);
@@ -5040,7 +6017,17 @@ async function runExport(){
   var name = safeName(currentDef().name), items = [], i;
   function step(t){ prog.className = 'gmsg ok'; prog.textContent = t; }
   try {
-    if($('exMock').checked){
+    if($('exMock').checked && is3D(project.productId)){
+      var bg3 = document.querySelector('input[name=exBg]:checked').value, wm3 = $('exWm').checked;
+      if(!(await s3dEnsure())) throw new Error(S3D.failed || 'the 3D studio could not start');
+      var v3 = [['front', 'front'], ['back', 'back'], ['q34', 'three-quarter'], ['left', 'left'], ['right', 'right'], ['armpit', 'underarm']];
+      for(i=0;i<v3.length;i++){
+        step('Rendering 3D mockup ' + (i+1) + ' of ' + v3.length + '…'); await wait(30);
+        var c3 = s3dRenderView(v3[i][0], 2048, { bg: bg3, watermark: wm3 });
+        await downloadCanvas(c3, name + '_3d_' + v3[i][1] + '_' + safeName(colorNameFor(project.garmentColor)) + '.png');
+        await wait(600);
+      }
+    } else if($('exMock').checked){
       var bg = document.querySelector('input[name=exBg]:checked').value, wm = $('exWm').checked;
       var views = VIEWS.filter(function(v){ return !!getPhotoAsset(project.productId, v.id); });
       if(!views.length) views = availableViews(project.productId);
@@ -5057,12 +6044,12 @@ async function runExport(){
       for(i=0;i<panels.length;i++){
         var p = panels[i], px = printPxFor(p);
         step('Rendering print file ' + (i+1) + ' of ' + panels.length + ' (' + px.w + '×' + px.h + ' px)…'); await wait(20);
-        var ab = renderArtboard(p.id, px.px, null, { w: px.w, h: px.h });
-        await downloadCanvas(ab, 'PRINT_' + name + '_' + p.id + '_' + p.w_cm + 'x' + p.h_cm + 'cm_300dpi.png');
+        var ab = printPiece(p, renderArtboard(p.id, px.px, null, { w: px.w, h: px.h }));
+        await downloadCanvas(ab, 'PRINT_' + name + '_' + p.id + '_' + p.w_cm + 'x' + p.h_cm + 'cm_' + px.dpi + 'dpi.png');
         await wait(600);
       }
     }
-    if($('exTech').checked){ step('Building tech pack…'); await wait(20); openTechPack(); await wait(600); }
+    if($('exTech').checked){ step('Building tech pack…'); if(is3D(project.productId)) await s3dEnsure(); await wait(20); openTechPack(); await wait(600); }
     if($('exProj').checked){
       step('Writing project.json…'); await wait(20);
       downloadText(JSON.stringify(serialiseProject(true)), name + '_project.json');
@@ -5071,12 +6058,32 @@ async function runExport(){
   } catch(e){ prog.className = 'gmsg err'; prog.textContent = 'Export failed: ' + e.message; }
   btn.disabled = false;
 }
+/* a pattern piece prints in its own shape: everything outside the cut line is transparent */
+function printPiece(p, art){
+  if(!p.outline || !p.outline.length) return art;
+  var c = document.createElement('canvas'); c.width = art.width; c.height = art.height;
+  var g = c.getContext('2d'), kx = art.width / p.w_cm, ky = art.height / p.h_cm;
+  g.beginPath(); p.outline.forEach(function(q, i){ if(i) g.lineTo(q[0] * kx, q[1] * ky); else g.moveTo(q[0] * kx, q[1] * ky); }); g.closePath(); g.clip();
+  g.drawImage(art, 0, 0);
+  return c;
+}
+/* load the 3D studio on demand (exports can need it before the customer opened the 3D view) */
+async function s3dEnsure(){
+  if(typeof S3D === 'undefined') return false;
+  if(S3D.ready) return true;
+  return s3dInit($('gl3d'));
+}
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
 function openTechPack(){
-  var def = currentDef(), panels = panelsFor(project.productId);
-  var front = compositeView(project.productId, 'front', { px: 900, stamp:false }).toDataURL('image/png');
-  var backHas = availableViews(project.productId).some(function(v){ return v.id === 'back'; });
-  var back = backHas ? compositeView(project.productId, 'back', { px: 900, stamp:false }).toDataURL('image/png') : null;
+  var def = currentDef(), panels = panelsFor(project.productId), front, back, backHas;
+  if(is3D(project.productId) && S3D.ready){
+    front = s3dRenderView('front', 900, { bg: 'studio' }).toDataURL('image/png');
+    back = s3dRenderView('back', 900, { bg: 'studio' }).toDataURL('image/png');
+  } else {
+    front = compositeView(project.productId, 'front', { px: 900, stamp:false }).toDataURL('image/png');
+    backHas = availableViews(project.productId).some(function(v){ return v.id === 'back'; });
+    back = backHas ? compositeView(project.productId, 'back', { px: 900, stamp:false }).toDataURL('image/png') : null;
+  }
   var rows = '', thumbs = '';
   panels.forEach(function(p){
     var ab = artboardSize(p), t = renderPanelThumb(p.id, 300, project.garmentColor);
@@ -5084,7 +6091,8 @@ function openTechPack(){
     layersFor(p.id).forEach(function(l){
       var wcm = (l.w / ab.pxPerCm).toFixed(1), hcm = (l.h / ab.pxPerCm).toFixed(1), xcm = (l.x / ab.pxPerCm).toFixed(1), ycm = (l.y / ab.pxPerCm).toFixed(1);
       var d = layerDpi(p.id, l);
-      rows += '<tr><td>' + esc(p.label) + '</td><td>' + esc(l.name || l.type) + '</td><td>' + esc(l.type) + (l.type === 'text' ? ': “' + esc(l.text) + '”' : '') + '</td><td>' + wcm + ' × ' + hcm + '</td><td>' + xcm + ', ' + ycm + '</td><td>' + (l.rot || 0) + '°</td><td>' + (d === null ? '—' : d) + '</td></tr>';
+      var kind = { image: 'Image', text: 'Text', shape: 'Shape', path: 'Brush stroke', fill: 'Fill' }[l.type] || l.type;
+      rows += '<tr><td>' + esc(p.label) + '</td><td>' + esc(l.name || l.type) + '</td><td>' + esc(kind) + (l.type === 'text' ? ': “' + esc(l.text) + '”' : '') + '</td><td>' + wcm + ' × ' + hcm + '</td><td>' + xcm + ', ' + ycm + '</td><td>' + (l.rot || 0) + '°</td><td>' + (d === null ? '—' : d) + '</td></tr>';
     });
   });
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tech pack — ' + esc(def.name) + '</title><style>' +
@@ -5221,8 +6229,9 @@ async function init(){
   $('boot').style.display = 'none';
   $('demoBanner').classList.toggle('hidden', !DEMO_MODE);
   showStudio();
+  if(typeof bindStudio3d === 'function') bindStudio3d();
   buildProduct(TRIAL_PRODUCT);
-  setMode('design');
+  setMode(is3D(TRIAL_PRODUCT) ? '3d' : 'design');
   onHistoryChanged();
   unlockStudio();          /* nobody is locked out: the T-shirt is the free trial */
   renderAccount();
@@ -5316,7 +6325,7 @@ function selLayer(){ if(!AB.sel) return null; var f = findLayer(AB.panel, AB.sel
 function hitLayer(x, y){
   var ls = layersFor(AB.panel), tol = 2/AB.zoom;
   for(var i=ls.length-1;i>=0;i--){
-    var l = ls[i]; if(l.visible === false || l.locked) continue;
+    var l = ls[i]; if(l.visible === false || l.locked || l.type === 'fill') continue;
     var p = toLocal(l, x, y);
     if(Math.abs(p[0]) <= l.w/2 + tol && Math.abs(p[1]) <= l.h/2 + tol) return l;
   }
@@ -5345,7 +6354,7 @@ function hitHandle(l, sx, sy){
 
 /* ---------- drawing ---------- */
 function abDraw(){
-  var c = $('abCanvas'); if(!c || !AB.panel || !AB.ab) return;
+  var c = $('abCanvas'); if(!c || !AB.panel || !AB.ab || state.mode === '3d') return;
   var ctx = c.getContext('2d'), dpr = AB.dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, c.width/dpr, c.height/dpr);
@@ -5357,22 +6366,42 @@ function abDraw(){
   var s = 14; ctx.fillStyle = '#e7e7e2';
   var x0 = Math.floor(o[0]/s)*s, y0 = Math.floor(o[1]/s)*s;
   for(var yy=y0; yy<o[1]+h; yy+=s) for(var xx=x0; xx<o[0]+w; xx+=s){ if(((xx/s + yy/s) % 2) === 0) ctx.fillRect(xx, yy, s, s); }
-  /* artwork at working resolution, scaled */
-  var art = renderArtboard(AB.panel, PANEL_PX);
+  /* artwork at working resolution, scaled; a pattern piece shows its own shape on the fabric colour */
+  var art = renderArtboard(AB.panel, PANEL_PX), piece = panelById(project.productId, AB.panel);
   ctx.imageSmoothingQuality = 'high';
-  if(art) ctx.drawImage(art, o[0], o[1], w, h);
+  if(piece && piece.outline){
+    var kx = w / piece.w_cm, ky = h / piece.h_cm;
+    outlinePath(ctx, piece, kx, ky, o[0], o[1]); ctx.save(); ctx.clip();
+    ctx.fillStyle = project.garmentColor; ctx.fillRect(o[0], o[1], w, h);
+    if(art) ctx.drawImage(art, o[0], o[1], w, h);
+    /* 1 cm seam allowance: the band that disappears into the seam */
+    ctx.lineWidth = 2 * kx; ctx.strokeStyle = 'rgba(195,66,63,0.13)'; outlinePath(ctx, piece, kx, ky, o[0], o[1]); ctx.stroke();
+    ctx.restore();
+    if(art){ ctx.save(); ctx.globalAlpha = 0.18; ctx.drawImage(art, o[0], o[1], w, h); ctx.restore(); }
+  } else if(art) ctx.drawImage(art, o[0], o[1], w, h);
   ctx.restore();
-  /* cutting line + safe area */
-  ctx.strokeStyle = '#1E2749'; ctx.lineWidth = 1; ctx.strokeRect(o[0]+0.5, o[1]+0.5, w, h);
-  ctx.save();
-  ctx.setLineDash([6, 5]); ctx.strokeStyle = 'rgba(195,66,63,0.85)';
-  ctx.strokeRect(o[0] + w*0.05, o[1] + h*0.05, w*0.9, h*0.9);
-  ctx.setLineDash([]);
-  ctx.font = '600 9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = 'rgba(195,66,63,0.9)'; ctx.textBaseline = 'bottom';
-  ctx.fillText('SAFE AREA', o[0] + w*0.05 + 6, o[1] + h*0.05 - 3);
-  ctx.textBaseline = 'top'; ctx.fillStyle = '#5A6178';
-  ctx.fillText((panelById(project.productId, AB.panel).w_cm) + ' × ' + panelById(project.productId, AB.panel).h_cm + ' CM · CUT LINE', o[0], o[1] + h + 6);
-  ctx.restore();
+  var cmLabel = piece.w_cm + ' × ' + piece.h_cm + ' CM · CUT LINE';
+  if(piece && piece.outline){
+    ctx.save();
+    outlinePath(ctx, piece, w / piece.w_cm, h / piece.h_cm, o[0], o[1]);
+    ctx.strokeStyle = '#1E2749'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = 'rgba(30,39,73,0.35)'; ctx.lineWidth = 1; ctx.strokeRect(o[0]+0.5, o[1]+0.5, w, h);
+    ctx.setLineDash([]);
+    ctx.font = '600 9.5px "IBM Plex Mono", monospace'; ctx.textBaseline = 'top'; ctx.fillStyle = '#5A6178';
+    ctx.fillText(cmLabel + ' · SHADED BAND = 1 CM SEAM', o[0], o[1] + h + 6);
+    ctx.restore();
+  } else {
+    ctx.strokeStyle = '#1E2749'; ctx.lineWidth = 1; ctx.strokeRect(o[0]+0.5, o[1]+0.5, w, h);
+    ctx.save();
+    ctx.setLineDash([6, 5]); ctx.strokeStyle = 'rgba(195,66,63,0.85)';
+    ctx.strokeRect(o[0] + w*0.05, o[1] + h*0.05, w*0.9, h*0.9);
+    ctx.setLineDash([]);
+    ctx.font = '600 9.5px "IBM Plex Mono", monospace'; ctx.fillStyle = 'rgba(195,66,63,0.9)'; ctx.textBaseline = 'bottom';
+    ctx.fillText('SAFE AREA', o[0] + w*0.05 + 6, o[1] + h*0.05 - 3);
+    ctx.textBaseline = 'top'; ctx.fillStyle = '#5A6178';
+    ctx.fillText(cmLabel, o[0], o[1] + h + 6);
+    ctx.restore();
+  }
   /* snap guides */
   AB.guides.forEach(function(g){
     ctx.save(); ctx.strokeStyle = '#C3423F'; ctx.lineWidth = 1;
@@ -5383,7 +6412,7 @@ function abDraw(){
   });
   /* selection */
   var l = selLayer();
-  if(l){
+  if(l && l.type !== 'fill'){
     var cs = layerCorners(l).map(function(p){ return toScreen(p[0], p[1]); });
     ctx.save();
     ctx.strokeStyle = '#1E2749'; ctx.lineWidth = 1.5;
@@ -5590,6 +6619,7 @@ function abKey(e){
   if(e.key === 'Escape'){
     if(document.querySelector('.menu.on')){ abCloseMenus(); return; }
     if(typing){ e.target.blur(); return; }
+    if(state.mode === '3d'){ if(typeof s3dSelect === 'function') s3dSelect(AB.panel, null); return; }
     abClose(); return;
   }
   if(typing) return;
@@ -5597,7 +6627,8 @@ function abKey(e){
   if((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')){ e.preventDefault(); if(l){ var d = duplicateLayer(AB.panel, l.id); if(d){ AB.sel = d.id; abRenderLayers(); abRenderInspector(); abDraw(); } } return; }
   if(!l || l.locked) return;
   var step = e.shiftKey ? 10 : 1;
-  if(e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); removeLayer(AB.panel, l.id); AB.sel = null; abRenderLayers(); abRenderInspector(); abDraw(); return; }
+  if(e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); removeLayer(AB.panel, l.id); AB.sel = null; abRenderLayers(); abRenderInspector(); abDraw(); if(state.mode === '3d') s3dMark(AB.panel); return; }
+  if(l.type === 'fill') return;
   var dx = 0, dy = 0;
   if(e.key === 'ArrowLeft') dx = -step; else if(e.key === 'ArrowRight') dx = step;
   else if(e.key === 'ArrowUp') dy = -step; else if(e.key === 'ArrowDown') dy = step;
@@ -5620,7 +6651,8 @@ function abRenderLayers(){
       if(dpi !== null){ var dot = document.createElement('span'); dot.className = 'dpi ' + dpiGrade(dpi); dot.title = dpiTip(dpi); row.appendChild(dot); }
       var name = document.createElement('span'); name.className = 'ln';
       name.innerHTML = '<span></span><small>' + l.type.toUpperCase() + (l.tile ? ' · TILED' : '') + (dpi !== null ? ' · ' + dpi + ' DPI' : '') + '</small>';
-      name.firstChild.textContent = l.name || (l.type === 'text' ? l.text : l.type);
+      name.firstChild.textContent = (l.type === 'text' && (!l.name || l.name === 'Text') ? String(l.text || '').replace(/\s+/g, ' ').slice(0, 40) : l.name) || l.type;
+      if(state.mode === '3d') row.addEventListener('dblclick', function(){ if(typeof s3dFocusPanel === 'function') s3dFocusPanel(AB.panel); });
       var eye = document.createElement('button'); eye.className = 'ib' + (l.visible === false ? ' off' : ''); eye.textContent = '◉'; eye.title = 'Toggle visibility'; eye.setAttribute('aria-label', (l.visible === false ? 'Show ' : 'Hide ') + (l.name || l.type));
       eye.addEventListener('click', function(e){ e.stopPropagation(); updateLayer(AB.panel, l.id, { visible: l.visible === false }, { label:'Toggle visibility' }); });
       var lock = document.createElement('button'); lock.className = 'ib' + (l.locked ? '' : ' off'); lock.textContent = '🔒'; lock.title = 'Lock'; lock.setAttribute('aria-label', (l.locked ? 'Unlock ' : 'Lock ') + (l.name || l.type));
@@ -5630,7 +6662,7 @@ function abRenderLayers(){
       var del = document.createElement('button'); del.className = 'ib'; del.textContent = '✕'; del.title = 'Delete'; del.setAttribute('aria-label', 'Delete ' + (l.name || l.type));
       del.addEventListener('click', function(e){ e.stopPropagation(); if(AB.sel === l.id) AB.sel = null; removeLayer(AB.panel, l.id); });
       row.appendChild(grip); row.appendChild(name); row.appendChild(eye); row.appendChild(lock); row.appendChild(dup); row.appendChild(del);
-      row.addEventListener('click', function(){ AB.sel = l.id; abRenderLayers(); abRenderInspector(); abDraw(); });
+      row.addEventListener('click', function(){ AB.sel = l.id; abRenderLayers(); abRenderInspector(); abDraw(); if(state.mode === '3d') s3dMark(AB.panel); });
       row.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ AB.sel = l.id; abRenderLayers(); abRenderInspector(); abDraw(); } });
       row.addEventListener('dragstart', function(e){ e.dataTransfer.setData('text/plain', l.id); e.dataTransfer.effectAllowed = 'move'; });
       row.addEventListener('dragover', function(e){ e.preventDefault(); row.classList.add('dragover'); });
@@ -5649,6 +6681,7 @@ function abRenderLayers(){
 /* ---------- inspector ---------- */
 var inspBinding = false;
 function abRenderInspector(){
+  if(typeof s3dSyncSelActs === 'function') s3dSyncSelActs();
   var l = selLayer();
   $('inspEmpty').classList.toggle('hidden', !!l);
   $('inspBody').classList.toggle('hidden', !l);
@@ -5659,14 +6692,32 @@ function abRenderInspector(){
   var d = layerDpi(AB.panel, l); $('inDpi').textContent = d === null ? '' : dpiTip(d); $('inDpi').className = 'tiny' + (d !== null && d < 300 ? ' warn' : '');
   $('inText').classList.toggle('hidden', l.type !== 'text');
   $('inShape').classList.toggle('hidden', l.type !== 'shape');
+  $('inImage').classList.toggle('hidden', l.type !== 'image');
+  $('inPath').classList.toggle('hidden', l.type !== 'path');
+  $('inFillL').classList.toggle('hidden', l.type !== 'fill');
+  $('inFlipRow').classList.toggle('hidden', l.type === 'fill');
   $('inTile').classList.toggle('hidden', !l.tile);
+  if(l.type === 'image'){
+    var fx = l.fx || {};
+    $('fxBright').value = fx.brightness === undefined ? 100 : fx.brightness; $('fxContrast').value = fx.contrast === undefined ? 100 : fx.contrast;
+    $('fxSat').value = fx.saturate === undefined ? 100 : fx.saturate; $('fxHue').value = fx.hue || 0; $('fxGray').value = fx.gray || 0; $('fxBlur').value = fx.blur || 0;
+  }
+  if(l.type === 'path'){ $('inPathStyle').value = l.style || 'pen'; $('inPathColor').value = l.color || '#000000'; $('inPathSize').value = Math.max(1, Math.min(120, Math.round(l.size || 10))); $('inPathStyle').disabled = l.blend === 'destination-out'; }
+  if(l.type === 'fill'){
+    $('inFillKind').value = l.fill || 'solid'; $('inFC1').value = l.c1 || '#000000'; $('inFC2').value = l.c2 || '#FFFFFF'; $('inFUse3').checked = !!l.c3; $('inFC3').value = l.c3 || '#C3423F';
+    $('inFAngle').value = l.angle || 0; $('inFScale').value = Math.max(1, Math.min(20, Math.round((l.scale || 60) / (AB.ab ? AB.ab.pxPerCm : 1))));
+  }
   if(l.type === 'text'){
     $('inTxt').value = l.text; $('inFont').value = l.font; $('inWeight').value = String(l.weight); $('inSize').value = l.size;
     $('inTrack').value = l.tracking || 0; $('inLH').value = l.lineHeight || 1.1; $('inAlign').value = l.align || 'center';
     $('inFill').value = l.fill || '#000000'; $('inStroke').value = l.stroke || '#000000'; $('inStrokeW').value = l.strokeW || 0;
     $('inCurve').value = l.curve || 0; $('inCurveV').textContent = l.curve || 0;
+    $('inGrad').checked = !!l.fill2; $('inFill2').value = l.fill2 || '#C3423F';
+    $('inShadowOn').checked = !!(l.shadow && l.shadow.color); $('inShadowRow').classList.toggle('hidden', !(l.shadow && l.shadow.color));
+    if(l.shadow){ $('inShadowC').value = l.shadow.color || '#000000'; $('inShadowB').value = Math.round((l.shadow.blur || 0) / Math.max(1, l.size) * 100); $('inShadowO').value = Math.round((l.shadow.y || 0) / Math.max(1, l.size) * 100); }
   }
-  if(l.type === 'shape'){ $('inSFill').value = l.fill || '#000000'; $('inSStroke').value = l.stroke || '#000000'; $('inSStrokeW').value = l.strokeW || 0; }
+  if(l.type === 'shape'){ $('inSFill').value = l.fill || '#000000'; $('inSStroke').value = l.stroke || '#000000'; $('inSStrokeW').value = l.strokeW || 0;
+    $('inShapeKind').value = l.shape || 'rect'; $('inSGrad').checked = !!l.fill2; $('inSFill2').value = l.fill2 || '#1E2749'; }
   if(l.tile){ $('inTileGap').value = Math.round((l.tile.gap || 0)*100); $('inTileRot').value = l.tile.rot || 0; $('inTileOff').checked = !!l.tile.offset; }
   inspBinding = false;
 }
@@ -5716,6 +6767,73 @@ function bindInspector(){
   $('inTileOff').addEventListener('change', function(){ if(inspBinding) return; var p = tilePatch(); if(p){ var l = selLayer(); updateLayer(AB.panel, l.id, p, { label:'Pattern offset' }); abDraw(); } });
   $('inTileStop').addEventListener('click', function(){ var l = selLayer(); if(l){ updateLayer(AB.panel, l.id, { tile: null }, { label:'Stop tiling' }); abRenderInspector(); abDraw(); } });
   $('techSel').addEventListener('change', function(){ if(AB.panel) setPanelTechnique(AB.panel, this.value); });
+  /* options built from the engine's lists */
+  var fontSel = $('inFont'); fontSel.innerHTML = '';
+  ['Latin', 'Arabic', 'Emoji'].forEach(function(gname){
+    var og = document.createElement('optgroup'); og.label = gname === 'Latin' ? 'Latin' : (gname === 'Arabic' ? 'Arabic · عربي' : 'Emoji');
+    DESIGN_FONTS.filter(function(f){ return f.g === gname; }).forEach(function(f){ var o = document.createElement('option'); o.value = f.f; o.textContent = f.f === 'Emoji' ? 'Colour emoji' : f.f; og.appendChild(o); });
+    fontSel.appendChild(og);
+  });
+  SHAPES.forEach(function(sh){ var o = document.createElement('option'); o.value = sh.id; o.textContent = sh.label; $('inShapeKind').appendChild(o); });
+  BRUSHES.forEach(function(b){ var o = document.createElement('option'); o.value = b.id; o.textContent = b.label; $('inPathStyle').appendChild(o); });
+  FILLS.forEach(function(f){ var o = document.createElement('option'); o.value = f.id; o.textContent = f.label; $('inFillKind').appendChild(o); });
+  function edit(patch, label){ var l = selLayer(); if(!l || inspBinding) return; updateLayer(AB.panel, l.id, patch, { label: label }); abRenderInspector(); abDraw(); }
+  function live(id, label, make){
+    $(id).addEventListener('input', function(){ if(inspBinding) return; var l = selLayer(); if(!l) return; liveUpdate(make(l, this)); abDraw(); });
+    $(id).addEventListener('change', function(){ gestureEnd(label); abRenderLayers(); });
+  }
+  $('inFlipX').addEventListener('click', function(){ var l = selLayer(); if(l) edit({ flipX: !l.flipX }, 'Mirror'); });
+  $('inFlipY').addEventListener('click', function(){ var l = selLayer(); if(l) edit({ flipY: !l.flipY }, 'Flip'); });
+  /* text: gradient and shadow / glow (sizes relative to the letters, so they scale with them) */
+  $('inGrad').addEventListener('change', function(){ edit({ fill2: this.checked ? $('inFill2').value : null }, 'Text gradient'); });
+  live('inFill2', 'Text gradient', function(l, el){ return $('inGrad').checked ? { fill2: el.value } : {}; });
+  function shadowFrom(l){ var sz = Math.max(1, l.size || 100), o = +$('inShadowO').value / 100 * sz; return { color: $('inShadowC').value, blur: +$('inShadowB').value / 100 * sz, x: o * 0.6, y: o }; }
+  $('inShadowOn').addEventListener('change', function(){ var l = selLayer(); if(!l) return; edit({ shadow: this.checked ? shadowFrom(l) : null }, this.checked ? 'Add shadow' : 'Remove shadow'); });
+  ['inShadowC', 'inShadowB', 'inShadowO'].forEach(function(id){ live(id, 'Shadow', function(l){ return $('inShadowOn').checked ? { shadow: shadowFrom(l) } : {}; }); });
+  /* shape */
+  $('inShapeKind').addEventListener('change', function(){ var sh = SHAPES.filter(function(x){ return x.id === $('inShapeKind').value; })[0]; edit({ shape: this.value, name: sh ? sh.label : 'Shape' }, 'Change shape'); });
+  $('inSGrad').addEventListener('change', function(){ edit({ fill2: this.checked ? $('inSFill2').value : null }, 'Shape gradient'); });
+  live('inSFill2', 'Shape gradient', function(l, el){ return $('inSGrad').checked ? { fill2: el.value } : {}; });
+  /* image adjustments */
+  [['fxBright', 'brightness'], ['fxContrast', 'contrast'], ['fxSat', 'saturate'], ['fxHue', 'hue'], ['fxGray', 'gray'], ['fxBlur', 'blur']].forEach(function(pair){
+    live(pair[0], 'Adjust image', function(l, el){ var fx = Object.assign({}, l.fx || {}); fx[pair[1]] = +el.value; return { fx: fx }; });
+  });
+  $('fxInvert').addEventListener('click', function(){ var l = selLayer(); if(!l) return; var fx = Object.assign({}, l.fx || {}); fx.invert = fx.invert ? 0 : 100; edit({ fx: fx }, 'Invert colours'); });
+  $('fxReset').addEventListener('click', function(){ edit({ fx: null }, 'Reset image'); });
+  $('fxKnock').addEventListener('click', function(){ var l = selLayer(); if(l && l.type === 'image') knockOutWhite(AB.panel, l); });
+  /* brush strokes */
+  $('inPathStyle').addEventListener('change', function(){ var b = BRUSHES.filter(function(x){ return x.id === $('inPathStyle').value; })[0]; edit({ style: this.value, blend: this.value === 'marker' ? 'multiply' : 'source-over', name: (b ? b.label : 'Brush') + ' stroke' }, 'Brush style'); });
+  live('inPathColor', 'Brush colour', function(l, el){ return { color: el.value }; });
+  live('inPathSize', 'Brush size', function(l, el){ return { size: +el.value }; });
+  /* fills */
+  $('inFillKind').addEventListener('change', function(){ var f = FILLS.filter(function(x){ return x.id === $('inFillKind').value; })[0]; edit({ fill: this.value, name: (f ? f.label : 'Fill') + ' fill' }, 'Fill pattern'); });
+  live('inFC1', 'Fill colour', function(l, el){ return { c1: el.value }; });
+  live('inFC2', 'Fill colour', function(l, el){ return { c2: el.value }; });
+  live('inFC3', 'Fill colour', function(l, el){ return $('inFUse3').checked ? { c3: el.value } : {}; });
+  $('inFUse3').addEventListener('change', function(){ edit({ c3: this.checked ? $('inFC3').value : null }, 'Fill colour'); });
+  live('inFAngle', 'Fill angle', function(l, el){ return { angle: +el.value }; });
+  live('inFScale', 'Fill scale', function(l, el){ return { scale: Math.round(+el.value * (AB.ab ? AB.ab.pxPerCm : 1)) }; });
+}
+/* white (or near-white) pixels become transparent: logos shot on paper, scans */
+function knockOutWhite(panelId, l){
+  var src = l.src, w = src.naturalWidth || src.width, h = src.naturalHeight || src.height;
+  var c = document.createElement('canvas'); c.width = w; c.height = h;
+  var g = c.getContext('2d'); g.drawImage(src, 0, 0);
+  var d; try { d = g.getImageData(0, 0, w, h); } catch(e){ inlineErr('inDpi', 'This image cannot be edited here.'); return; }
+  var p = d.data;
+  for(var i = 0; i < p.length; i += 4){
+    var mn = Math.min(p[i], p[i + 1], p[i + 2]);
+    if(mn > 238) p[i + 3] = 0;
+    else if(mn > 205) p[i + 3] = Math.round(p[i + 3] * (238 - mn) / 33);
+  }
+  g.putImageData(d, 0, 0);
+  var data = c.toDataURL('image/png'), img = new Image();
+  img.onload = function(){
+    var hash = hashString(data); imageStore[hash] = data;
+    updateLayer(panelId, l.id, { src: img, srcHash: hash }, { label: 'Remove white background' });
+    abRenderInspector(); abDraw();
+  };
+  img.src = data;
 }
 
 /* ---------- toolbar ---------- */
@@ -5801,6 +6919,1200 @@ function bindEditor(){
   ['dragenter','dragover'].forEach(function(t){ st.addEventListener(t, function(e){ e.preventDefault(); st.classList.add('hot'); }); });
   ['dragleave','drop'].forEach(function(t){ st.addEventListener(t, function(){ st.classList.remove('hot'); }); });
   bindInspector();
+}
+/* ============================================================
+   SEIF STUDIO — 3D STUDIO (the tee)
+
+   A hollow tee (r_tee3d.js) in a three.js scene the customer can turn in
+   every direction and design on directly. Each pattern piece is a mesh
+   whose texture is that piece's artboard (renderArtboard) over the fabric
+   colour, plus stitches and the selection, so the 2D and 3D editors are
+   two views of the same layers.
+   three.js is loaded on demand from assets/vendor (one self-hosted module).
+   ============================================================ */
+var S3D = {
+  T: null, ready: false, failed: null, loading: null, host: null,
+  renderer: null, scene: null, camera: null, controls: null, group: null,
+  panels: {}, order: [], insideMats: [], dirty: {}, needsRender: true, running: false,
+  knit: null, fly: null, visible: false, lastFrame: 0,
+  TEX_PX_PER_CM: 26,
+  /* where pixels come from: the studio's layers and garment colour (the multi-colour sheet swaps the colour) */
+  src: {
+    art: function(panelId, px){ return renderArtboard(panelId, px); },
+    base: function(panelId){ return project.garmentColor; },
+    selection: function(){ return null; }
+  }
+};
+
+function s3dSupported(){
+  try { var c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); }
+  catch(e){ return false; }
+}
+function s3dLoadThree(){
+  if(!S3D.loading){
+    /* a failed import is remembered by the browser, so a retry asks for a fresh URL */
+    var url = new URL((CFG.assetBase || 'assets/') + 'vendor/three-r186.min.js' + (S3D.tries ? '?retry=' + S3D.tries : ''), location.href).href;
+    S3D.tries = (S3D.tries || 0) + 1;
+    S3D.loading = import(url).then(function(mod){ S3D.T = mod; return mod; });
+    S3D.loading.catch(function(){ S3D.loading = null; });
+  }
+  return S3D.loading;
+}
+
+/* ---------- fabric: a knit normal map (jersey columns of V loops), made once ---------- */
+function s3dKnitTexture(T){
+  var N = 128, c = document.createElement('canvas'); c.width = c.height = N;
+  var g = c.getContext('2d'), img = g.createImageData(N, N), h = new Float32Array(N * N), x, y;
+  for(y = 0; y < N; y++) for(x = 0; x < N; x++){
+    var col = x % 16, cx = Math.abs(col - 8) / 8;
+    var loop = Math.sin(Math.PI * 2 * (y / 16 + cx * 0.5));
+    h[y * N + x] = 0.55 * Math.sin(Math.PI * col / 16) + 0.45 * loop * (1 - cx * 0.6) + 0.08 * Math.sin(x * 1.7 + y * 0.9);
+  }
+  for(y = 0; y < N; y++) for(x = 0; x < N; x++){
+    var l = h[y * N + (x + N - 1) % N], r = h[y * N + (x + 1) % N], u = h[((y + N - 1) % N) * N + x], d = h[((y + 1) % N) * N + x];
+    var nx = (l - r) * 1.2, ny = (u - d) * 1.2, nz = 1, k = 1 / Math.hypot(nx, ny, nz), i = (y * N + x) * 4;
+    img.data[i] = (nx * k * 0.5 + 0.5) * 255; img.data[i + 1] = (ny * k * 0.5 + 0.5) * 255; img.data[i + 2] = (nz * k * 0.5 + 0.5) * 255; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  var t = new T.CanvasTexture(c);
+  t.wrapS = t.wrapT = T.RepeatWrapping; t.colorSpace = T.NoColorSpace;
+  return t;
+}
+/* soft contact shadow under the hem */
+function s3dShadowTexture(T){
+  var c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  var g = c.getContext('2d'), gr = g.createRadialGradient(128, 64, 4, 128, 64, 120);
+  gr.addColorStop(0, 'rgba(20,24,40,0.55)'); gr.addColorStop(0.45, 'rgba(20,24,40,0.22)'); gr.addColorStop(1, 'rgba(20,24,40,0)');
+  g.save(); g.scale(1, 0.5); g.translate(0, 64); g.fillStyle = gr; g.fillRect(0, -64, 256, 256); g.restore();
+  var t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; return t;
+}
+
+/* ---------- init: one at a time, whoever asks first (the studio, an export) ---------- */
+function s3dInit(host){
+  if(S3D.ready) return Promise.resolve(true);
+  if(S3D.failed) return Promise.resolve(false);
+  if(!S3D.initP){
+    S3D.initP = s3dInitNow(host)
+      .catch(function(e){ S3D.failed = 'The 3D studio could not start (' + ((e && e.message) || e) + ').'; return false; })
+      .then(function(ok){
+        S3D.initP = null;
+        if(ok && !S3D.bound){ S3D.bound = true; s3dBindPointer(); }
+        return ok;
+      });
+  }
+  return S3D.initP;
+}
+async function s3dInitNow(host){
+  S3D.canRetry = false;
+  if(!s3dSupported()){ S3D.failed = 'This browser cannot show 3D (WebGL is turned off or not supported).'; return false; }
+  var T;
+  try { T = await s3dLoadThree(); }
+  catch(e){ S3D.failed = 'Could not load the 3D engine (' + (e.message || 'network error') + ').'; S3D.canRetry = true; return false; }
+  S3D.host = host;
+  var renderer;
+  try {
+    renderer = new T.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  } catch(e){ S3D.failed = 'This device could not start 3D (' + (e.message || 'WebGL error') + ').'; return false; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = T.SRGBColorSpace;
+  renderer.toneMapping = T.NeutralToneMapping; renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+  renderer.setClearColor(0x000000, 0);
+  renderer.domElement.className = 'gl3d';
+  host.appendChild(renderer.domElement);
+  S3D.renderer = renderer;
+
+  var scene = new T.Scene();
+  var pmrem = new T.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new T.RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.5;
+  var hemi = new T.HemisphereLight(0xffffff, 0xb8bac4, 0.38); scene.add(hemi);
+  var key = new T.DirectionalLight(0xffffff, 0.95);
+  key.position.set(55, 95, 120); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  var sc = key.shadow.camera; sc.left = -60; sc.right = 60; sc.top = 60; sc.bottom = -60; sc.near = 20; sc.far = 400;
+  key.shadow.bias = -0.0004; key.shadow.normalBias = 0.35; key.shadow.radius = 4;
+  scene.add(key); scene.add(key.target);
+  var rim = new T.DirectionalLight(0xdfe6ff, 0.45); rim.position.set(-80, 40, -90); scene.add(rim); scene.add(rim.target); S3D.rim = rim;
+  /* a soft light riding with the camera, so whichever side faces the viewer is lit */
+  var head = new T.DirectionalLight(0xffffff, 0.35); head.position.set(0, 0.3, 1); S3D.headLight = head;
+  S3D.scene = scene; S3D.key = key;
+
+  var camera = new T.PerspectiveCamera(30, 1, 5, 2000);
+  camera.position.set(0, 4, 205);
+  camera.add(head); head.target.position.set(0, 0, -1); camera.add(head.target); scene.add(camera);
+  S3D.camera = camera;
+  var controls = new T.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.09;
+  controls.rotateSpeed = 0.75; controls.zoomSpeed = 0.9; controls.panSpeed = 0.7;
+  controls.minDistance = 38; controls.maxDistance = 420;
+  controls.minPolarAngle = 0.001; controls.maxPolarAngle = Math.PI - 0.001;   /* over the top and underneath */
+  controls.screenSpacePanning = true; controls.target.set(0, 2, 0);
+  controls.addEventListener('change', function(){ S3D.needsRender = true; });
+  controls.addEventListener('start', function(){ s3dStopFly(); });
+  S3D.controls = controls;
+
+  S3D.knit = s3dKnitTexture(T);
+  s3dBuildGarment();
+  var shadow = new T.Mesh(new T.PlaneGeometry(78, 34), new T.MeshBasicMaterial({ map: s3dShadowTexture(T), transparent: true, depthWrite: false }));
+  shadow.rotation.x = -Math.PI / 2; shadow.position.set(0, -38.6, -1);
+  scene.add(shadow); S3D.floorShadow = shadow;
+
+  var ro = new ResizeObserver(function(){ s3dResize(); });
+  ro.observe(host);
+  renderer.domElement.addEventListener('webglcontextlost', function(e){ e.preventDefault(); S3D.lost = true; });
+  renderer.domElement.addEventListener('webglcontextrestored', function(){ S3D.lost = false; s3dMarkAll(); });
+  S3D.ready = true;
+  var sheet = document.getElementById('sheet');
+  if(sheet) new MutationObserver(s3dSheetInset).observe(sheet, { attributes: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', s3dSheetInset);
+  s3dSheetInset();
+  s3dResize();
+  s3dStart();
+  return true;
+}
+function s3dResize(){
+  if(!S3D.renderer || !S3D.host) return;
+  var w = S3D.host.clientWidth, h = S3D.host.clientHeight;
+  if(!w || !h) return;
+  S3D.renderer.setSize(w, h, false);
+  S3D.renderer.domElement.style.width = w + 'px'; S3D.renderer.domElement.style.height = h + 'px';
+  S3D.camera.aspect = w / h;
+  /* keep the whole tee in frame on tall, narrow screens */
+  S3D.camera.fov = w / h < 0.8 ? 30 * Math.min(1.7, 0.8 / (w / h)) : 30;
+  /* a phone's half-open sheet covers the bottom of the stage: the tee moves up into what is left */
+  var inset = Math.min(S3D.inset || 0, h * 0.6);
+  if(inset > 0){ S3D.camera.setViewOffset(w, h, 0, inset / 2, w, h); S3D.camera.zoom = Math.max(0.62, Math.min(1, (h - inset) / h * 1.2)); }
+  else { S3D.camera.clearViewOffset(); S3D.camera.zoom = 1; }
+  S3D.camera.updateProjectionMatrix();
+  S3D.needsRender = true;
+}
+function s3dSheetInset(){
+  var sheet = $('sheet'); if(!sheet || !S3D.ready) return;
+  var px = window.innerWidth <= 900 && sheet.classList.contains('half') ? window.innerHeight * 0.46 : 0;
+  if(px === (S3D.inset || 0)) return;
+  S3D.inset = px; s3dResize();
+}
+
+/* ---------- the garment ---------- */
+function s3dBuildGarment(){
+  var T = S3D.T, b = TEE3D.build(), group = new T.Group();
+  group.position.y = -36.5;
+  b.panels.forEach(function(p){
+    var geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.BufferAttribute(p.pos, 3));
+    geo.setAttribute('uv', new T.BufferAttribute(p.uv, 2));
+    geo.setIndex(s3dUnfold(p.pos, p.idx));
+    geo.computeVertexNormals();
+    geo.computeBoundingSphere();
+    var W = Math.min(2048, Math.round(p.W * S3D.TEX_PX_PER_CM)), H = Math.max(16, Math.min(2048, Math.round(p.H * S3D.TEX_PX_PER_CM)));
+    var canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+    var tex = new T.CanvasTexture(canvas);
+    tex.colorSpace = T.SRGBColorSpace; tex.anisotropy = Math.min(8, S3D.renderer.capabilities.getMaxAnisotropy());
+    tex.generateMipmaps = true; tex.minFilter = T.LinearMipmapLinearFilter;
+    var knit = S3D.knit.clone(); knit.needsUpdate = true; knit.repeat.set(p.W / 0.95, p.H / 0.95);
+    var mat = new T.MeshPhysicalMaterial({ map: tex, roughness: 0.93, metalness: 0, sheen: 0.28, sheenRoughness: 0.8,
+      sheenColor: new T.Color(0xffffff), normalMap: knit, normalScale: new T.Vector2(0.28, 0.28), side: T.FrontSide });
+    var mesh = new T.Mesh(geo, mat);
+    mesh.castShadow = true; mesh.receiveShadow = true; mesh.userData.panel = p.id;
+    /* the inside of the cloth sits a hair behind the outside, so where the surface folds on itself the outside wins */
+    var inMat = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 0, side: T.BackSide, normalMap: knit, normalScale: new T.Vector2(0.2, 0.2),
+                                             polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 2 });
+    var inner = new T.Mesh(geo, inMat); inner.receiveShadow = true; inner.castShadow = false;
+    group.add(mesh); group.add(inner);
+    S3D.panels[p.id] = { id: p.id, mesh: mesh, inner: inner, innerMat: inMat, mat: mat, tex: tex, canvas: canvas, ctx: canvas.getContext('2d'),
+                         W: W, H: H, piece: p, detail: null, detailKey: '' };
+    S3D.order.push(p.id);
+  });
+  var gi = new T.BufferGeometry();
+  gi.setAttribute('position', new T.BufferAttribute(b.inside.pos, 3)); gi.setIndex(b.inside.idx); gi.computeVertexNormals();
+  var insideMat = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 1, side: T.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  var insideMesh = new T.Mesh(gi, insideMat); insideMesh.receiveShadow = true;
+  group.add(insideMesh); S3D.insideMat = insideMat;
+  S3D.scene.add(group); S3D.group = group;
+  s3dMarkAll();
+}
+
+/* where the pattern grid crowds (steep armhole and neck edges) a few slivers fold back on
+   themselves; the surface is covered twice around them anyway, so they are dropped rather than
+   showing the inside of the cloth through the outside as dark specks */
+function s3dUnfold(pos, idx){
+  var n = pos.length / 3, vn = new Float64Array(n * 3), fn = [], t, k, out = [];
+  for(t = 0; t < idx.length; t += 3){
+    var a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+    var ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2];
+    var vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
+    var nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    fn.push(nx, ny, nz);
+    [a, b, c].forEach(function(i){ vn[i] += nx; vn[i + 1] += ny; vn[i + 2] += nz; });
+  }
+  for(t = 0, k = 0; t < idx.length; t += 3, k += 3){
+    var s = 0;
+    for(var j = 0; j < 3; j++){ var i = idx[t + j] * 3; s += vn[i] * fn[k] + vn[i + 1] * fn[k + 1] + vn[i + 2] * fn[k + 2]; }
+    if(s > 0) out.push(idx[t], idx[t + 1], idx[t + 2]);
+  }
+  return out;
+}
+
+/* ---------- textures ---------- */
+function s3dMarkAll(){ S3D.order.forEach(function(id){ S3D.dirty[id] = true; }); S3D.needsRender = true; }
+function s3dMark(panelId){ if(panelId && S3D.panels[panelId]) S3D.dirty[panelId] = true; else s3dMarkAll(); S3D.needsRender = true; }
+/* stitches, rib knit and a soft shade along the seams: display only, never printed */
+function s3dDetail(pp, base){
+  var key = base + '|' + pp.W + 'x' + pp.H;
+  if(pp.detail && pp.detailKey === key) return pp.detail;
+  var c = document.createElement('canvas'); c.width = pp.W; c.height = pp.H;
+  var g = c.getContext('2d'), k = pp.W / pp.piece.W, light = lum(base) > 0.45;
+  var ink = light ? 'rgba(20,22,30,' : 'rgba(255,255,255,';
+  var out = pp.piece.outline;
+  if(out && out.length > 2){
+    g.save(); g.beginPath(); out.forEach(function(q, i){ if(i) g.lineTo(q[0] * k, q[1] * k); else g.moveTo(q[0] * k, q[1] * k); }); g.closePath(); g.clip();
+    for(var s = 4; s >= 1; s--){ g.lineWidth = s * 0.22 * k; g.strokeStyle = ink + (0.022 * (5 - s)) + ')'; g.stroke(); }
+    g.restore();
+  }
+  function stitchRow(y){
+    g.save(); g.setLineDash([0.32 * k, 0.2 * k]); g.lineWidth = Math.max(1, 0.07 * k); g.strokeStyle = ink + (light ? 0.28 : 0.22) + ')';
+    g.beginPath(); g.moveTo(0, y); g.lineTo(pp.W, y); g.stroke(); g.restore();
+  }
+  if(pp.id === 'front' || pp.id === 'back' || pp.id === 'sleeve_l' || pp.id === 'sleeve_r'){
+    stitchRow(pp.H - 2.0 * k); stitchRow(pp.H - 2.6 * k);
+  }
+  if(pp.id === 'collar'){
+    g.fillStyle = ink + (light ? 0.07 : 0.06) + ')';
+    for(var x = 0; x < pp.W; x += 0.2 * k) g.fillRect(x, 0, Math.max(1, 0.06 * k), pp.H);
+  }
+  pp.detail = c; pp.detailKey = key;
+  return c;
+}
+function s3dCompose(panelId){
+  var pp = S3D.panels[panelId]; if(!pp) return;
+  var g = pp.ctx, base = S3D.src.base(panelId) || '#FAFAF7';
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
+  g.fillStyle = base; g.fillRect(0, 0, pp.W, pp.H);
+  var art = S3D.src.art(panelId, Math.max(pp.W, pp.H));
+  if(art) g.drawImage(art, 0, 0, pp.W, pp.H);
+  g.drawImage(s3dDetail(pp, base), 0, 0);
+  var sel = S3D.src.selection();
+  if(sel && sel.panel === panelId && typeof s3dDrawSelection === 'function') s3dDrawSelection(pp, sel.layer);
+  pp.tex.needsUpdate = true;
+  var inside = mixHex(base, '#0E1018', 0.2);
+  pp.innerMat.color.set(inside);
+  if(S3D.insideMat) S3D.insideMat.color.set(inside);
+}
+
+/* ---------- loop: render only when something changed ---------- */
+function s3dStart(){
+  if(S3D.running) return;
+  S3D.running = true;
+  requestAnimationFrame(s3dFrame);
+}
+function s3dFrame(t){
+  if(!S3D.running) return;
+  requestAnimationFrame(s3dFrame);
+  if(!S3D.visible || S3D.lost || document.hidden) return;
+  var moved = S3D.controls.update();
+  if(S3D.fly) s3dFlyStep(t);
+  if(moved || S3D.fly || S3D.needsRender) s3dKeyFollow();
+  var ids = Object.keys(S3D.dirty);
+  if(ids.length){ ids.forEach(function(id){ s3dCompose(id); }); S3D.dirty = {}; S3D.needsRender = true; }
+  if(moved || S3D.needsRender || S3D.controls.autoRotate){
+    S3D.needsRender = false;
+    S3D.renderer.render(S3D.scene, S3D.camera);
+  }
+}
+/* the key light keeps its place relative to the viewer (upper right, in front), so every side
+   of the tee is lit like the front and its shadows read the same way */
+function s3dKeyFollow(){
+  var T = S3D.T, cam = S3D.camera, k = S3D.key, tgt = S3D.controls.target;
+  cam.updateMatrixWorld();
+  var right = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 0);
+  var up = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+  var back = new T.Vector3().setFromMatrixColumn(cam.matrixWorld, 2);
+  k.position.copy(tgt).addScaledVector(right, 55).addScaledVector(up, 90).addScaledVector(back, 120);
+  k.target.position.copy(tgt); k.target.updateMatrixWorld();
+  if(S3D.rim){ S3D.rim.position.copy(tgt).addScaledVector(right, -70).addScaledVector(up, 45).addScaledVector(back, -110); S3D.rim.target.position.copy(tgt); S3D.rim.target.updateMatrixWorld(); }
+  /* the studio's reflections turn with the viewer too */
+  var off = cam.position.clone().sub(tgt);
+  if(S3D.scene.environmentRotation) S3D.scene.environmentRotation.y = Math.atan2(off.x, off.z);
+}
+function s3dSetVisible(on){
+  S3D.visible = !!on;
+  if(on){ s3dResize(); S3D.needsRender = true; }
+}
+
+/* ---------- camera presets ---------- */
+var S3D_VIEWS = {
+  front:  { dir: [0, 0.02, 1],     dist: 205, target: [0, 2, 0] },
+  neck:   { dir: [0, 0.62, 0.78],  dist: 118, target: [0, 27, 0] },
+  back:   { dir: [0, 0.02, -1],    dist: 205, target: [0, 2, 0] },
+  left:   { dir: [-1, 0.03, 0.02], dist: 205, target: [0, 2, 0] },
+  right:  { dir: [1, 0.03, 0.02],  dist: 205, target: [0, 2, 0] },
+  q34:    { dir: [0.72, 0.16, 0.68], dist: 205, target: [0, 2, 0] },
+  top:    { dir: [0, 1, 0.08],     dist: 190, target: [0, 6, 0] },
+  bottom: { dir: [0, -1, 0.08],    dist: 190, target: [0, 0, 0] },
+  armpit: { dir: [0.78, -0.42, 0.46], dist: 95, target: [21, 10.5, 1] }
+};
+function s3dView(name, instant){
+  var v = S3D_VIEWS[name]; if(!v || !S3D.ready) return;
+  var T = S3D.T, d = new T.Vector3(v.dir[0], v.dir[1], v.dir[2]).normalize();
+  var target = new T.Vector3(v.target[0], v.target[1], v.target[2]);
+  var to = target.clone().add(d.multiplyScalar(v.dist));
+  s3dStillControls();
+  if(instant){ S3D.camera.position.copy(to); S3D.controls.target.copy(target); S3D.controls.update(); S3D.camera.updateMatrixWorld(); S3D.needsRender = true; return; }
+  S3D.fly = { t0: performance.now(), dur: 520, fromPos: S3D.camera.position.clone(), fromTarget: S3D.controls.target.clone(), toPos: to, toTarget: target };
+}
+function s3dStopFly(){ S3D.fly = null; }
+/* drop any swing left over from a flick, so a preset view stays put */
+function s3dStillControls(){
+  var c = S3D.controls; if(!c) return;
+  if(c._sphericalDelta) c._sphericalDelta.set(0, 0, 0);
+  if(c._panOffset) c._panOffset.set(0, 0, 0);
+  if(c._scale !== undefined) c._scale = 1;
+}
+function s3dFlyStep(t){
+  var f = S3D.fly, k = Math.min(1, (performance.now() - f.t0) / f.dur), e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  /* travel around the tee, not through it: interpolate on a sphere about the target */
+  var T = S3D.T, ft = f.fromTarget.clone().lerp(f.toTarget, e);
+  var a = f.fromPos.clone().sub(f.fromTarget), b = f.toPos.clone().sub(f.toTarget);
+  var la = a.length(), lb = b.length(), na = a.clone().normalize(), nb = b.clone().normalize();
+  var ang = Math.acos(Math.max(-1, Math.min(1, na.dot(nb))));
+  var dir;
+  if(ang < 1e-4) dir = na;
+  else if(Math.PI - ang < 1e-3){ var axis = new T.Vector3(0, 1, 0); dir = na.clone().applyAxisAngle(axis, Math.PI * e); }
+  else { var s = Math.sin(ang); dir = na.multiplyScalar(Math.sin((1 - e) * ang) / s).add(nb.multiplyScalar(Math.sin(e * ang) / s)); }
+  S3D.camera.position.copy(ft).add(dir.multiplyScalar(la + (lb - la) * e));
+  S3D.controls.target.copy(ft);
+  S3D.needsRender = true;
+  if(k >= 1) S3D.fly = null;
+}
+function s3dAutoRotate(on){ if(!S3D.ready) return; S3D.controls.autoRotate = !!on; S3D.controls.autoRotateSpeed = 2.2; S3D.needsRender = true; }
+
+/* ============================================================
+   DESIGNING ON THE 3D TEE
+   The selection is the editor's (AB.panel / AB.sel), so the layer list and
+   inspector on the right work the same in 2D and 3D. A drag on a design
+   moves it — across seams onto the next piece too — a drag on bare fabric
+   turns the tee, a brush paints straight onto the surface.
+   ============================================================ */
+S3D.tool = 'select';
+S3D.brush = { style: 'pen', color: '#C3423F', sizeCm: 0.8, opacity: 1, mirror: false };
+S3D.fillOpts = { fill: 'solid', c1: '#1E2749', c2: '#F4F4F0', c3: '', angle: 0, scaleCm: 4 };
+S3D.drag = null; S3D.lastHit = null;
+var S3D_HANDLE_CM = 0.85, S3D_ROT_CM = 2.4;
+
+/* pixels -> which piece, where on it (artboard units) */
+function s3dHit(clientX, clientY){
+  if(!S3D.ready) return null;
+  var T = S3D.T, el = S3D.renderer.domElement, r = el.getBoundingClientRect();
+  if(!S3D.ray) S3D.ray = new T.Raycaster();
+  S3D.camera.updateMatrixWorld();                                      /* a click can come before the next frame */
+  var ndc = new T.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+  S3D.ray.setFromCamera(ndc, S3D.camera);
+  var hits = S3D.ray.intersectObjects(S3D.order.map(function(id){ return S3D.panels[id].mesh; }), false);
+  if(!hits.length || !hits[0].uv) return null;
+  var h = hits[0], id = h.object.userData.panel, panel = panelById(project.productId, id);
+  if(!panel) return null;
+  var ab = artboardSize(panel);
+  return { panel: id, x: h.uv.x * ab.w, y: (1 - h.uv.y) * ab.h, ab: ab, point: h.point.clone() };
+}
+/* the point of the tee in the middle of the screen: where new things go */
+function s3dCentreHit(){
+  var r = S3D.renderer.domElement.getBoundingClientRect();
+  var h = s3dHit(r.left + r.width / 2, r.top + r.height * 0.45);
+  if(h) return h;
+  var p = panelById(project.productId, 'front'), ab = artboardSize(p);
+  return { panel: 'front', x: ab.w / 2, y: ab.h * 0.33, ab: ab };
+}
+function s3dSelection(){
+  if(state.mode !== '3d' || !AB.panel || !AB.sel) return null;
+  var f = findLayer(AB.panel, AB.sel);
+  return f ? { panel: AB.panel, layer: f.layer } : null;
+}
+S3D.src.selection = s3dSelection;
+
+function s3dSelect(panelId, layerId){
+  var prev = AB.panel;
+  AB.panel = panelId; state.panel = null;
+  var panel = panelById(project.productId, panelId);
+  AB.ab = panel ? artboardSize(panel) : null;
+  AB.sel = layerId || null;
+  if(prev && prev !== panelId) s3dMark(prev);
+  s3dMark(panelId);
+  if(typeof abRenderLayers === 'function'){ abRenderLayers(); abRenderInspector(); }
+  if(typeof s3dSyncPanelChips === 'function') s3dSyncPanelChips();
+}
+/* top-most design under a point; brush strokes hit on their line, not their box */
+function s3dLayerAt(panelId, x, y, tolUnits){
+  var ls = layersFor(panelId);
+  for(var i = ls.length - 1; i >= 0; i--){
+    var l = ls[i]; if(l.visible === false || l.locked || l.type === 'fill') continue;
+    var p = toLocal(l, x, y);
+    if(Math.abs(p[0]) > l.w / 2 + tolUnits || Math.abs(p[1]) > l.h / 2 + tolUnits) continue;
+    if(l.type === 'path' && !s3dPathNear(l, p[0], p[1], tolUnits)) continue;
+    return l;
+  }
+  return null;
+}
+function s3dPathNear(l, lx, ly, tol){
+  var sx = l.w / (l.bw || l.w), sy = l.h / (l.bh || l.h), r = (l.size || 10) * Math.sqrt(Math.abs(sx * sy)) / 2 + tol, pts = l.pts || [];
+  if(l.flipX) lx = -lx; if(l.flipY) ly = -ly;
+  for(var i = 0; i < pts.length; i++){
+    var a = pts[i], b = pts[Math.min(pts.length - 1, i + 1)];
+    var ax = a[0] * sx, ay = a[1] * sy, bx = b[0] * sx, by = b[1] * sy, dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+    var t = L ? Math.max(0, Math.min(1, ((lx - ax) * dx + (ly - ay) * dy) / L)) : 0;
+    if(Math.hypot(lx - (ax + dx * t), ly - (ay + dy * t)) <= r) return true;
+  }
+  return false;
+}
+/* handles in artboard units: four corners resize, the dot above rotates */
+function s3dHandles(l, ab){
+  var hw = l.w / 2, hh = l.h / 2;
+  return { nw: fromLocal(l, -hw, -hh), ne: fromLocal(l, hw, -hh), se: fromLocal(l, hw, hh), sw: fromLocal(l, -hw, hh),
+           rot: fromLocal(l, 0, -hh - S3D_ROT_CM * ab.pxPerCm), top: fromLocal(l, 0, -hh) };
+}
+function s3dHandleAt(l, ab, x, y){
+  if(l.type === 'fill' || l.locked) return null;
+  var hs = s3dHandles(l, ab), tol = S3D_HANDLE_CM * 1.5 * ab.pxPerCm, best = null, bd = tol;
+  ['rot', 'nw', 'ne', 'se', 'sw'].forEach(function(k){ var d = Math.hypot(hs[k][0] - x, hs[k][1] - y); if(d < bd){ bd = d; best = k; } });
+  return best;
+}
+/* the selection, drawn into the piece's texture (display only) */
+function s3dDrawSelection(pp, l){
+  if(l.type === 'fill') return;
+  var g = pp.ctx, ab = artboardSize(panelById(project.productId, pp.id)), k = pp.W / ab.w;
+  var hs = s3dHandles(l, ab), pts = [hs.nw, hs.ne, hs.se, hs.sw];
+  g.save();
+  g.lineJoin = 'round';
+  g.beginPath(); pts.forEach(function(q, i){ if(i) g.lineTo(q[0] * k, q[1] * k); else g.moveTo(q[0] * k, q[1] * k); }); g.closePath();
+  g.lineWidth = Math.max(2, 0.16 * S3D.TEX_PX_PER_CM); g.strokeStyle = 'rgba(255,255,255,0.95)'; g.stroke();
+  g.setLineDash([0.45 * S3D.TEX_PX_PER_CM, 0.3 * S3D.TEX_PX_PER_CM]);
+  g.lineWidth = Math.max(1.5, 0.09 * S3D.TEX_PX_PER_CM); g.strokeStyle = '#C3423F'; g.stroke(); g.setLineDash([]);
+  if(!l.locked){
+    var r = S3D_HANDLE_CM * S3D.TEX_PX_PER_CM;
+    g.beginPath(); g.moveTo(hs.top[0] * k, hs.top[1] * k); g.lineTo(hs.rot[0] * k, hs.rot[1] * k);
+    g.lineWidth = Math.max(1.5, 0.08 * S3D.TEX_PX_PER_CM); g.strokeStyle = '#C3423F'; g.stroke();
+    ['nw', 'ne', 'se', 'sw'].forEach(function(h){
+      g.beginPath(); g.arc(hs[h][0] * k, hs[h][1] * k, r * 0.62, 0, Math.PI * 2);
+      g.fillStyle = '#FFFFFF'; g.fill(); g.lineWidth = Math.max(1.5, 0.1 * S3D.TEX_PX_PER_CM); g.strokeStyle = '#1E2749'; g.stroke();
+    });
+    g.beginPath(); g.arc(hs.rot[0] * k, hs.rot[1] * k, r * 0.7, 0, Math.PI * 2);
+    g.fillStyle = '#C3423F'; g.fill(); g.lineWidth = Math.max(1.5, 0.1 * S3D.TEX_PX_PER_CM); g.strokeStyle = '#FFFFFF'; g.stroke();
+  }
+  g.restore();
+}
+
+/* ---------- moving a design onto another piece keeps its real size ---------- */
+function s3dRescale(l, r){
+  l.w = Math.max(2, l.w * r); l.h = Math.max(2, l.h * r);
+  if(l.type === 'text'){ l.size = Math.max(4, l.size * r); if(l.tracking) l.tracking *= r; if(l.strokeW) l.strokeW *= r;
+    if(l.shadow){ l.shadow = { color: l.shadow.color, blur: (l.shadow.blur || 0) * r, x: (l.shadow.x || 0) * r, y: (l.shadow.y || 0) * r }; } }
+  if(l.type === 'shape' && l.strokeW) l.strokeW *= r;
+}
+function s3dTransfer(l, fromId, toId, cx, cy){
+  var f = findLayer(fromId, l.id); if(!f) return;
+  layersFor(fromId).splice(f.index, 1); bumpRev(fromId);
+  var r = artboardSize(panelById(project.productId, toId)).pxPerCm / artboardSize(panelById(project.productId, fromId)).pxPerCm;
+  s3dRescale(l, r);
+  l.x = cx - l.w / 2; l.y = cy - l.h / 2;
+  layersFor(toId).push(l); bumpRev(toId);
+  return r;
+}
+/* one undo step for a drag, even when it changed pieces */
+function s3dSnapshot(panelId, layerId){
+  var f = findLayer(panelId, layerId); return f ? { panel: panelId, index: f.index, layer: cloneLayer(f.layer), ref: f.layer } : null;
+}
+function s3dPushMove(before, label){
+  var cur = null;
+  S3D.order.forEach(function(pid){ var f = findLayer(pid, before.ref.id); if(f) cur = { panel: pid, index: f.index }; });
+  if(!cur) return;
+  var after = { panel: cur.panel, index: cur.index, layer: cloneLayer(before.ref) }, ref = before.ref;
+  var changed = after.panel !== before.panel || Object.keys(after.layer).some(function(k){ return after.layer[k] !== before.layer[k]; });
+  if(!changed) return;
+  function place(st){
+    S3D.order.forEach(function(pid){ var f = findLayer(pid, ref.id); if(f){ layersFor(pid).splice(f.index, 1); bumpRev(pid); } });
+    Object.keys(st.layer).forEach(function(k){ ref[k] = st.layer[k]; });
+    var ls = layersFor(st.panel); ls.splice(Math.min(st.index, ls.length), 0, ref); bumpRev(st.panel);
+    if(AB.sel === ref.id) s3dSelect(st.panel, ref.id);
+  }
+  hPush({ label: label, undo: function(){ place(before); }, redo: function(){ place(after); } });
+}
+
+/* ---------- brush strokes ---------- */
+function s3dMirrorOf(panelId, x, y){
+  var ab = artboardSize(panelById(project.productId, panelId));
+  var other = { front: 'front', back: 'back', collar: 'collar', sleeve_r: 'sleeve_l', sleeve_l: 'sleeve_r' }[panelId] || panelId;
+  var ab2 = artboardSize(panelById(project.productId, other));
+  return { panel: other, x: (ab.w - x) * ab2.w / ab.w, y: y * ab2.h / ab.h };
+}
+function s3dSetPath(l, abs){
+  var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+  abs.forEach(function(p){ if(p[0] < minx) minx = p[0]; if(p[0] > maxx) maxx = p[0]; if(p[1] < miny) miny = p[1]; if(p[1] > maxy) maxy = p[1]; });
+  var pad = l.size / 2 + 2;
+  l.x = minx - pad; l.y = miny - pad; l.w = maxx - minx + pad * 2; l.h = maxy - miny + pad * 2; l.bw = l.w; l.bh = l.h; l.rot = 0;
+  var cx = l.x + l.w / 2, cy = l.y + l.h / 2;
+  l.pts = abs.map(function(p){ return [Math.round((p[0] - cx) * 10) / 10, Math.round((p[1] - cy) * 10) / 10]; });
+}
+function s3dNewStroke(panelId, x, y, erase){
+  var ab = artboardSize(panelById(project.productId, panelId)), b = S3D.brush, l = baseLayer('path');
+  l.style = erase ? 'pen' : b.style; l.color = b.color; l.size = Math.max(1, b.sizeCm * ab.pxPerCm);
+  l.opacity = erase ? 1 : b.opacity; l.blend = erase ? 'destination-out' : (b.style === 'marker' ? 'multiply' : 'source-over');
+  l.seed = Math.floor(Math.random() * 1e6) + 1; l.name = erase ? 'Eraser' : (BRUSHES.filter(function(x){ return x.id === b.style; })[0] || { label: 'Brush' }).label + ' stroke';
+  var seg = { panel: panelId, layer: l, abs: [[x, y]] };
+  s3dSetPath(l, seg.abs);
+  layersFor(panelId).push(l); bumpRev(panelId);
+  return seg;
+}
+function s3dStrokeTo(st, which, hit){
+  var seg = st[which];
+  if(!seg || seg.panel !== hit.panel){
+    seg = s3dNewStroke(hit.panel, hit.x, hit.y, st.erase);
+    st[which] = seg; st.made.push(seg);
+    return;
+  }
+  var last = seg.abs[seg.abs.length - 1];
+  if(Math.hypot(hit.x - last[0], hit.y - last[1]) < Math.max(1.2, seg.layer.size * 0.18)) return;
+  seg.abs.push([hit.x, hit.y]);
+  s3dSetPath(seg.layer, seg.abs);
+  bumpRev(seg.panel);
+}
+function s3dEndStroke(st){
+  var made = st.made.map(function(sg){ return { panel: sg.panel, layer: sg.layer }; });
+  if(!made.length) return;
+  hPush({ label: st.erase ? 'Erase' : 'Brush stroke',
+          undo: function(){ made.forEach(function(m){ var f = findLayer(m.panel, m.layer.id); if(f){ layersFor(m.panel).splice(f.index, 1); bumpRev(m.panel); } }); },
+          redo: function(){ made.forEach(function(m){ if(!findLayer(m.panel, m.layer.id)){ layersFor(m.panel).push(m.layer); bumpRev(m.panel); } }); } });
+}
+
+/* ---------- fills ---------- */
+function s3dFillOptsFor(panelId){
+  var ab = artboardSize(panelById(project.productId, panelId)), o = S3D.fillOpts;
+  var out = { fill: o.fill, c1: o.c1, c2: o.c2, angle: o.angle, scale: Math.round(o.scaleCm * ab.pxPerCm) };
+  out.c3 = o.c3 || null;
+  return out;
+}
+function s3dFillPanel(panelId){
+  var ls = layersFor(panelId), first = ls[0], opts = s3dFillOptsFor(panelId);
+  var f = FILLS.filter(function(x){ return x.id === opts.fill; })[0];
+  if(first && first.type === 'fill'){ opts.name = (f ? f.label : 'Fill') + ' fill'; updateLayer(panelId, first.id, opts, { label: 'Fill piece' }); return first; }
+  return addFillLayer(panelId, opts);
+}
+function s3dFillAll(){
+  hBegin('Fill the whole tee');
+  S3D.order.forEach(function(pid){ s3dFillPanel(pid); });
+  hCommit();
+}
+function s3dClearFills(){
+  hBegin('Remove fills');
+  S3D.order.forEach(function(pid){ layersFor(pid).filter(function(l){ return l.type === 'fill'; }).forEach(function(l){ removeLayer(pid, l.id); }); });
+  hCommit();
+}
+
+/* ---------- adding things where the customer is looking ---------- */
+function s3dPlace(l, hit){
+  l.x = Math.round(hit.x - l.w / 2); l.y = Math.round(hit.y - l.h / 2);
+  bumpRev(hit.panel);
+  s3dSelect(hit.panel, l.id);
+  return l;
+}
+function s3dAddText(text, opts){
+  var hit = s3dCentreHit(), ab = hit.ab, o = { size: Math.round(3.2 * ab.pxPerCm) };
+  Object.keys(opts || {}).forEach(function(k){ o[k] = opts[k]; });
+  if(text) o.text = text;
+  var l = addTextLayer(hit.panel, o); if(!l) return null;
+  if(l.w > ab.w * 0.92){ var k = ab.w * 0.92 / l.w; updateLayer(hit.panel, l.id, { size: Math.max(6, Math.round(l.size * k)) }, { silent: true }); }
+  return s3dPlace(l, hit);
+}
+function s3dAddShape(shape, fill){
+  var hit = s3dCentreHit(), ab = hit.ab, side = Math.round(Math.min(10 * ab.pxPerCm, ab.h * 0.8, ab.w * 0.8));
+  var l = addShapeLayer(hit.panel, { shape: shape, w: shape === 'line' ? side * 1.6 : side, h: shape === 'line' ? Math.max(4, 0.4 * ab.pxPerCm) : side, fill: fill || '#C3423F' });
+  return l ? s3dPlace(l, hit) : null;
+}
+function s3dAddEmoji(ch){ return s3dAddText(ch, { font: 'Emoji', weight: 400, fill: '#000000', size: Math.round(7 * s3dCentreHit().ab.pxPerCm) }); }
+/* at: where it goes (a hit from s3dHit, e.g. where a file was dropped); the middle of the view otherwise */
+function s3dAddImageFile(file, done, at){
+  if(!file || !/^image\//.test(file.type || '')){ done && done('That file is not an image.'); return; }
+  var rd = new FileReader();
+  rd.onload = function(){
+    var img = new Image();
+    img.onload = function(){
+      var hit = at || s3dCentreHit(), ab = hit.ab, l = addImageLayer(hit.panel, img, file.name, rd.result);
+      if(!l){ done && done('Could not add the image.'); return; }
+      var want = Math.min(18 * ab.pxPerCm, ab.w * 0.8, ab.h * 0.8 * l.w / l.h), k = want / l.w;
+      l.w = Math.round(l.w * k); l.h = Math.round(l.h * k);
+      s3dPlace(l, hit);
+      var d = layerDpi(hit.panel, l);
+      done && done(d !== null && d < 150 ? file.name + ' is only ' + d + ' DPI at this size — it will print blurred. Make it smaller or use a bigger file.' : '');
+    };
+    img.onerror = function(){ done && done('Could not read ' + file.name + '.'); };
+    img.src = rd.result;
+  };
+  rd.readAsDataURL(file);
+}
+
+/* ---------- pointer ---------- */
+function s3dTol(ab){ return 0.35 * ab.pxPerCm; }
+function s3dPointerDown(e){
+  if(!S3D.ready || e.button === 2 || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  if(S3D.touches && S3D.touches > 1) return;
+  var tool = S3D.tool, hit = s3dHit(e.clientX, e.clientY);
+  S3D.lastHit = hit;
+  if(!hit) return;                                                     /* bare background: let the tee turn */
+  if(tool === 'brush' || tool === 'eraser'){
+    var st = { type: 'paint', erase: tool === 'eraser', made: [], main: null, twin: null };
+    st.main = s3dNewStroke(hit.panel, hit.x, hit.y, st.erase); st.made.push(st.main);
+    if(S3D.brush.mirror){ var m = s3dMirrorOf(hit.panel, hit.x, hit.y); st.twin = s3dNewStroke(m.panel, m.x, m.y, st.erase); st.made.push(st.twin); }
+    s3dBeginDrag(e, st); return;
+  }
+  if(tool === 'fill'){
+    var fl = s3dFillPanel(hit.panel); s3dSelect(hit.panel, fl ? fl.id : null);
+    e.preventDefault(); e.stopPropagation(); return;
+  }
+  /* select tool */
+  var cur = s3dSelection();
+  if(cur && cur.panel === hit.panel){
+    var hd = s3dHandleAt(cur.layer, hit.ab, hit.x, hit.y);
+    if(hd){
+      var c = layerCentre(cur.layer);
+      var drag = hd === 'rot'
+        ? { type: 'rotate', a0: Math.atan2(hit.y - c[1], hit.x - c[0]), rot0: cur.layer.rot || 0 }
+        : { type: 'scale', d0: Math.max(1, Math.hypot(hit.x - c[0], hit.y - c[1])), l0: cloneLayer(cur.layer) };
+      drag.before = s3dSnapshot(cur.panel, cur.layer.id); drag.panel = cur.panel;
+      s3dBeginDrag(e, drag); return;
+    }
+  }
+  var l = s3dLayerAt(hit.panel, hit.x, hit.y, s3dTol(hit.ab));
+  if(l){
+    if(AB.sel !== l.id || AB.panel !== hit.panel) s3dSelect(hit.panel, l.id);
+    var cc = layerCentre(l);
+    s3dBeginDrag(e, { type: 'move', panel: hit.panel, ox: hit.x - cc[0], oy: hit.y - cc[1], before: s3dSnapshot(hit.panel, l.id), moved: false });
+    return;
+  }
+  /* bare fabric: deselect on a click (not a drag), and let the tee turn */
+  S3D.clickAt = { x: e.clientX, y: e.clientY, panel: hit.panel };
+}
+function s3dBeginDrag(e, drag){
+  S3D.drag = drag; S3D.controls.enabled = false;
+  try { S3D.renderer.domElement.setPointerCapture(e.pointerId); } catch(err){}
+  e.preventDefault(); e.stopPropagation();
+}
+function s3dPointerMove(e){
+  if(!S3D.ready) return;
+  var d = S3D.drag;
+  if(!d){ s3dHover(e); return; }
+  var hit = s3dHit(e.clientX, e.clientY); if(!hit) return;
+  if(d.type === 'paint'){
+    s3dStrokeTo(d, 'main', hit);
+    if(S3D.brush.mirror){ var m = s3dMirrorOf(hit.panel, hit.x, hit.y); s3dStrokeTo(d, 'twin', { panel: m.panel, x: m.x, y: m.y }); }
+    return;
+  }
+  var l = d.before && d.before.ref; if(!l) return;
+  if(d.type === 'move'){
+    if(hit.panel !== d.panel){
+      var r = s3dTransfer(l, d.panel, hit.panel, hit.x - d.ox, hit.y - d.oy);
+      d.ox *= r; d.oy *= r; d.panel = hit.panel; s3dSelect(hit.panel, l.id);
+    } else {
+      l.x = Math.round(hit.x - d.ox - l.w / 2); l.y = Math.round(hit.y - d.oy - l.h / 2); bumpRev(d.panel);
+    }
+    d.moved = true; return;
+  }
+  if(hit.panel !== d.panel) return;
+  var c = layerCentre(l);
+  if(d.type === 'rotate'){
+    var deg = d.rot0 + (Math.atan2(hit.y - c[1], hit.x - c[0]) - d.a0) * 180 / Math.PI;
+    if(e.shiftKey) deg = Math.round(deg / 15) * 15; else { var near = Math.round(deg / 90) * 90; if(Math.abs(deg - near) < 4) deg = near; }
+    l.rot = Math.round((((deg + 180) % 360 + 360) % 360 - 180) * 10) / 10; bumpRev(d.panel);
+  } else if(d.type === 'scale'){
+    var k = Math.max(0.05, Math.hypot(hit.x - c[0], hit.y - c[1]) / d.d0), l0 = d.l0;
+    var nw = Math.max(4, l0.w * k), nh = Math.max(4, l0.h * k);
+    l.x = c[0] - nw / 2; l.y = c[1] - nh / 2; l.w = nw; l.h = nh;
+    if(l.type === 'text'){ l.size = Math.max(4, l0.size * k); if(l0.strokeW) l.strokeW = l0.strokeW * k; if(l0.tracking) l.tracking = l0.tracking * k; }
+    if(l.type === 'shape' && l0.strokeW) l.strokeW = l0.strokeW * k;
+    bumpRev(d.panel);
+  }
+}
+function s3dPointerUp(e){
+  var d = S3D.drag;
+  if(d){
+    S3D.drag = null; S3D.controls.enabled = true;
+    if(d.type === 'paint') s3dEndStroke(d);
+    else if(d.before) s3dPushMove(d.before, d.type === 'move' ? 'Move design' : (d.type === 'rotate' ? 'Rotate design' : 'Resize design'));
+    /* the lists were left alone while dragging (see onProjectChanged) */
+    if(typeof abRenderLayers === 'function'){ abRenderLayers(); abRenderInspector(); }
+    s3dSyncPanelChips();
+    if(typeof syncRack === 'function') syncRack();
+    return;
+  }
+  var c = S3D.clickAt; S3D.clickAt = null;
+  if(c && Math.hypot(e.clientX - c.x, e.clientY - c.y) < 5 && S3D.tool === 'select') s3dSelect(c.panel, null);
+}
+var _hoverT = 0;
+function s3dHover(e){
+  var el = S3D.renderer.domElement, now = performance.now();
+  if(e.pointerType !== 'mouse' || now - _hoverT < 45) return;
+  _hoverT = now;
+  if(S3D.tool === 'brush' || S3D.tool === 'eraser' || S3D.tool === 'fill'){ el.style.cursor = 'crosshair'; return; }
+  var hit = s3dHit(e.clientX, e.clientY), cur = s3dSelection();
+  if(!hit){ el.style.cursor = 'grab'; return; }
+  if(cur && cur.panel === hit.panel){
+    var hd = s3dHandleAt(cur.layer, hit.ab, hit.x, hit.y);
+    if(hd){ el.style.cursor = hd === 'rot' ? 'alias' : 'nwse-resize'; return; }
+  }
+  el.style.cursor = s3dLayerAt(hit.panel, hit.x, hit.y, s3dTol(hit.ab)) ? 'move' : 'grab';
+}
+/* the wheel over the selected design scales it with Alt held; otherwise it zooms the view */
+function s3dWheel(e){
+  if(!e.altKey) return;
+  var cur = s3dSelection(); if(!cur) return;
+  e.preventDefault(); e.stopPropagation();
+  var l = cur.layer, k = Math.exp(-e.deltaY * 0.0015), c = layerCentre(l), before = s3dSnapshot(cur.panel, l.id);
+  var l0 = cloneLayer(l), nw = Math.max(4, l.w * k), nh = Math.max(4, l.h * k);
+  l.x = c[0] - nw / 2; l.y = c[1] - nh / 2; l.w = nw; l.h = nh;
+  if(l.type === 'text'){ l.size = Math.max(4, l0.size * k); if(l0.strokeW) l.strokeW = l0.strokeW * k; }
+  bumpRev(cur.panel);
+  clearTimeout(S3D.wheelT);
+  if(!S3D.wheelBefore) S3D.wheelBefore = before;
+  S3D.wheelT = setTimeout(function(){ var b = S3D.wheelBefore; S3D.wheelBefore = null; if(b) s3dPushMove(b, 'Resize design'); if(typeof abRenderInspector === 'function') abRenderInspector(); }, 350);
+}
+function s3dBindPointer(){
+  var el = S3D.renderer.domElement;
+  el.addEventListener('pointerdown', function(e){ S3D.touches = (S3D.touches || 0) + (e.pointerType === 'touch' ? 1 : 0); s3dPointerDown(e); }, true);
+  el.addEventListener('pointermove', s3dPointerMove);
+  ['pointerup', 'pointercancel'].forEach(function(t){ el.addEventListener(t, function(e){ if(e.pointerType === 'touch') S3D.touches = Math.max(0, (S3D.touches || 1) - 1); s3dPointerUp(e); }); });
+  el.addEventListener('wheel', s3dWheel, { capture: true, passive: false });
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+}
+function s3dSetTool(t){
+  S3D.tool = t;
+  if(S3D.renderer) S3D.renderer.domElement.style.cursor = (t === 'brush' || t === 'eraser' || t === 'fill') ? 'crosshair' : 'grab';
+  if(typeof onS3dTool === 'function') onS3dTool(t);
+}
+
+/* ---------- renders for export: any view, any size, transparent or on the studio backdrop ----------
+   Rendered through the visible canvas (same tone mapping and colour as the screen), resized for one
+   frame and restored before the browser paints. */
+function s3dRenderView(view, px, opts){
+  opts = opts || {};
+  var T = S3D.T, r = S3D.renderer, cam = S3D.camera, v = S3D_VIEWS[view] || S3D_VIEWS.front;
+  var saved = { pos: cam.position.clone(), quat: cam.quaternion.clone(), aspect: cam.aspect, fov: cam.fov,
+                target: S3D.controls.target.clone(), pr: r.getPixelRatio(), sel: S3D.src.selection };
+  var d = new T.Vector3(v.dir[0], v.dir[1], v.dir[2]).normalize(), tgt = new T.Vector3(v.target[0], v.target[1], v.target[2]);
+  cam.position.copy(tgt).add(d.multiplyScalar(v.dist * 0.92)); cam.up.set(0, 1, 0); cam.lookAt(tgt);
+  cam.clearViewOffset(); cam.zoom = 1;
+  cam.aspect = 1; cam.fov = 30; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+  S3D.src.selection = function(){ return null; };
+  S3D.order.forEach(function(id){ s3dCompose(id); });
+  S3D.controls.target.copy(tgt); s3dKeyFollow();
+  r.setPixelRatio(1); r.setSize(px, px, false); r.setClearColor(0x000000, 0);
+  r.render(S3D.scene, cam);
+  var c = document.createElement('canvas'); c.width = c.height = px;
+  c.getContext('2d').drawImage(r.domElement, 0, 0, px, px);
+  r.setPixelRatio(saved.pr);
+  cam.position.copy(saved.pos); cam.quaternion.copy(saved.quat); cam.fov = saved.fov; cam.aspect = saved.aspect;
+  S3D.controls.target.copy(saved.target); cam.updateProjectionMatrix();
+  S3D.src.selection = saved.sel;
+  s3dResize(); s3dKeyFollow(); s3dMarkAll();
+  if(opts.bg && opts.bg !== 'transparent'){
+    var out = document.createElement('canvas'); out.width = out.height = px;
+    var o = out.getContext('2d'), gr = o.createRadialGradient(px / 2, px * 0.4, px * 0.05, px / 2, px * 0.45, px * 0.75);
+    gr.addColorStop(0, '#FBFBF7'); gr.addColorStop(1, '#E2E3DC'); o.fillStyle = gr; o.fillRect(0, 0, px, px);
+    o.drawImage(c, 0, 0); c = out;
+  }
+  if(opts.watermark && typeof drawWatermark === 'function') drawWatermark(c.getContext('2d'), px);
+  return c;
+}
+
+/* ============================================================
+   THE STUDIO AROUND THE TEE
+   Toolbar, tool options, stickers, text styles, the piece chips over the
+   layer list, shortcuts, file drops and the multi-colour sheet.
+   ============================================================ */
+var S3D_QUICK = ['#111111', '#FFFFFF', '#C3423F', '#F2B33D', '#2E7D5B', '#2E4FA3', '#7B4FA0', '#F28FB1'];
+var S3D_EMOJI = ['🔥', '⚡', '✨', '💥', '⭐', '🌙', '☀️', '🌈', '❤️', '💀', '👑', '💎', '🎯', '🚀', '👽', '👻', '🦋', '🌹', '🌴', '🍕',
+                 '😎', '😂', '🥳', '😍', '🤘', '✌️', '👀', '💯', '🎧', '🏀', '⚽', '🎮', '🐍', '🦁', '🐺', '🦅', '🌊', '🍀', '☮️', '♾️'];
+var S3D_PIECE_VIEW = { front: 'front', back: 'back', sleeve_r: 'right', sleeve_l: 'left', collar: 'neck' };
+/* one click restyles the selected text; sizes are fractions of the letter height */
+var S3D_TEXT_STYLES = [
+  { id: 'bold', label: 'Bold', css: "800 17px 'Archivo'", p: { font: 'Archivo', weight: 800, fill: '#1E2749' } },
+  { id: 'neon', label: 'Neon', css: "400 15px 'Monoton'", color: '#FF3EA5', p: { font: 'Monoton', weight: 400, fill: '#FFF0FA', shadow: { color: '#FF3EA5', blur: 0.4, x: 0, y: 0 } } },
+  { id: 'retro', label: 'Retro', css: "400 15px 'Bungee'", color: '#D9452B', p: { font: 'Bungee', weight: 400, fill: '#F2B33D', fill2: '#D9452B', stroke: '#1E2749', strokeW: 0.05, shadow: { color: '#1E2749', blur: 0, x: 0.05, y: 0.07 } } },
+  { id: 'script', label: 'Script', css: "400 17px 'Pacifico'", color: '#C3423F', p: { font: 'Pacifico', weight: 400, fill: '#C3423F' } },
+  { id: 'arc', label: 'Arc', css: "800 15px 'Archivo'", p: { font: 'Archivo', weight: 800, fill: '#1E2749', curve: 45, tracking: 0.04 } },
+  { id: 'graffiti', label: 'Graffiti', css: "400 17px 'Permanent Marker'", p: { font: 'Permanent Marker', weight: 400, fill: '#111111', shadow: { color: '#F2B33D', blur: 0, x: 0.05, y: 0.05 } } },
+  { id: 'pixel', label: 'Pixel', css: "400 11px 'Press Start 2P'", color: '#2E7D5B', p: { font: 'Press Start 2P', weight: 400, fill: '#2E7D5B' } },
+  { id: 'stencil', label: 'Stencil', css: "400 16px 'Black Ops One'", color: '#3B4A2F', p: { font: 'Black Ops One', weight: 400, fill: '#3B4A2F' } },
+  { id: 'outline', label: 'Outline', css: "400 18px 'Anton'", p: { font: 'Anton', weight: 400, fill: '#FFFFFF', stroke: '#111111', strokeW: 0.05 } },
+  { id: 'chrome', label: 'Chrome', css: "400 17px 'Righteous'", color: '#56627A', p: { font: 'Righteous', weight: 400, fill: '#F5F7FA', fill2: '#6F7B91', stroke: '#2B3140', strokeW: 0.03 } },
+  { id: 'kufi', label: 'كوفي', css: "700 18px 'Reem Kufi'", p: { font: 'Reem Kufi', weight: 700, fill: '#1E2749' } },
+  { id: 'ruqaa', label: 'رقعة', css: "700 18px 'Aref Ruqaa'", color: '#6E2A35', p: { font: 'Aref Ruqaa', weight: 700, fill: '#6E2A35' } }
+];
+
+function s3dToast(text, ms){
+  var el = $('s3dMsg'); if(!el) return;
+  clearTimeout(S3D.toastT);
+  if(!text){ el.classList.add('hidden'); return; }
+  el.textContent = text; el.classList.remove('hidden');
+  S3D.toastT = setTimeout(function(){ el.classList.add('hidden'); }, ms || 4200);
+}
+
+/* entering 3D: start the engine the first time, pick a piece so the layer list has one */
+function s3dOpen(){
+  if(!AB.panel || !panelById(project.productId, AB.panel)) s3dSelect('front', null);
+  else s3dSyncPanelChips();
+  s3dSyncSelActs();
+  if(S3D.ready){ $('s3dLoading').classList.add('hidden'); s3dSetVisible(state.mode === '3d'); return Promise.resolve(true); }
+  if(S3D.failed){ s3dShowFail(); return Promise.resolve(false); }
+  $('s3dLoading').classList.remove('hidden'); $('s3dFail').classList.add('hidden');
+  return s3dInit($('gl3d')).then(function(ok){
+    $('s3dLoading').classList.add('hidden');
+    if(!ok){ s3dShowFail(); return false; }
+    s3dSetVisible(state.mode === '3d');
+    s3dSetTool(S3D.tool);
+    return true;
+  });
+}
+function s3dShowFail(){
+  var el = $('s3dFail'); el.innerHTML = '';
+  var p = document.createElement('div'); p.textContent = S3D.failed || 'The 3D studio could not start.'; el.appendChild(p);
+  if(S3D.canRetry){
+    var again = document.createElement('button'); again.className = 'btn small'; again.type = 'button'; again.textContent = 'Try again';
+    again.addEventListener('click', function(){ S3D.failed = null; s3dOpen(); });
+    el.appendChild(again);
+  }
+  var flat = document.createElement('button'); flat.className = 'btn small ghost'; flat.type = 'button'; flat.textContent = 'Design on flat pieces';
+  flat.addEventListener('click', function(){ setMode('design'); });
+  el.appendChild(flat);
+  el.classList.remove('hidden');
+  $('s3dLoading').classList.add('hidden');
+}
+
+/* the pieces as chips over the layer list: which one the list shows, how many designs each has */
+function s3dSyncPanelChips(){
+  var host = $('s3dChips'); if(!host || !project) return;
+  var ps = panelsFor(project.productId);
+  if(host.dataset.product !== project.productId || host.children.length !== ps.length){
+    host.innerHTML = ''; host.dataset.product = project.productId;
+    ps.forEach(function(p){
+      var b = document.createElement('button'); b.type = 'button'; b.dataset.panel = p.id; b.setAttribute('role', 'tab');
+      var name = document.createElement('span'); name.textContent = p.label;
+      var n = document.createElement('span'); n.className = 'n';
+      b.appendChild(name); b.appendChild(n);
+      b.addEventListener('click', function(){ s3dSelect(p.id, null); s3dFocusPanel(p.id); });
+      host.appendChild(b);
+    });
+  }
+  Array.prototype.forEach.call(host.children, function(b){
+    var on = b.dataset.panel === AB.panel, n = layersFor(b.dataset.panel).length;
+    b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.lastChild.textContent = n ? String(n) : '';
+  });
+}
+function s3dFocusPanel(id){
+  var v = S3D_PIECE_VIEW[id]; if(!v || !S3D.ready) return;
+  s3dSpin(false); s3dView(v);
+}
+function s3dSpin(on){
+  s3dAutoRotate(on);
+  var b = $('s3dSpin'); if(b) b.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+
+/* ---------- tools ---------- */
+var S3D_HINTS = {
+  select: 'Drag a design to move it · drag the fabric to turn the tee · scroll to zoom',
+  brush: 'Paint anywhere on the tee · drag the background to turn it',
+  eraser: 'Rub out paint · drag the background to turn the tee',
+  fill: 'Click a piece to fill it · drag the background to turn the tee'
+};
+function onS3dTool(t){
+  document.querySelectorAll('#s3dTools button').forEach(function(b){
+    var on = b.dataset.tool === t; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  var er = t === 'eraser';
+  $('optSelect').classList.toggle('hidden', t !== 'select');
+  $('optBrush').classList.toggle('hidden', t !== 'brush' && !er);
+  $('optFill').classList.toggle('hidden', t !== 'fill');
+  $('eraserNote').classList.toggle('hidden', !er);
+  $('brushStyles').classList.toggle('hidden', er);
+  $('brushColor').closest('.rowline').classList.toggle('hidden', er);
+  $('brushOp').closest('.rowline').classList.toggle('hidden', er);
+  $('optBrush').querySelector('.speclabel').textContent = er ? 'Eraser' : 'Brush';
+  $('s3dHint').textContent = S3D_HINTS[t] || S3D_HINTS.select;
+  s3dStickers(false);
+}
+/* text, image and sticker add something and go back to moving; the others are modes */
+function s3dToolAction(t){
+  if(locked){ openGate(); return; }
+  if(t === 'text'){
+    s3dSetTool('select');
+    if(!s3dAddText()) return;
+    /* phones: show the text box in the sheet without popping the keyboard over the tee */
+    if(window.innerWidth <= 900){ if(window.sheetDetent) window.sheetDetent('half'); $('sheet').scrollTop = 0; return; }
+    setTimeout(function(){ var el = $('s3dTxt'); if(el){ el.focus({ preventScroll: true }); el.select(); } }, 40);
+    return;
+  }
+  if(t === 'image'){ s3dSetTool('select'); $('s3dFile').click(); return; }
+  if(t === 'sticker'){ s3dStickers(); return; }
+  s3dSetTool(t);
+}
+
+/* ---------- stickers: shapes and emoji ---------- */
+S3D.stickColor = '#C3423F';
+function s3dStickers(on){
+  var pop = $('s3dStickers'), btn = document.querySelector('#s3dTools [data-tool="sticker"]');
+  if(!pop) return;
+  if(on === undefined) on = pop.classList.contains('hidden');
+  pop.classList.toggle('hidden', !on);
+  if(btn) btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+  if(on) s3dDrawStickerShapes();
+}
+function s3dDrawStickerShapes(){
+  document.querySelectorAll('#stickShapes button').forEach(function(b){
+    var c = b.querySelector('canvas'), g = c.getContext('2d'), sh = b.dataset.shape, n = c.width;
+    g.clearRect(0, 0, n, n); g.save(); g.translate(n / 2, n / 2);
+    g.fillStyle = S3D.stickColor; g.beginPath();
+    shapePath(g, sh, sh === 'line' ? n * 0.8 : n * 0.72, sh === 'line' ? n * 0.08 : n * 0.72);
+    g.fill(sh === 'ring' ? 'evenodd' : 'nonzero');
+    if(lum(S3D.stickColor) > 0.85){ g.lineWidth = 1.5; g.strokeStyle = 'rgba(30,39,73,0.35)'; g.stroke(); }
+    g.restore();
+  });
+}
+function s3dBuildStickers(){
+  var shapes = $('stickShapes'), emoji = $('stickEmoji'), sw = $('stickSw');
+  shapes.innerHTML = ''; emoji.innerHTML = ''; sw.innerHTML = '';
+  SHAPES.forEach(function(sh){
+    var b = document.createElement('button'); b.type = 'button'; b.dataset.shape = sh.id; b.title = sh.label; b.setAttribute('aria-label', sh.label);
+    var c = document.createElement('canvas'); c.width = c.height = 64; b.appendChild(c);
+    b.addEventListener('click', function(){ if(s3dAddShape(sh.id, S3D.stickColor)) s3dStickers(false); });
+    shapes.appendChild(b);
+  });
+  S3D_EMOJI.forEach(function(ch){
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = ch; b.setAttribute('aria-label', 'Emoji ' + ch);
+    b.addEventListener('click', function(){ if(s3dAddEmoji(ch)) s3dStickers(false); });
+    emoji.appendChild(b);
+  });
+  S3D_QUICK.forEach(function(hex){
+    var b = document.createElement('button'); b.type = 'button'; b.style.background = hex; b.title = hex; b.setAttribute('aria-label', 'Shape colour ' + hex);
+    b.addEventListener('click', function(){ S3D.stickColor = hex; $('stickColor').value = hex; s3dDrawStickerShapes(); });
+    sw.appendChild(b);
+  });
+  $('stickColor').addEventListener('input', function(){ S3D.stickColor = this.value; s3dDrawStickerShapes(); });
+}
+
+/* ---------- brush and eraser options ---------- */
+function s3dBuildBrushOptions(){
+  var host = $('brushStyles'), sw = $('brushSw');
+  host.innerHTML = ''; sw.innerHTML = '';
+  BRUSHES.forEach(function(br){
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = br.label; b.dataset.style = br.id; b.setAttribute('role', 'radio');
+    b.addEventListener('click', function(){ S3D.brush.style = br.id; s3dSyncBrush(); });
+    host.appendChild(b);
+  });
+  S3D_QUICK.forEach(function(hex){
+    var b = document.createElement('button'); b.type = 'button'; b.style.background = hex; b.title = hex; b.setAttribute('aria-label', 'Brush colour ' + hex);
+    b.addEventListener('click', function(){ S3D.brush.color = hex; s3dSyncBrush(); });
+    sw.appendChild(b);
+  });
+  $('brushColor').addEventListener('input', function(){ S3D.brush.color = this.value; });
+  $('brushSize').addEventListener('input', function(){ S3D.brush.sizeCm = Math.max(0.1, +this.value / 10); s3dSyncBrush(); });
+  $('brushOp').addEventListener('input', function(){ S3D.brush.opacity = Math.max(0.05, +this.value / 100); });
+  $('brushMirror').addEventListener('change', function(){ S3D.brush.mirror = this.checked; });
+  s3dSyncBrush();
+}
+function s3dSyncBrush(){
+  var b = S3D.brush;
+  document.querySelectorAll('#brushStyles button').forEach(function(x){ var on = x.dataset.style === b.style; x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
+  $('brushColor').value = b.color; $('brushSize').value = Math.round(b.sizeCm * 10);
+  $('brushSizeV').textContent = (Math.round(b.sizeCm * 10) / 10).toFixed(1) + ' cm';
+  $('brushOp').value = Math.round(b.opacity * 100); $('brushMirror').checked = !!b.mirror;
+}
+
+/* ---------- fill options: these set the next fill; a fill already made is edited in the inspector ---------- */
+function s3dBuildFillOptions(){
+  var host = $('fillKinds'); host.innerHTML = '';
+  FILLS.forEach(function(f){
+    var b = document.createElement('button'); b.type = 'button'; b.dataset.fill = f.id; b.setAttribute('role', 'radio');
+    var c = document.createElement('canvas'); c.width = 84; c.height = 60;
+    b.appendChild(c); b.appendChild(document.createTextNode(f.label));
+    b.addEventListener('click', function(){ S3D.fillOpts.fill = f.id; s3dSyncFill(); });
+    host.appendChild(b);
+  });
+  function opt(id, ev, fn){ $(id).addEventListener(ev, function(){ fn(this); s3dSyncFill(true); }); }
+  opt('fillC1', 'input', function(el){ S3D.fillOpts.c1 = el.value; });
+  opt('fillC2', 'input', function(el){ S3D.fillOpts.c2 = el.value; });
+  opt('fillC3', 'input', function(el){ if($('fillUse3').checked) S3D.fillOpts.c3 = el.value; });
+  opt('fillUse3', 'change', function(el){ S3D.fillOpts.c3 = el.checked ? $('fillC3').value : ''; });
+  opt('fillAngle', 'input', function(el){ S3D.fillOpts.angle = +el.value; });
+  opt('fillScale', 'input', function(el){ S3D.fillOpts.scaleCm = Math.max(1, +el.value); });
+  $('fillAllBtn').addEventListener('click', function(){ if(locked){ openGate(); return; } s3dFillAll(); s3dToast('The whole tee is filled. Click a piece to select its fill and fine-tune it on the right.'); });
+  $('fillClearBtn').addEventListener('click', function(){ s3dClearFills(); });
+  s3dSyncFill();
+}
+function s3dSyncFill(soon){
+  var o = S3D.fillOpts;
+  document.querySelectorAll('#fillKinds button').forEach(function(b){ var on = b.dataset.fill === o.fill; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); });
+  $('fillC1').value = o.c1; $('fillC2').value = o.c2; $('fillUse3').checked = !!o.c3; if(o.c3) $('fillC3').value = o.c3;
+  $('fillAngle').value = o.angle; $('fillScale').value = o.scaleCm; $('fillScaleV').textContent = o.scaleCm + ' cm';
+  /* the previews redraw a moment after the last change (camo and tie-dye take a few ms each) */
+  clearTimeout(S3D.fillPrevT);
+  S3D.fillPrevT = setTimeout(s3dFillPreviews, soon ? 90 : 0);
+}
+function s3dFillPreviews(){
+  var o = S3D.fillOpts;
+  document.querySelectorAll('#fillKinds button').forEach(function(b){
+    var c = b.querySelector('canvas'), g = c.getContext('2d');
+    g.save(); g.clearRect(0, 0, c.width, c.height);
+    drawFill(g, { fill: b.dataset.fill, c1: o.c1, c2: o.c2, c3: o.c3 || null, angle: o.angle, scale: 9 + o.scaleCm * 2.2, seed: 5 }, c.width, c.height, 1);
+    g.restore();
+  });
+}
+
+/* ---------- the selected design: quick actions, text styles ---------- */
+function s3dSyncSelActs(){
+  var acts = $('s3dSelActs'); if(!acts) return;
+  var l = state.mode === '3d' && AB.panel && AB.sel ? (findLayer(AB.panel, AB.sel) || {}).layer : null;
+  var design = !!(l && l.type !== 'fill');
+  acts.classList.toggle('hidden', !design);
+  $('s3dSelHelp').classList.toggle('hidden', design);
+  $('s3dTextStyles').classList.toggle('hidden', !(l && l.type === 'text'));
+  var tx = $('s3dTxt');
+  if(l && l.type === 'text' && document.activeElement !== tx && tx.value !== l.text) tx.value = l.text;
+  if(design){
+    var tile = acts.querySelector('[data-act="tile"]');
+    tile.textContent = l.tile ? 'Single' : 'Pattern';
+    tile.title = l.tile ? 'Stop repeating it' : 'Repeat it across the whole piece';
+  }
+}
+function s3dBuildTextStyles(){
+  var host = $('textStyleGrid'); host.innerHTML = '';
+  S3D_TEXT_STYLES.forEach(function(st){
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = st.label; b.title = st.id === 'kufi' || st.id === 'ruqaa' ? 'Arabic ' + st.p.font : st.label;
+    b.style.font = st.css; if(st.color) b.style.color = st.color;
+    if(st.id === 'outline'){ b.style.color = '#FFFFFF'; b.style.webkitTextStroke = '1px #111'; }
+    if(st.id === 'neon') b.style.textShadow = '0 0 6px #FF3EA5';
+    b.addEventListener('click', function(){ s3dApplyTextStyle(st); });
+    host.appendChild(b);
+  });
+}
+function s3dApplyTextStyle(st){
+  var cur = s3dSelection(); if(!cur || cur.layer.type !== 'text') return;
+  var l = cur.layer, sz = Math.max(1, l.size || 100), p = st.p;
+  var arabic = /[؀-ۿ]/.test(l.text || '');
+  var patch = { font: p.font, weight: p.weight || 400, fill: p.fill, fill2: p.fill2 || null,
+                stroke: p.stroke || null, strokeW: p.strokeW ? Math.round(p.strokeW * sz * 10) / 10 : 0,
+                shadow: p.shadow ? { color: p.shadow.color, blur: p.shadow.blur * sz, x: p.shadow.x * sz, y: p.shadow.y * sz } : null,
+                curve: arabic ? 0 : (p.curve || 0), tracking: arabic ? 0 : Math.round((p.tracking || 0) * sz * 10) / 10 };
+  updateLayer(cur.panel, l.id, patch, { label: st.label + ' text' });
+  s3dSelect(cur.panel, l.id);
+}
+function s3dSelAction(act){
+  var cur = s3dSelection(); if(!cur) return;
+  var l = cur.layer, pid = cur.panel, ab = artboardSize(panelById(project.productId, pid));
+  if(act === 'dup'){ var d = duplicateLayer(pid, l.id); if(d) s3dSelect(pid, d.id); return; }
+  if(act === 'centre'){ updateLayer(pid, l.id, { x: Math.round((ab.w - l.w) / 2) }, { label: 'Centre on piece' }); s3dSelect(pid, l.id); return; }
+  if(act === 'tile'){ updateLayer(pid, l.id, { tile: l.tile ? null : { gap: 0.25, rot: 0, offset: true } }, { label: l.tile ? 'Stop pattern' : 'Make a pattern' }); s3dSelect(pid, l.id); return; }
+  if(act === 'up' || act === 'down'){ reorderLayer(pid, l.id, act === 'up' ? 1 : -1); s3dSelect(pid, l.id); return; }
+  if(act === 'other'){
+    /* the same spot on the other side: left chest <-> right chest, one sleeve <-> the other */
+    var c = layerCentre(l), m = s3dMirrorOf(pid, c[0], c[1]), copy = cloneLayer(l);
+    copy.id = uid('l_'); copy.name = (l.name || l.type) + ' (other side)'; copy.rot = -(l.rot || 0);
+    if(l.type === 'path') copy.flipX = !l.flipX;
+    if(m.panel !== pid) s3dRescale(copy, artboardSize(panelById(project.productId, m.panel)).pxPerCm / ab.pxPerCm);
+    copy.x = m.x - copy.w / 2; copy.y = m.y - copy.h / 2;
+    insertLayer(m.panel, copy, 'Copy to the other side');
+    s3dSelect(m.panel, copy.id);
+    if(m.panel !== pid) s3dFocusPanel(m.panel);
+  }
+}
+
+/* ---------- keys (3D only, never while typing) ---------- */
+function s3dKey(e){
+  if(state.mode !== '3d' || locked || e.ctrlKey || e.metaKey || e.altKey) return;
+  var t = e.target, typing = t && (/TEXTAREA|SELECT/.test(t.tagName) || t.isContentEditable ||
+    (t.tagName === 'INPUT' && !/^(checkbox|radio|range|color|button|file)$/.test(t.type)));
+  if(e.key === 'Escape'){ s3dStickers(false); return; }
+  if(typing || document.querySelector('.modal.on')) return;
+  var k = (e.key || '').toLowerCase();
+  var tools = { v: 'select', t: 'text', i: 'image', s: 'sticker', b: 'brush', e: 'eraser', f: 'fill' };
+  if(tools[k]){ e.preventDefault(); s3dToolAction(tools[k]); return; }
+  var views = { '1': 'front', '2': 'back', '3': 'left', '4': 'right', '5': 'top', '6': 'armpit', '7': 'bottom' };
+  if(views[k]){ e.preventDefault(); s3dSpin(false); s3dView(views[k]); return; }
+  if(k === '[' || k === ']'){
+    e.preventDefault();
+    S3D.brush.sizeCm = Math.max(0.1, Math.min(6, Math.round((S3D.brush.sizeCm * (k === ']' ? 1.25 : 0.8)) * 10) / 10));
+    s3dSyncBrush(); s3dToast('Brush ' + S3D.brush.sizeCm.toFixed(1) + ' cm', 1200);
+  }
+}
+
+/* ---------- the design on the tee in every garment colour, as one PNG ---------- */
+async function s3dContactSheet(){
+  if(!trialAllows('export', project.productId)) return;
+  var btn = $('contactSheet3dBtn'); if(btn.disabled) return;
+  btn.disabled = true; var was = btn.textContent; btn.textContent = 'Rendering…';
+  try {
+    if(!(await s3dEnsure())){ s3dToast(S3D.failed || '3D is not available on this device.'); return; }
+    await new Promise(function(r){ setTimeout(r, 30); });
+    var view = !layersFor('front').length && layersFor('back').length ? 'back' : 'front';
+    var cols = Math.min(4, GARMENT_COLORS.length), rows = Math.ceil(GARMENT_COLORS.length / cols), cell = 520, pad = 24, label = 44;
+    var c = document.createElement('canvas');
+    c.width = cols * (cell + pad) + pad; c.height = rows * (cell + label + pad) + pad;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#ECEDE8'; ctx.fillRect(0, 0, c.width, c.height);
+    var base = S3D.src.base;
+    try {
+      GARMENT_COLORS.forEach(function(col, i){
+        var x = pad + (i % cols) * (cell + pad), y = pad + Math.floor(i / cols) * (cell + label + pad);
+        S3D.src.base = function(){ return col.hex; };
+        ctx.fillStyle = '#FBFBF7'; ctx.fillRect(x, y, cell, cell + label);
+        ctx.drawImage(s3dRenderView(view, cell, { bg: 'studio' }), x, y);
+        ctx.fillStyle = col.hex; ctx.fillRect(x + 12, y + cell + 12, 20, 20);
+        ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.strokeRect(x + 12.5, y + cell + 12.5, 19, 19);
+        ctx.font = '600 15px "IBM Plex Mono", monospace'; ctx.fillStyle = '#1E2749'; ctx.textBaseline = 'top';
+        ctx.fillText(col.name.toUpperCase() + '  ' + col.hex.toUpperCase() + (col.tcx ? '  TCX ' + col.tcx : ''), x + 42, y + cell + 14);
+      });
+    } finally { S3D.src.base = base; s3dMarkAll(); }
+    await downloadCanvas(c, safeName(currentDef().name) + '_3d_colours.png');
+    track('export', project.productId, 'multi-colour sheet (3D)');
+  } catch(e){
+    s3dToast('Could not make the sheet: ' + (e.message || e));
+  } finally { btn.disabled = false; btn.textContent = was; }
+}
+
+/* ---------- wiring (once) ---------- */
+function bindStudio3d(){
+  if(S3D.uiBound) return; S3D.uiBound = true;
+  document.querySelectorAll('#s3dTools button').forEach(function(b){
+    b.setAttribute('aria-pressed', b.dataset.tool === S3D.tool ? 'true' : 'false');
+    b.addEventListener('click', function(){ s3dToolAction(b.dataset.tool); });
+  });
+  var st = document.querySelector('#s3dTools [data-tool="sticker"]'); if(st){ st.setAttribute('aria-haspopup', 'dialog'); st.setAttribute('aria-expanded', 'false'); st.removeAttribute('aria-pressed'); }
+  document.querySelectorAll('#s3dViews button[data-view]').forEach(function(b){
+    b.addEventListener('click', function(){ s3dSpin(false); s3dView(b.dataset.view); });
+  });
+  $('s3dSpin').addEventListener('click', function(){ s3dSpin(!(S3D.controls && S3D.controls.autoRotate)); });
+  $('s3dFile').addEventListener('change', function(){
+    var f = this.files && this.files[0]; this.value = '';
+    if(f) s3dAddImageFile(f, function(msg){ s3dToast(msg); });
+  });
+  document.querySelectorAll('#s3dSelActs button').forEach(function(b){ b.addEventListener('click', function(){ s3dSelAction(b.dataset.act); }); });
+  $('s3dTxt').addEventListener('input', function(){ var l = selLayer(); if(l && l.type === 'text') liveUpdate({ text: this.value }); });
+  $('s3dTxt').addEventListener('change', function(){ gestureEnd('Edit text'); abRenderLayers(); });
+  s3dBuildStickers(); s3dBuildBrushOptions(); s3dBuildFillOptions(); s3dBuildTextStyles();
+  $('contactSheet3dBtn').addEventListener('click', s3dContactSheet);
+  document.addEventListener('keydown', s3dKey);
+  /* a click anywhere else closes the sticker popover */
+  document.addEventListener('pointerdown', function(e){
+    if(e.target.closest && !e.target.closest('#s3dStickers') && !e.target.closest('#s3dTools [data-tool="sticker"]')) s3dStickers(false);
+  }, true);
+  /* an image dropped on the tee lands where it was dropped */
+  var stage = $('studio3d');
+  ['dragenter', 'dragover'].forEach(function(t){ stage.addEventListener(t, function(e){ e.preventDefault(); stage.classList.add('hot'); }); });
+  ['dragleave', 'drop'].forEach(function(t){ stage.addEventListener(t, function(){ stage.classList.remove('hot'); }); });
+  stage.addEventListener('drop', function(e){
+    e.preventDefault();
+    if(locked || state.mode !== '3d') return;
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; if(!f) return;
+    s3dAddImageFile(f, function(msg){ s3dToast(msg); }, s3dHit(e.clientX, e.clientY));
+  });
+  onS3dTool(S3D.tool);
 }
 </script>
 </body>

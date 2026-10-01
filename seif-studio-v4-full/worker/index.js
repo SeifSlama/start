@@ -118,7 +118,7 @@ export default {
     /* every HTML page gets the live config, so no URL serves the demo build once secrets are set.
        The bundle's first <script> is p0_config.js, which only sets a default when nothing is defined. */
     var pid = projectId(env);
-    var cfgJs = { demo: false, price: priceEgp(env) + ' EGP', pricePeriod: '/month', apiBase: '',
+    var cfgJs = { demo: false, price: priceEgp(env) + ' EGP', pricePeriod: '/month', apiBase: '', assetBase: '/assets/',
                   firebase: { apiKey: env.FIREBASE_API_KEY, authDomain: pid + '.firebaseapp.com', projectId: pid } };
     if(env.FIREBASE_AUTH_EMULATOR_HOST) cfgJs.authEmulator = 'http://' + env.FIREBASE_AUTH_EMULATOR_HOST;
     if(admin) cfgJs.admin = true;

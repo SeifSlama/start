@@ -1,9 +1,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seif Studio - 2D Apparel Mockups</title>
+<title>Seif Studio - 3D Apparel Design</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<!-- design fonts for text on garments (files download only when a font is used) -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Bungee&family=Black+Ops+One&family=Rubik+Mono+One&family=Righteous&family=Monoton&family=Press+Start+2P&family=Permanent+Marker&family=Pacifico&family=Lobster&family=Caveat:wght@400;700&family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Lalezar&family=Reem+Kufi:wght@400;700&family=Changa:wght@400;700;800&family=El+Messiri:wght@400;700&family=Rakkas&family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Marhey:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#ECEDE8; --panel:#FBFBF7; --ink:#1E2749; --ink2:#5A6178;
@@ -222,6 +224,59 @@ input[type=range]{accent-color:var(--red)}
 @keyframes lockshake{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 6px))}75%{transform:translateX(calc(-50% + 6px))}}
 #lockBar.shake{animation:lockshake .35s ease}
 
+/* ---------- 3D studio ---------- */
+#studio3d{background:radial-gradient(ellipse at 50% 40%,#ffffff 0%,#f4f4ef 58%,#e6e7e0 100%);overflow:hidden}
+.gl3dhost{position:absolute;inset:0;touch-action:none}
+.gl3dhost canvas{display:block;outline:none;touch-action:none;cursor:grab}
+.s3dnote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);text-align:center;max-width:80%;line-height:1.6}
+.s3dtools{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;background:rgba(251,251,247,.94);border:1.5px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(30,39,73,.12);z-index:5}
+.s3dtools button{width:56px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;border-radius:10px;color:var(--ink);cursor:pointer;font-size:10px;font-weight:600}
+.s3dtools button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.s3dtools button:hover{background:#EFEFE8}
+.s3dtools button.on{background:var(--ink);color:#fff}
+.s3dviews{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:2px;background:rgba(251,251,247,.94);border:1.5px solid var(--line);border-radius:999px;padding:4px;z-index:5;max-width:calc(100% - 24px);overflow-x:auto;scrollbar-width:none}
+.s3dviews::-webkit-scrollbar{display:none}
+.s3dviews button{border:0;background:transparent;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.s3dviews button:hover{color:var(--ink);background:#EFEFE8}
+.s3dviews button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.s3dpop{position:absolute;left:88px;top:50%;transform:translateY(-50%);width:300px;max-height:72%;overflow-y:auto;background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;padding:12px;z-index:6;box-shadow:0 14px 40px rgba(30,39,73,.2)}
+.stickgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
+.stickgrid button{aspect-ratio:1;border:1.5px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center}
+.stickgrid button:hover{border-color:var(--ink)}
+.stickgrid button canvas{width:100%;height:100%}
+.stickgrid.emoji button{font-size:22px;line-height:1}
+.s3dhint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);white-space:nowrap;color:var(--ink2);pointer-events:none}
+.s3dmsg{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;max-width:80%;z-index:7;box-shadow:0 8px 24px rgba(30,39,73,.25)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 10px}
+.chips button{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.chips button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chips button .n{font-family:var(--mono);font-size:9.5px;opacity:.75;margin-left:4px}
+.brushseg{flex-wrap:wrap}
+.brushseg button{flex:1 0 30%}
+.minisw{display:flex;gap:4px;margin-left:8px;flex-wrap:wrap}
+.minisw button{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(30,39,73,.25);cursor:pointer;padding:0}
+.fillgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 10px}
+.fillgrid button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:3px 3px 4px;cursor:pointer;font-size:10px;font-weight:600;color:var(--ink2)}
+.fillgrid button canvas{width:100%;aspect-ratio:1.4;display:block;border-radius:7px;margin-bottom:3px}
+.fillgrid button.on{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 2px rgba(30,39,73,.15)}
+.actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:4px}
+.actgrid .btn{padding:7px 4px;font-size:11.5px}
+.stylegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.stylegrid button{height:46px;border:1.5px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;font-size:17px;line-height:1;overflow:hidden;white-space:nowrap;padding:0 4px;color:#1E2749}
+.stylegrid button:hover{border-color:var(--ink)}
+.s3dtools button[aria-expanded="true"]{background:#E4E5DD}
+#studio3d.hot .gl3dhost{outline:2px dashed var(--ink);outline-offset:-12px;border-radius:18px}
+.s3dnote .btn{margin:12px 4px 0;text-transform:none;letter-spacing:0;font-family:inherit}
+@media (max-width:900px){
+  .s3dtools{left:8px;right:8px;top:auto;bottom:66px;transform:none;flex-direction:row;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}
+  .s3dtools::-webkit-scrollbar{display:none}
+  .s3dtools button{width:50px;height:48px;flex:none}
+  .s3dviews{top:8px}
+  .s3dpop{left:8px;right:8px;width:auto;top:auto;bottom:126px;transform:none;max-height:46vh}
+  .s3dhint{display:none}
+  .s3dmsg{bottom:126px}
+}
+
 /* ---------- free trial (live build) ---------- */
 .rackitem.trial-locked{opacity:.55}
 .rackitem.trial-locked::after{content:"PRO";margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--red)}
@@ -332,6 +387,13 @@ input[type=range]{accent-color:var(--red)}
   .sheethandle{display:flex;justify-content:center;padding:10px 0 6px;flex:none;cursor:grab;touch-action:none}
   .sheethandle span{width:44px;height:5px;border-radius:3px;background:var(--line)}
   .sheetpane{overflow-y:auto;flex:1;min-height:0;padding-bottom:20px}
+  /* 3D: the tool options and the layers scroll together, one sheet */
+  #sheet.s3d{display:block;overflow-y:auto;overscroll-behavior:contain}
+  #sheet.s3d .sheethandle{position:sticky;top:0;background:var(--panel);z-index:2}
+  #sheet.s3d .sheetpane{overflow:visible;flex:none;min-height:0;padding-bottom:0}
+  /* the tools ride on top of a half-open sheet */
+  #app:has(#sheet.half) .s3dtools{bottom:calc(46vh + 10px)}
+  #app:has(#sheet.half) .s3dpop{bottom:calc(46vh + 70px);max-height:30vh}
   .sheetpane .sec:first-child{padding-top:0}
   #lockBar{bottom:66px}
   .modal{padding:10px}

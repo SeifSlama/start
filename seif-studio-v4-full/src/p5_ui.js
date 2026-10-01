@@ -91,7 +91,7 @@ function syncRack(){
 
 /* ---------- swatches (named colours) ---------- */
 function renderSwatches(){
-  ['swatches','swatches2'].forEach(function(hid){
+  ['swatches','swatches2','swatches3'].forEach(function(hid){
     var host = $(hid); if(!host) return;
     host.innerHTML = '';
     GARMENT_COLORS.forEach(function(s){
@@ -115,15 +115,38 @@ function syncSwatches(){
     x.classList.toggle('on', on); x.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   var cn = $('colorNameLine'); if(cn) cn.textContent = colorNameFor(project.garmentColor) + ' · ' + project.garmentColor.toUpperCase();
-  ['customColor','customColor2'].forEach(function(id){ var el = $(id); if(el) el.value = project.garmentColor; });
+  ['customColor','customColor2','customColor3'].forEach(function(id){ var el = $(id); if(el) el.value = project.garmentColor; });
 }
 
 /* ---------- modes & panes ---------- */
+/* the tee is designed in 3D (or flat); other garments in flat panels with a photo preview */
+function syncModeButtons(){
+  var three = is3D(project.productId);
+  document.querySelectorAll('#modeSeg button').forEach(function(b){
+    if(b.dataset.mode === '3d') b.classList.toggle('hidden', !three);
+    if(b.dataset.mode === 'preview') b.classList.toggle('hidden', three);
+    if(b.dataset.mode === 'design') b.textContent = three ? 'Flat' : 'Design';
+  });
+  var asm = $('psPreviewBtn'); if(asm) asm.textContent = three ? 'See it in 3D \u2192' : 'Assemble \u2192';
+}
 function setMode(mode){
+  if(mode === '3d' && !is3D(project.productId)) mode = 'design';
+  if(mode === 'preview' && is3D(project.productId)) mode = '3d';
+  if(mode === '3d') state.flat3d = false;
+  var was = state.mode;
   state.mode = mode;
+  syncModeButtons();
   document.querySelectorAll('#modeSeg button').forEach(function(b){
     var on = b.dataset.mode === mode; b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false');
   });
+  if(typeof s3dSetVisible === 'function') s3dSetVisible(mode === '3d' && S3D.ready);
+  if(mode === '3d'){
+    if(typeof abClose === 'function' && was !== '3d'){ AB.panel = null; AB.sel = null; state.panel = null; }
+    showPane('3d');
+    if(typeof s3dOpen === 'function') s3dOpen();
+    return;
+  }
+  if(was === '3d'){ AB.panel = null; AB.sel = null; state.panel = null; }
   if(mode === 'preview'){
     showPane('floor');
     if(!mockCanvas) init2D();
@@ -138,9 +161,13 @@ function showPane(which){
   $('panelSheet').classList.toggle('hidden', which !== 'sheet');
   $('artboard').classList.toggle('hidden', which !== 'editor');
   $('floor').classList.toggle('hidden', which !== 'floor');
+  $('studio3d').classList.toggle('hidden', which !== '3d');
   $('sheetSheet').classList.toggle('hidden', which !== 'sheet');
-  $('sheetEditor').classList.toggle('hidden', which !== 'editor');
+  $('sheetEditor').classList.toggle('hidden', which !== 'editor' && which !== '3d');
   $('sheetPreview').classList.toggle('hidden', which !== 'floor');
+  $('sheet3d').classList.toggle('hidden', which !== '3d');
+  $('s3dChips').classList.toggle('hidden', which !== '3d');
+  $('sheet').classList.toggle('s3d', which === '3d');
   if(which === 'sheet') renderPanelSheet();
   if(which === 'editor' && typeof abResize === 'function') abResize();
 }
@@ -221,16 +248,32 @@ function onProductChanged(id){
   $('specFab').textContent = def.spec;
   $('fabricNote').value = project.fabricNote || '';
   syncRack(); syncSwatches();
+  if(typeof abClose === 'function') abClose(true);
+  /* a 3D garment opens in 3D unless the customer switched it to Flat */
+  if(is3D(id) && !state.flat3d){ setMode('3d'); return; }
+  if(is3D(id) && state.mode !== 'design'){ setMode('design'); return; }
+  if(!is3D(id) && state.mode === '3d'){ setMode('design'); return; }
+  syncModeButtons();
   if(state.mode === 'preview'){ renderViewSeg(); syncFitVisibility(); }
   else showPane('sheet');
-  if(typeof abClose === 'function') abClose(true);
 }
 function onProjectChanged(panelId){
+  $('saveStatus').textContent = 'UNSAVED';
+  if(typeof S3D !== 'undefined' && S3D.ready){
+    s3dMark(panelId);
+    if(S3D.drag) return;                 /* mid-drag on the 3D tee: lists catch up on release */
+    if(state.mode === '3d' && typeof s3dSyncPanelChips === 'function') s3dSyncPanelChips();
+  }
   syncRack();
   if(state.mode === 'design' && !state.panel) renderPanelSheet();
   if(typeof abOnProjectChanged === 'function') abOnProjectChanged(panelId);
   if(state.mode === 'preview') requestRender();
-  $('saveStatus').textContent = 'UNSAVED';
+}
+/* a design font finished loading: every text using it is redrawn */
+function onFontsLoaded(){
+  if(typeof S3D !== 'undefined' && S3D.ready) s3dMarkAll();
+  if(state.mode === 'design'){ if(state.panel && typeof abDraw === 'function') abDraw(); else renderPanelSheet(); }
+  if(state.mode === 'preview') requestRender();
 }
 function onHistoryChanged(){
   var u = $('undoBtn'), r = $('redoBtn');
@@ -266,11 +309,14 @@ function onRendered(ms){
 
 /* ---------- main UI ---------- */
 function bindUI(){
-  document.querySelectorAll('#modeSeg button').forEach(function(b){ b.addEventListener('click', function(){ setMode(b.dataset.mode); }); });
+  document.querySelectorAll('#modeSeg button').forEach(function(b){ b.addEventListener('click', function(){
+    if(is3D(project.productId)) state.flat3d = b.dataset.mode === 'design';
+    setMode(b.dataset.mode);
+  }); });
   $('psPreviewBtn').addEventListener('click', function(){ setMode('preview'); });
   $('editPanelsBtn').addEventListener('click', function(){ setMode('design'); });
 
-  ['customColor','customColor2'].forEach(function(id){
+  ['customColor','customColor2','customColor3'].forEach(function(id){
     var el = $(id); if(!el) return;
     el.addEventListener('input', function(){ hBegin('Custom dye'); setGarmentColor(this.value); });
     el.addEventListener('change', function(){ hCommit(); });
@@ -1025,7 +1071,7 @@ var MAP_PX = 370, MAP_S = 370 / 1600, HANDLE_R = 7;
 function pePopulateProducts(){
   var sel = $('peProduct');
   sel.innerHTML = '';
-  PRODUCTS.filter(function(p){ return !p.isCustom; }).forEach(function(p){
+  PRODUCTS.filter(function(p){ return !p.isCustom && !is3D(p.id); }).forEach(function(p){   /* 3D garments need no photos */
     var o = document.createElement('option');
     o.value = p.id; o.textContent = p.name;
     sel.appendChild(o);
@@ -1425,10 +1471,13 @@ function bindExport(){
       if(d !== null && d < 150) warns.push(p.label + ' has artwork at ' + d + ' DPI — it will print blurred.');
       techniqueWarnings(p.id).forEach(function(w){ warns.push(p.label + ': ' + w); });
       var px = printPxFor(p);
-      if(px.capped) warns.push(p.label + ' exceeds 6000 px at 300 DPI; the print file is capped at 6000 px on the long edge.');
+      if(px.capped && layersFor(p.id).length) warns.push(p.label + ' prints at ' + px.dpi + ' DPI: a whole-piece file is capped at 6000 px on its long edge.');
     });
     $('exWarn').textContent = warns.join(' ');
     $('exWm').checked = locked || DEMO_MODE;
+    var three = is3D(project.productId);
+    $('exMockNote').textContent = three ? 'The 3D tee from six angles (front, back, three-quarter, both sides, underarm) at 2048 px, PNG' : 'Every photographed view at 2400 px, PNG';
+    $('exPrintNote').textContent = three ? 'One transparent PNG per sewn piece, cut to its shape, up to 300 DPI' : 'One transparent PNG per designed panel at 300 DPI';
     openModal('exportModal');
   });
   $('exGo').addEventListener('click', runExport);
@@ -1457,7 +1506,17 @@ async function runExport(){
   var name = safeName(currentDef().name), items = [], i;
   function step(t){ prog.className = 'gmsg ok'; prog.textContent = t; }
   try {
-    if($('exMock').checked){
+    if($('exMock').checked && is3D(project.productId)){
+      var bg3 = document.querySelector('input[name=exBg]:checked').value, wm3 = $('exWm').checked;
+      if(!(await s3dEnsure())) throw new Error(S3D.failed || 'the 3D studio could not start');
+      var v3 = [['front', 'front'], ['back', 'back'], ['q34', 'three-quarter'], ['left', 'left'], ['right', 'right'], ['armpit', 'underarm']];
+      for(i=0;i<v3.length;i++){
+        step('Rendering 3D mockup ' + (i+1) + ' of ' + v3.length + '…'); await wait(30);
+        var c3 = s3dRenderView(v3[i][0], 2048, { bg: bg3, watermark: wm3 });
+        await downloadCanvas(c3, name + '_3d_' + v3[i][1] + '_' + safeName(colorNameFor(project.garmentColor)) + '.png');
+        await wait(600);
+      }
+    } else if($('exMock').checked){
       var bg = document.querySelector('input[name=exBg]:checked').value, wm = $('exWm').checked;
       var views = VIEWS.filter(function(v){ return !!getPhotoAsset(project.productId, v.id); });
       if(!views.length) views = availableViews(project.productId);
@@ -1474,12 +1533,12 @@ async function runExport(){
       for(i=0;i<panels.length;i++){
         var p = panels[i], px = printPxFor(p);
         step('Rendering print file ' + (i+1) + ' of ' + panels.length + ' (' + px.w + '×' + px.h + ' px)…'); await wait(20);
-        var ab = renderArtboard(p.id, px.px, null, { w: px.w, h: px.h });
-        await downloadCanvas(ab, 'PRINT_' + name + '_' + p.id + '_' + p.w_cm + 'x' + p.h_cm + 'cm_300dpi.png');
+        var ab = printPiece(p, renderArtboard(p.id, px.px, null, { w: px.w, h: px.h }));
+        await downloadCanvas(ab, 'PRINT_' + name + '_' + p.id + '_' + p.w_cm + 'x' + p.h_cm + 'cm_' + px.dpi + 'dpi.png');
         await wait(600);
       }
     }
-    if($('exTech').checked){ step('Building tech pack…'); await wait(20); openTechPack(); await wait(600); }
+    if($('exTech').checked){ step('Building tech pack…'); if(is3D(project.productId)) await s3dEnsure(); await wait(20); openTechPack(); await wait(600); }
     if($('exProj').checked){
       step('Writing project.json…'); await wait(20);
       downloadText(JSON.stringify(serialiseProject(true)), name + '_project.json');
@@ -1488,12 +1547,32 @@ async function runExport(){
   } catch(e){ prog.className = 'gmsg err'; prog.textContent = 'Export failed: ' + e.message; }
   btn.disabled = false;
 }
+/* a pattern piece prints in its own shape: everything outside the cut line is transparent */
+function printPiece(p, art){
+  if(!p.outline || !p.outline.length) return art;
+  var c = document.createElement('canvas'); c.width = art.width; c.height = art.height;
+  var g = c.getContext('2d'), kx = art.width / p.w_cm, ky = art.height / p.h_cm;
+  g.beginPath(); p.outline.forEach(function(q, i){ if(i) g.lineTo(q[0] * kx, q[1] * ky); else g.moveTo(q[0] * kx, q[1] * ky); }); g.closePath(); g.clip();
+  g.drawImage(art, 0, 0);
+  return c;
+}
+/* load the 3D studio on demand (exports can need it before the customer opened the 3D view) */
+async function s3dEnsure(){
+  if(typeof S3D === 'undefined') return false;
+  if(S3D.ready) return true;
+  return s3dInit($('gl3d'));
+}
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
 function openTechPack(){
-  var def = currentDef(), panels = panelsFor(project.productId);
-  var front = compositeView(project.productId, 'front', { px: 900, stamp:false }).toDataURL('image/png');
-  var backHas = availableViews(project.productId).some(function(v){ return v.id === 'back'; });
-  var back = backHas ? compositeView(project.productId, 'back', { px: 900, stamp:false }).toDataURL('image/png') : null;
+  var def = currentDef(), panels = panelsFor(project.productId), front, back, backHas;
+  if(is3D(project.productId) && S3D.ready){
+    front = s3dRenderView('front', 900, { bg: 'studio' }).toDataURL('image/png');
+    back = s3dRenderView('back', 900, { bg: 'studio' }).toDataURL('image/png');
+  } else {
+    front = compositeView(project.productId, 'front', { px: 900, stamp:false }).toDataURL('image/png');
+    backHas = availableViews(project.productId).some(function(v){ return v.id === 'back'; });
+    back = backHas ? compositeView(project.productId, 'back', { px: 900, stamp:false }).toDataURL('image/png') : null;
+  }
   var rows = '', thumbs = '';
   panels.forEach(function(p){
     var ab = artboardSize(p), t = renderPanelThumb(p.id, 300, project.garmentColor);
@@ -1501,7 +1580,8 @@ function openTechPack(){
     layersFor(p.id).forEach(function(l){
       var wcm = (l.w / ab.pxPerCm).toFixed(1), hcm = (l.h / ab.pxPerCm).toFixed(1), xcm = (l.x / ab.pxPerCm).toFixed(1), ycm = (l.y / ab.pxPerCm).toFixed(1);
       var d = layerDpi(p.id, l);
-      rows += '<tr><td>' + esc(p.label) + '</td><td>' + esc(l.name || l.type) + '</td><td>' + esc(l.type) + (l.type === 'text' ? ': “' + esc(l.text) + '”' : '') + '</td><td>' + wcm + ' × ' + hcm + '</td><td>' + xcm + ', ' + ycm + '</td><td>' + (l.rot || 0) + '°</td><td>' + (d === null ? '—' : d) + '</td></tr>';
+      var kind = { image: 'Image', text: 'Text', shape: 'Shape', path: 'Brush stroke', fill: 'Fill' }[l.type] || l.type;
+      rows += '<tr><td>' + esc(p.label) + '</td><td>' + esc(l.name || l.type) + '</td><td>' + esc(kind) + (l.type === 'text' ? ': “' + esc(l.text) + '”' : '') + '</td><td>' + wcm + ' × ' + hcm + '</td><td>' + xcm + ', ' + ycm + '</td><td>' + (l.rot || 0) + '°</td><td>' + (d === null ? '—' : d) + '</td></tr>';
     });
   });
   var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tech pack — ' + esc(def.name) + '</title><style>' +
@@ -1638,8 +1718,9 @@ async function init(){
   $('boot').style.display = 'none';
   $('demoBanner').classList.toggle('hidden', !DEMO_MODE);
   showStudio();
+  if(typeof bindStudio3d === 'function') bindStudio3d();
   buildProduct(TRIAL_PRODUCT);
-  setMode('design');
+  setMode(is3D(TRIAL_PRODUCT) ? '3d' : 'design');
   onHistoryChanged();
   unlockStudio();          /* nobody is locked out: the T-shirt is the free trial */
   renderAccount();

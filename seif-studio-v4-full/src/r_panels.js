@@ -12,12 +12,9 @@ var PANEL_PX = 1200;   /* working resolution of an artboard's long edge */
 /* A panel is a flat artboard the user designs on.
    w_cm / h_cm are the real printable size and drive export DPI. */
 var PANEL_SETS = {
-  tee: [
-    { id:'front',    label:'Front',        w_cm:32, h_cm:42 },
-    { id:'back',     label:'Back',         w_cm:32, h_cm:42 },
-    { id:'sleeve_l', label:'Left sleeve',  w_cm:10, h_cm:9 },
-    { id:'sleeve_r', label:'Right sleeve', w_cm:10, h_cm:9 }
-  ],
+  /* the tee is 3D: its panels are the real pattern pieces of the 3D shell (r_tee3d.js),
+     each with its cut outline, so a design can go anywhere — side seams and underarms included */
+  tee: TEE3D.panels(),
   longsleeve: [
     { id:'front',    label:'Front',        w_cm:32, h_cm:42 },
     { id:'back',     label:'Back',         w_cm:32, h_cm:42 },
@@ -102,38 +99,6 @@ function mirrorQuad(q){
   return [m[1], m[0], m[3], m[2]];
 }
 var DEFAULT_PLACEMENTS = {
-  /* tee: measured on the built-in turntable renders (assets/tee) */
-  'tee|front': [
-    { panel:'front',    quad:rectQuad(485,430,563,740) },
-    { panel:'sleeve_r', quad:[[1160,420],[1330,470],[1300,630],[1130,585]] },
-    { panel:'sleeve_l', quad:[[372,470],[542,420],[572,585],[402,630]] }
-  ],
-  'tee|back': [
-    { panel:'back',     quad:rectQuad(485,380,563,740) },
-    { panel:'sleeve_l', quad:[[1160,420],[1330,470],[1300,630],[1130,585]] },
-    { panel:'sleeve_r', quad:[[372,470],[542,420],[572,585],[402,630]] }
-  ],
-  'tee|turn_030': [
-    { panel:'front',    quad:[[585,440],[1090,470],[1075,1180],[600,1200]] },
-    { panel:'sleeve_r', quad:[[1110,395],[1215,430],[1200,630],[1095,600]] },
-    { panel:'sleeve_l', quad:[[300,450],[520,400],[540,690],[310,720]] }
-  ],
-  'tee|turn_060': [
-    { panel:'front',    quad:[[560,450],[960,480],[950,1190],[575,1210]] },
-    { panel:'sleeve_r', quad:[[930,430],[1160,470],[1150,720],[920,690]] },
-    { panel:'sleeve_l', quad:[[445,470],[585,455],[580,715],[440,700]] }
-  ],
-  'tee|side_left':  [ { panel:'sleeve_l', quad:rectQuad(690,440,240,216) } ],
-  'tee|turn_120': [
-    { panel:'back',     quad:[[745,440],[1035,470],[1025,1200],[755,1220]] },
-    { panel:'sleeve_l', quad:[[485,410],[715,440],[705,710],[475,690]] }
-  ],
-  'tee|turn_150': [
-    { panel:'back',     quad:[[560,460],[1040,430],[1030,1180],[580,1210]] },
-    { panel:'sleeve_l', quad:[[400,440],[560,400],[580,660],[410,690]] },
-    { panel:'sleeve_r', quad:[[1080,420],[1200,450],[1190,650],[1070,620]] }
-  ],
-  'tee|side_right': [ { panel:'sleeve_r', quad:rectQuad(650,430,240,216) } ],
   'longsleeve|front': [
     { panel:'front',    quad:rectQuad(570,430,460,540) },
     { panel:'sleeve_r', quad:rectQuad(1098,480,118,320) },
@@ -212,6 +177,9 @@ var DEFAULT_PLACEMENTS = {
   ]
 };
 
+/* products shown as a 3D model instead of photos */
+var PRODUCTS_3D = { tee: true };
+function is3D(productId){ return !!PRODUCTS_3D[productId]; }
 function panelsFor(productId){
   if(PANEL_SETS[productId]) return PANEL_SETS[productId];
   var def = (typeof PRODUCTS_BY_ID !== 'undefined') ? PRODUCTS_BY_ID[productId] : null;

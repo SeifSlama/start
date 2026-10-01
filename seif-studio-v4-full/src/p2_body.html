@@ -37,7 +37,7 @@
         <p class="price" id="priceTag">100 EGP &middot; PER MONTH</p>
         <ul>
           <li>All 16 garment mockups &middot; every photographed view</li>
-          <li>Flat panel artboards &middot; layers, text, patterns</li>
+          <li>3D T-shirt studio &middot; design anywhere on it</li>
           <li>300 DPI print-ready panel files</li>
         </ul>
         <button id="payOpenBtn" class="btn red" style="width:100%">Subscribe</button>
@@ -51,9 +51,10 @@
 <!-- ================= APP ================= -->
 <div id="app">
   <header class="bar">
-    <div class="wordmark">SEIF STUDIO<i>.</i><small>2D apparel mockups</small></div>
+    <div class="wordmark">SEIF STUDIO<i>.</i><small>3D apparel studio</small></div>
     <div id="demoBanner" class="demobanner hidden" title="Nothing enforced in client JavaScript is enforced. A server must supply SEIF_CONFIG before launch.">DEMO MODE &mdash; access is not enforced</div>
     <div class="seg modeseg" id="modeSeg" role="radiogroup" aria-label="Workspace">
+      <button data-mode="3d" role="radio" aria-checked="false" class="hidden">3D</button>
       <button data-mode="design" role="radio" aria-checked="true" class="on">Design</button>
       <button data-mode="preview" role="radio" aria-checked="false">Preview</button>
     </div>
@@ -143,6 +144,35 @@
         </div>
       </div>
 
+      <!-- 3D STUDIO: the tee as a hollow garment you turn and design on -->
+      <section id="studio3d" class="stagepane hidden">
+        <div id="gl3d" class="gl3dhost"></div>
+        <div id="s3dLoading" class="s3dnote">Loading the 3D studio&hellip;</div>
+        <div id="s3dFail" class="s3dnote hidden"></div>
+        <div class="s3dtools" id="s3dTools" role="toolbar" aria-label="Design tools">
+          <button data-tool="select" class="on" title="Select &amp; move (V)" aria-label="Select and move"><svg viewBox="0 0 22 22"><path d="M6 3.5l11 6.6-4.6 1.4-2.3 4.4z"/></svg><span>Move</span></button>
+          <button data-tool="text" title="Add text (T)" aria-label="Add text"><svg viewBox="0 0 22 22"><path d="M5 5.5h12M11 5.5V17"/></svg><span>Text</span></button>
+          <button data-tool="image" title="Add an image (I)" aria-label="Add an image"><svg viewBox="0 0 22 22"><rect x="3.5" y="4.5" width="15" height="13" rx="2"/><path d="M3.5 14.5l4.5-4.5 4 4 2.5-2.5 4 4"/><circle cx="14.5" cy="8.5" r="1.3"/></svg><span>Image</span></button>
+          <button data-tool="sticker" title="Shapes &amp; emoji (S)" aria-label="Shapes and emoji"><svg viewBox="0 0 22 22"><path d="M11 3.5l2.3 4.8 5.2.6-3.9 3.6 1.1 5.1-4.7-2.6-4.7 2.6 1.1-5.1-3.9-3.6 5.2-.6z"/></svg><span>Sticker</span></button>
+          <button data-tool="brush" title="Paint on the tee (B)" aria-label="Brush"><svg viewBox="0 0 22 22"><path d="M15 3.8l3.2 3.2-8 8-3.2-3.2z"/><path d="M6.6 12.4c-2 .1-3.1 1.6-3.1 3.6v2.5H6c2 0 3.5-1.3 3.5-3.3"/></svg><span>Brush</span></button>
+          <button data-tool="eraser" title="Erase paint (E)" aria-label="Eraser"><svg viewBox="0 0 22 22"><path d="M4.5 13.5l7.5-7.5 5.5 5.5-6.5 6.5H8.5z"/><path d="M9 18h9.5"/></svg><span>Eraser</span></button>
+          <button data-tool="fill" title="Fill a piece with colour or a pattern (F)" aria-label="Fill"><svg viewBox="0 0 22 22"><path d="M4.5 11l6-6 7 7-6 6z"/><path d="M4.5 11h13"/><path d="M19 15.5s1.8 2.1 1.8 3.2a1.8 1.8 0 0 1-3.6 0c0-1.1 1.8-3.2 1.8-3.2z"/></svg><span>Fill</span></button>
+        </div>
+        <div class="s3dviews" id="s3dViews" role="group" aria-label="Camera views">
+          <button data-view="front">Front</button><button data-view="back">Back</button><button data-view="left">Left</button><button data-view="right">Right</button>
+          <button data-view="top">Top</button><button data-view="armpit">Underarm</button><button data-view="bottom">Below</button>
+          <button id="s3dSpin" aria-pressed="false" title="Spin the tee">&#10227; Spin</button>
+        </div>
+        <div class="s3dpop hidden" id="s3dStickers" role="dialog" aria-label="Shapes and emoji">
+          <div class="rowline" style="margin:0 0 6px"><span class="speclabel" style="flex:1">Shapes</span><input type="color" id="stickColor" value="#C3423F" aria-label="Shape colour"><div class="minisw" id="stickSw"></div></div>
+          <div class="stickgrid" id="stickShapes"></div>
+          <div class="speclabel" style="margin-top:10px">Emoji</div><div class="stickgrid emoji" id="stickEmoji"></div>
+        </div>
+        <div id="s3dHint" class="s3dhint speclabel">Drag to turn the tee &middot; scroll to zoom &middot; right-drag to pan</div>
+        <input type="file" id="s3dFile" accept="image/*" class="hidden">
+        <div id="s3dMsg" class="s3dmsg hidden" role="status"></div>
+      </section>
+
       <!-- PREVIEW: assembled garment -->
       <section id="floor" class="stagepane hidden">
         <div id="three"></div>
@@ -185,10 +215,59 @@
         </div>
       </div>
 
+      <!-- right pane: 3D STUDIO -->
+      <div id="sheet3d" class="sheetpane hidden">
+        <div class="sec" id="optSelect">
+          <span class="speclabel">Design on the tee</span>
+          <p class="tiny" id="s3dSelHelp" style="margin-top:0">Click a design to select it and drag to move it &mdash; right across the seams onto the next piece. Corners resize, the red dot turns it. Drag bare fabric to turn the tee; it can go anywhere, under the arms too.</p>
+          <div id="s3dSelActs" class="actgrid hidden">
+            <button type="button" class="btn small ghost" data-act="dup" title="Duplicate (Ctrl+D)">Duplicate</button>
+            <button type="button" class="btn small ghost" data-act="other" title="Put a copy in the same place on the other side">Other side</button>
+            <button type="button" class="btn small ghost" data-act="centre" title="Centre it across the piece">Centre</button>
+            <button type="button" class="btn small ghost" data-act="tile" title="Repeat it across the whole piece">Pattern</button>
+            <button type="button" class="btn small ghost" data-act="up" title="Bring forward">Forward</button>
+            <button type="button" class="btn small ghost" data-act="down" title="Send backward">Backward</button>
+          </div>
+          <div id="s3dTextStyles" class="hidden">
+            <textarea id="s3dTxt" class="field" rows="2" placeholder="Your text" aria-label="Text" style="resize:vertical;margin-top:10px;width:100%"></textarea>
+            <span class="speclabel" style="margin-top:12px;display:block">Text style</span>
+            <div class="stylegrid" id="textStyleGrid" role="group" aria-label="Text styles"></div>
+          </div>
+        </div>
+        <div class="sec hidden" id="optBrush">
+          <span class="speclabel">Brush</span>
+          <div class="seg wrap brushseg" id="brushStyles" role="radiogroup" aria-label="Brush style"></div>
+          <div class="rowline"><label for="brushColor" style="width:64px">Colour</label><input type="color" id="brushColor" value="#C3423F"><div class="minisw" id="brushSw"></div></div>
+          <div class="rowline"><label for="brushSize" style="width:64px">Size</label><input type="range" id="brushSize" class="slider" min="1" max="60" value="8"><span class="tiny" id="brushSizeV" style="width:52px;margin:0;text-align:right">0.8 cm</span></div>
+          <div class="rowline"><label for="brushOp" style="width:64px">Opacity</label><input type="range" id="brushOp" class="slider" min="5" max="100" value="100"></div>
+          <label class="rowline" style="cursor:pointer"><input type="checkbox" id="brushMirror" style="width:auto;flex:none"><span style="font-size:12.5px">Mirror left &harr; right</span></label>
+          <p class="tiny hidden" id="eraserNote">The eraser cuts through everything on that piece, down to the fabric.</p>
+        </div>
+        <div class="sec hidden" id="optFill">
+          <span class="speclabel">Fill</span>
+          <div class="fillgrid" id="fillKinds" role="radiogroup" aria-label="Fill pattern"></div>
+          <div class="rowline"><label style="width:64px">Colours</label><input type="color" id="fillC1" value="#1E2749"><input type="color" id="fillC2" value="#F4F4F0"><label class="tiny" style="margin:0 0 0 4px;display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="fillUse3" style="width:auto">3rd</label><input type="color" id="fillC3" value="#C3423F"></div>
+          <div class="rowline"><label for="fillAngle" style="width:64px">Angle</label><input type="range" id="fillAngle" class="slider" min="-90" max="90" value="0"></div>
+          <div class="rowline"><label for="fillScale" style="width:64px">Scale</label><input type="range" id="fillScale" class="slider" min="1" max="20" value="4"><span class="tiny" id="fillScaleV" style="width:52px;margin:0;text-align:right">4 cm</span></div>
+          <p class="tiny">Click any piece of the tee to fill it.</p>
+          <div class="grid2"><button id="fillAllBtn" class="btn small primary">Fill the whole tee</button><button id="fillClearBtn" class="btn small ghost">Remove fills</button></div>
+        </div>
+        <div class="sec">
+          <span class="speclabel">Colorway</span>
+          <div class="swatches" id="swatches3" role="listbox" aria-label="Garment colour"></div>
+          <div class="rowline"><label for="customColor3">Custom dye</label><input type="color" id="customColor3" value="#1E2749"></div>
+        </div>
+        <div class="sec">
+          <button id="contactSheet3dBtn" class="btn ghost small" style="width:100%">Multi-colour sheet</button>
+          <p class="tiny">Your design on the tee in every garment colour, as one PNG.</p>
+        </div>
+      </div>
+
       <!-- right pane: ARTBOARD EDITOR -->
       <div id="sheetEditor" class="sheetpane hidden">
         <div class="sec">
           <span class="speclabel">Layers</span>
+          <div id="s3dChips" class="chips hidden" role="tablist" aria-label="Pieces of the tee"></div>
           <div id="layerList" class="layerlist" role="listbox" aria-label="Layers"></div>
           <p class="tiny" id="layerEmpty">No layers yet. Upload an image or add text to start.</p>
           <div class="rowline" style="margin-top:8px">
@@ -224,6 +303,7 @@
                 <option value="lighten">Lighten</option>
               </select>
             </div>
+            <div class="rowline" id="inFlipRow"><label style="width:70px">Flip</label><button id="inFlipX" class="btn ghost small" type="button">&harr; Mirror</button><button id="inFlipY" class="btn ghost small" type="button">&varr; Upside down</button></div>
             <div id="inDpi" class="tiny"></div>
 
             <div id="inText" class="hidden">
@@ -249,10 +329,44 @@
               </div>
               <div class="rowline"><label style="width:70px">Fill</label><input type="color" id="inFill"><label style="margin-left:10px">Stroke</label><input type="color" id="inStroke"><input type="number" id="inStrokeW" class="field" min="0" style="width:64px" title="Stroke width"></div>
               <div class="rowline"><label for="inCurve" style="width:70px">Arc</label><input type="range" id="inCurve" class="slider" min="-100" max="100"><span class="tiny" id="inCurveV" style="width:36px;margin:0;text-align:right">0</span></div>
+              <label class="rowline" style="cursor:pointer"><input type="checkbox" id="inGrad" style="width:auto;flex:none"><span style="font-size:12.5px;flex:1">Gradient to</span><input type="color" id="inFill2" value="#C3423F"></label>
+              <label class="rowline" style="cursor:pointer"><input type="checkbox" id="inShadowOn" style="width:auto;flex:none"><span style="font-size:12.5px;flex:1">Shadow / glow</span><input type="color" id="inShadowC" value="#000000"></label>
+              <div id="inShadowRow" class="grid2 hidden">
+                <label>Blur<input type="range" id="inShadowB" class="slider" min="0" max="60" value="12"></label>
+                <label>Offset<input type="range" id="inShadowO" class="slider" min="-40" max="40" value="6"></label>
+              </div>
             </div>
 
             <div id="inShape" class="hidden">
+              <div class="rowline"><label for="inShapeKind" style="width:70px">Shape</label><select id="inShapeKind" class="field" style="flex:1;padding:6px 8px"></select></div>
               <div class="rowline"><label style="width:70px">Fill</label><input type="color" id="inSFill"><label style="margin-left:10px">Stroke</label><input type="color" id="inSStroke"><input type="number" id="inSStrokeW" class="field" min="0" style="width:64px" title="Stroke width"></div>
+              <label class="rowline" style="cursor:pointer"><input type="checkbox" id="inSGrad" style="width:auto;flex:none"><span style="font-size:12.5px;flex:1">Gradient to</span><input type="color" id="inSFill2" value="#1E2749"></label>
+            </div>
+
+            <div id="inImage" class="hidden">
+              <span class="speclabel" style="margin:10px 0 6px">Adjust</span>
+              <div class="grid2">
+                <label>Brightness<input type="range" id="fxBright" class="slider" min="0" max="200" value="100"></label>
+                <label>Contrast<input type="range" id="fxContrast" class="slider" min="0" max="200" value="100"></label>
+                <label>Saturation<input type="range" id="fxSat" class="slider" min="0" max="300" value="100"></label>
+                <label>Hue<input type="range" id="fxHue" class="slider" min="-180" max="180" value="0"></label>
+                <label>Black &amp; white<input type="range" id="fxGray" class="slider" min="0" max="100" value="0"></label>
+                <label>Blur<input type="range" id="fxBlur" class="slider" min="0" max="20" value="0"></label>
+              </div>
+              <div class="grid2" style="margin-top:6px"><button id="fxInvert" class="btn ghost small" type="button">Invert colours</button><button id="fxReset" class="btn ghost small" type="button">Reset</button></div>
+              <button id="fxKnock" class="btn small" type="button" style="width:100%;margin-top:6px">Remove white background</button>
+            </div>
+
+            <div id="inPath" class="hidden">
+              <div class="rowline"><label for="inPathStyle" style="width:70px">Brush</label><select id="inPathStyle" class="field" style="flex:1;padding:6px 8px"></select></div>
+              <div class="rowline"><label style="width:70px">Colour</label><input type="color" id="inPathColor"><label for="inPathSize" style="margin-left:10px">Size</label><input type="range" id="inPathSize" class="slider" min="1" max="120"></div>
+            </div>
+
+            <div id="inFillL" class="hidden">
+              <div class="rowline"><label for="inFillKind" style="width:70px">Pattern</label><select id="inFillKind" class="field" style="flex:1;padding:6px 8px"></select></div>
+              <div class="rowline"><label style="width:70px">Colours</label><input type="color" id="inFC1"><input type="color" id="inFC2"><label class="tiny" style="margin:0 0 0 4px;display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" id="inFUse3" style="width:auto">3rd</label><input type="color" id="inFC3"></div>
+              <div class="rowline"><label for="inFAngle" style="width:70px">Angle</label><input type="range" id="inFAngle" class="slider" min="-90" max="90"></div>
+              <div class="rowline"><label for="inFScale" style="width:70px">Scale</label><input type="range" id="inFScale" class="slider" min="1" max="20"></div>
             </div>
 
             <div id="inTile" class="hidden">
@@ -319,9 +433,9 @@
     <div class="speclabel">First time here</div>
     <h3 id="obTitle">Three steps, thirty seconds</h3>
     <ol class="obsteps">
-      <li><b>Pick a garment</b> from the rack on the left.</li>
-      <li><b>Design each flat panel</b> &mdash; a tee is four artboards: front, back, two sleeves. Layer logos, text and patterns on each one.</li>
-      <li><b>Assemble &amp; export</b> &mdash; Preview maps the panels onto the photographed garment; Export gives you mockups and 300 DPI print files.</li>
+      <li><b>Turn the tee</b> &mdash; drag it to look at it from any side: front, back, over the shoulders, under the arms.</li>
+      <li><b>Design right on it</b> &mdash; text, images, stickers, brushes and fills go anywhere, even across the seams. Drag a design to move it.</li>
+      <li><b>Export</b> &mdash; 3D mockups from every angle and print files for each sewn piece.</li>
     </ol>
     <button id="obGo" class="btn primary" style="width:100%">Got it</button>
     <div class="gmsg"></div>
@@ -334,13 +448,13 @@
     <button class="x" data-close="exportModal" aria-label="Close">&times;</button>
     <h3 id="exTitle">Export</h3>
     <div class="sub">Pick what to produce. Multi-file exports download one after another.</div>
-    <label class="exrow"><input type="checkbox" id="exMock" checked><span><b>Mockup images</b><small>Every photographed view at 2400 px, PNG</small></span></label>
+    <label class="exrow"><input type="checkbox" id="exMock" checked><span><b>Mockup images</b><small id="exMockNote">Every photographed view at 2400 px, PNG</small></span></label>
     <div class="exsub" id="exMockOpts">
       <label class="rowline"><input type="radio" name="exBg" value="transparent" checked style="width:auto;flex:none"><span class="tiny" style="margin:0">Transparent background</span></label>
       <label class="rowline"><input type="radio" name="exBg" value="studio" style="width:auto;flex:none"><span class="tiny" style="margin:0">White studio background with contact shadow</span></label>
       <label class="rowline"><input type="checkbox" id="exWm" style="width:auto;flex:none"><span class="tiny" style="margin:0">Corner watermark</span></label>
     </div>
-    <label class="exrow"><input type="checkbox" id="exPrint" checked><span><b>Print-ready panel files</b><small>One transparent PNG per designed panel at 300 DPI</small></span></label>
+    <label class="exrow"><input type="checkbox" id="exPrint" checked><span><b>Print-ready panel files</b><small id="exPrintNote">One transparent PNG per designed panel at 300 DPI</small></span></label>
     <label class="exrow"><input type="checkbox" id="exTech"><span><b>Tech pack</b><small>Printable sheet: mockups, panels, colour, layer table</small></span></label>
     <label class="exrow"><input type="checkbox" id="exProj"><span><b>Project file</b><small>project.json &mdash; reopen it here later</small></span></label>
     <div id="exWarn" class="tiny warn"></div>

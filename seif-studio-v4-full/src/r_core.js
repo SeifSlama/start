@@ -20,7 +20,7 @@ var API_BASE      = CFG.apiBase || '';
 var K_ACCESS  = 'seifstudio:access';
 var K_INVITES = 'seifstudio:invites';
 var DEBUG     = /[?&]debug=1/.test(location.search);
-var PROJECT_VERSION = 4;
+var PROJECT_VERSION = 5;   /* 5: the tee's panels became full pattern pieces (3D); 4 still opens */
 
 function $(id){ return document.getElementById(id); }
 
@@ -163,9 +163,7 @@ function viewById(id){ for(var i=0;i<VIEWS.length;i++){ if(VIEWS[i].id === id) r
 /* Built-in garment renders shipped next to the HTML (assets/<product>/<view>.png,
    luminance + alpha, made with tools/prep-photos.js). An admin upload in
    storage overrides them. */
-var BUILTIN_PHOTOS = {
-  tee: { front:1, turn_030:1, turn_060:1, side_left:1, turn_120:1, turn_150:1, back:1, side_right:1 }
-};
+var BUILTIN_PHOTOS = {};      /* the tee is 3D now; other garments still map onto uploaded photos */
 function builtinPhotoUrl(productId, view){
   return (BUILTIN_PHOTOS[productId] && BUILTIN_PHOTOS[productId][view]) ? (CFG.assetBase || 'assets/') + productId + '/' + view + '.png' : null;
 }
@@ -608,7 +606,7 @@ function addTextLayer(panelId, opts){
   var panel = panelById(project.productId, panelId); if(!panel) return null;
   var ab = artboardSize(panel);
   var l = baseLayer('text');
-  l.text = 'YOUR TEXT'; l.font = 'Archivo'; l.weight = 700; l.size = Math.round(ab.w * 0.1);
+  l.text = 'YOUR TEXT'; l.font = 'Archivo'; l.weight = 700; l.size = Math.round(Math.min(ab.w * 0.1, ab.h * 0.5));
   l.tracking = 0; l.lineHeight = 1.1; l.align = 'center'; l.fill = '#1E2749'; l.stroke = null; l.strokeW = 0; l.curve = 0;
   l.name = 'Text';
   if(opts) Object.keys(opts).forEach(function(k){ l[k] = opts[k]; });
@@ -622,11 +620,25 @@ function addShapeLayer(panelId, opts){
   var ab = artboardSize(panel);
   var l = baseLayer('shape');
   l.shape = 'rect'; l.fill = '#C3423F'; l.stroke = null; l.strokeW = 0;
-  l.w = Math.round(ab.w * 0.4); l.h = Math.round(ab.w * 0.4);
+  l.w = Math.round(Math.min(ab.w, ab.h) * 0.4); l.h = l.w;
   l.x = Math.round((ab.w - l.w) / 2); l.y = Math.round((ab.h - l.h) / 2);
   if(opts) Object.keys(opts).forEach(function(k){ l[k] = opts[k]; });
-  l.name = l.shape === 'ellipse' ? 'Ellipse' : (l.shape === 'line' ? 'Line' : 'Rectangle');
+  var sh = SHAPES.filter(function(x){ return x.id === l.shape; })[0];
+  l.name = sh ? sh.label : 'Shape';
   return insertLayer(panelId, l, 'Add shape');
+}
+/* a fill covers the whole panel and sits under everything else on it */
+function addFillLayer(panelId, opts){
+  var panel = panelById(project.productId, panelId); if(!panel) return null;
+  var ab = artboardSize(panel), l = baseLayer('fill');
+  l.x = 0; l.y = 0; l.w = ab.w; l.h = ab.h; l.fill = 'solid'; l.c1 = '#1E2749'; l.c2 = '#FFFFFF'; l.angle = 0;
+  l.scale = Math.round(4 * ab.pxPerCm); l.seed = Math.floor(Math.random() * 1000) + 1;
+  if(opts) Object.keys(opts).forEach(function(k){ l[k] = opts[k]; });
+  var f = FILLS.filter(function(x){ return x.id === l.fill; })[0];
+  l.name = (f ? f.label : 'Fill') + ' fill';
+  var ls = layersFor(panelId), at = 0;
+  while(at < ls.length && ls[at].type === 'fill') at++;
+  return insertLayer(panelId, l, 'Add fill', at);
 }
 function insertLayer(panelId, l, label, index){
   var ls = layersFor(panelId);
@@ -697,6 +709,18 @@ function setPanelTechnique(panelId, t){
 /* ---------- text metrics ---------- */
 var _measureCtx = null;
 function fontString(l){ return (l.weight || 400) + ' ' + (l.size || 100) + 'px ' + fontFamilyCss(l.font); }
+/* design fonts: system ones plus Google Fonts (Latin and Arabic), loaded on first use */
+var DESIGN_FONTS = [
+  { f:'Archivo', g:'Latin' }, { f:'Bricolage Grotesque', g:'Latin' }, { f:'Bebas Neue', g:'Latin' }, { f:'Anton', g:'Latin' },
+  { f:'Bungee', g:'Latin' }, { f:'Black Ops One', g:'Latin' }, { f:'Rubik Mono One', g:'Latin' }, { f:'Righteous', g:'Latin' },
+  { f:'Monoton', g:'Latin' }, { f:'Press Start 2P', g:'Latin' }, { f:'Permanent Marker', g:'Latin' }, { f:'Pacifico', g:'Latin' },
+  { f:'Lobster', g:'Latin' }, { f:'Caveat', g:'Latin' }, { f:'IBM Plex Mono', g:'Latin' }, { f:'Georgia', g:'Latin' },
+  { f:'Impact', g:'Latin' }, { f:'Script', g:'Latin' },
+  { f:'Cairo', g:'Arabic' }, { f:'Tajawal', g:'Arabic' }, { f:'Lalezar', g:'Arabic' }, { f:'Reem Kufi', g:'Arabic' },
+  { f:'Changa', g:'Arabic' }, { f:'El Messiri', g:'Arabic' }, { f:'Rakkas', g:'Arabic' }, { f:'Aref Ruqaa', g:'Arabic' },
+  { f:'Amiri', g:'Arabic' }, { f:'Marhey', g:'Arabic' },
+  { f:'Emoji', g:'Emoji' }
+];
 function fontFamilyCss(f){
   var map = {
     'Archivo': "'Archivo', system-ui, sans-serif",
@@ -704,9 +728,44 @@ function fontFamilyCss(f){
     'IBM Plex Mono': "'IBM Plex Mono', ui-monospace, monospace",
     'Georgia': "Georgia, 'Times New Roman', serif",
     'Impact': "Impact, 'Arial Black', sans-serif",
-    'Script': "'Brush Script MT', 'Segoe Script', cursive"
+    'Script': "'Brush Script MT', 'Segoe Script', cursive",
+    'Emoji': "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif"
   };
   return map[f] || ("'" + f + "', sans-serif");
+}
+var fontPending = {};
+/* canvas text needs the font file first; draw with the fallback now, redraw once it lands */
+function ensureFont(l){
+  if(!document.fonts || !document.fonts.check) return;
+  var f = fontString(l);
+  try { if(document.fonts.check(f)) return; } catch(e){ return; }
+  if(fontPending[f]) return;
+  fontPending[f] = 1;
+  document.fonts.load(f, l.text || 'A').then(function(){
+    textCache = {}; artboardCache = {};
+    refitTextLayers();
+    if(typeof onFontsLoaded === 'function') onFontsLoaded();
+  }).catch(function(){});
+}
+/* text boxes measured while a font was still loading have the fallback's width; the height
+   does not depend on the font, so keep it and give every text its real width again */
+function refitTextLayers(){
+  Object.keys(project.work || {}).forEach(function(pid){
+    var w = project.work[pid]; if(!w || !w.panels) return;
+    Object.keys(w.panels).forEach(function(pk){
+      var changed = false;
+      (w.panels[pk].layers || []).forEach(function(l){
+        if(l.type !== 'text') return;
+        var m = textNaturalSize(l); if(!(m.w > 0 && m.h > 0 && l.h > 0)) return;
+        var nw = m.w * l.h / m.h;
+        if(Math.abs(nw - l.w) < 0.5) return;
+        var cx = l.x + l.w / 2; l.w = nw; l.x = cx - nw / 2; changed = true;
+      });
+      if(!changed) return;
+      if(pid === project.productId) bumpRev(pk);
+      else { var k = pid + '|' + pk; panelRev[k] = (panelRev[k] || 0) + 1; projectDirty = true; }
+    });
+  });
 }
 function textLines(l){ return String(l.text || '').split('\n'); }
 function measureLine(ctx, l, line){
@@ -743,6 +802,15 @@ function drawTextNatural(ctx, l, nat){
   ctx.font = fontString(l);
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = l.fill || '#000';
+  if(l.fill2){
+    var gr = ctx.createLinearGradient(0, 0, 0, nat.h);
+    gr.addColorStop(0, l.fill || '#000'); gr.addColorStop(1, l.fill2);
+    ctx.fillStyle = gr;
+  }
+  if(l.shadow && l.shadow.color){
+    ctx.shadowColor = l.shadow.color; ctx.shadowBlur = (l.shadow.blur || 0) * (ctx._k || 1);
+    ctx.shadowOffsetX = (l.shadow.x || 0) * (ctx._k || 1); ctx.shadowOffsetY = (l.shadow.y || 0) * (ctx._k || 1);
+  }
   var stroke = l.stroke && l.strokeW > 0;
   if(stroke){ ctx.strokeStyle = l.stroke; ctx.lineWidth = l.strokeW; ctx.lineJoin = 'round'; }
   var lines = textLines(l), size = l.size || 100, lh = size * (l.lineHeight || 1.1), tr = l.tracking || 0;
@@ -789,15 +857,24 @@ function drawTextNatural(ctx, l, nat){
 /* per-layer raster cache for text (keyed by the properties that change its pixels) */
 var textCache = {};
 function textLayerKey(l){
-  return [l.text, l.font, l.weight, l.size, l.tracking, l.lineHeight, l.align, l.fill, l.stroke, l.strokeW, l.curve].join('|');
+  return [l.text, l.font, l.weight, l.size, l.tracking, l.lineHeight, l.align, l.fill, l.fill2, l.stroke, l.strokeW, l.curve,
+          l.shadow ? [l.shadow.color, l.shadow.blur, l.shadow.x, l.shadow.y].join(',') : ''].join('|');
 }
-function textRaster(l){
-  var key = textLayerKey(l);
+/* margin around the text box that a shadow or glow needs, in artboard units */
+function textPad(l){ return l.shadow && l.shadow.color ? Math.ceil((l.shadow.blur || 0) * 1.5 + Math.max(Math.abs(l.shadow.x || 0), Math.abs(l.shadow.y || 0))) : 0; }
+/* rs = raster scale: text is rasterised at the size it is drawn, so print files stay sharp */
+function textRaster(l, rs){
+  rs = Math.max(0.5, Math.min(12, Math.ceil((rs || 1) * 2) / 2));
+  var key = textLayerKey(l) + '@' + rs;
   if(textCache[key]) return textCache[key];
-  var nat = textNaturalSize(l);
-  var c = document.createElement('canvas'); c.width = nat.w; c.height = nat.h;
-  drawTextNatural(c.getContext('2d'), l, nat);
-  c._nat = nat;
+  ensureFont(l);
+  var nat = textNaturalSize(l), pad = textPad(l);
+  var c = document.createElement('canvas');
+  c.width = Math.max(1, Math.ceil((nat.w + pad * 2) * rs)); c.height = Math.max(1, Math.ceil((nat.h + pad * 2) * rs));
+  var g = c.getContext('2d');
+  g.scale(rs, rs); g.translate(pad, pad); g._k = rs;
+  drawTextNatural(g, l, nat);
+  c._nat = nat; c._pad = pad;
   var keys = Object.keys(textCache);
   if(keys.length > 40) delete textCache[keys[0]];
   textCache[key] = c;
@@ -810,6 +887,15 @@ var artboardCache = {}; /* productId|panelId|px|rev|technique -> canvas */
    whole artboard (an all-over print). ab = artboard size in artboard units. */
 function drawLayer(ctx, l, s, ab){
   if(l.visible === false) return;
+  if(l.type === 'fill'){
+    if(!ab) return;
+    ctx.save();
+    ctx.globalAlpha = l.opacity === undefined ? 1 : l.opacity;
+    ctx.globalCompositeOperation = l.blend || 'source-over';
+    drawFill(ctx, l, ab.w * s, ab.h * s, s);
+    ctx.restore();
+    return;
+  }
   if(l.tile && ab){
     var stepX = l.w * (1 + (l.tile.gap || 0)), stepY = l.h * (1 + (l.tile.gap || 0));
     if(stepX < 8 || stepY < 8) return;
@@ -834,25 +920,239 @@ function drawLayer(ctx, l, s, ab){
   ctx.globalCompositeOperation = l.blend || 'source-over';
   ctx.translate((l.x + l.w/2) * s, (l.y + l.h/2) * s);
   ctx.rotate((l.rot || 0) * Math.PI / 180);
+  if(l.flipX || l.flipY) ctx.scale(l.flipX ? -1 : 1, l.flipY ? -1 : 1);
+  var fl = layerFilter(l, s); if(fl) ctx.filter = fl;
   var w = l.w * s, h = l.h * s;
   if(l.type === 'image' && l.src){
     ctx.drawImage(l.src, -w/2, -h/2, w, h);
   } else if(l.type === 'text'){
-    var r = textRaster(l);
-    ctx.drawImage(r, -w/2, -h/2, w, h);
+    var nat = textNaturalSize(l), k = w / Math.max(1, nat.w), r = textRaster(l, k), pad = (r._pad || 0) * k;
+    ctx.drawImage(r, -w/2 - pad, -h/2 - pad, w + pad * 2, h + pad * 2);
   } else if(l.type === 'shape'){
     ctx.fillStyle = l.fill || '#000';
+    if(l.fill2){ var sg = ctx.createLinearGradient(0, -h/2, 0, h/2); sg.addColorStop(0, l.fill || '#000'); sg.addColorStop(1, l.fill2); ctx.fillStyle = sg; }
     var stroke = l.stroke && l.strokeW > 0;
-    if(stroke){ ctx.strokeStyle = l.stroke; ctx.lineWidth = l.strokeW * s; }
+    if(stroke){ ctx.strokeStyle = l.stroke; ctx.lineWidth = l.strokeW * s; ctx.lineJoin = 'round'; }
     ctx.beginPath();
-    if(l.shape === 'ellipse') ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
-    else if(l.shape === 'line'){ ctx.rect(-w/2, -Math.max(1, h/2), w, Math.max(2, h)); }
-    else ctx.rect(-w/2, -h/2, w, h);
-    ctx.fill();
+    shapePath(ctx, l.shape, w, h);
+    ctx.fill(l.shape === 'ring' ? 'evenodd' : 'nonzero');
     if(stroke) ctx.stroke();
+  } else if(l.type === 'path'){
+    drawPath(ctx, l, s);
   }
   ctx.restore();
 }
+/* blur is in artboard units, so it looks the same on screen, on the tee and in the 300 DPI file */
+function layerFilter(l, s){
+  var f = l.fx; if(!f) return '';
+  var out = [];
+  if(f.brightness !== undefined && f.brightness !== 100) out.push('brightness(' + f.brightness + '%)');
+  if(f.contrast !== undefined && f.contrast !== 100) out.push('contrast(' + f.contrast + '%)');
+  if(f.saturate !== undefined && f.saturate !== 100) out.push('saturate(' + f.saturate + '%)');
+  if(f.hue) out.push('hue-rotate(' + f.hue + 'deg)');
+  if(f.gray) out.push('grayscale(' + f.gray + '%)');
+  if(f.invert) out.push('invert(' + f.invert + '%)');
+  if(f.blur) out.push('blur(' + Math.round(f.blur * (s || 1) * 10) / 10 + 'px)');
+  return out.join(' ');
+}
+
+/* ---------- sticker shapes: drawn centred in a w x h box ---------- */
+var SHAPES = [
+  { id:'rect', label:'Square' }, { id:'ellipse', label:'Circle' }, { id:'triangle', label:'Triangle' }, { id:'star', label:'Star' },
+  { id:'heart', label:'Heart' }, { id:'bolt', label:'Bolt' }, { id:'burst', label:'Burst' }, { id:'crown', label:'Crown' },
+  { id:'flame', label:'Flame' }, { id:'drop', label:'Drop' }, { id:'moon', label:'Moon' }, { id:'sparkle', label:'Sparkle' },
+  { id:'arrow', label:'Arrow' }, { id:'speech', label:'Speech' }, { id:'hexagon', label:'Hexagon' }, { id:'ring', label:'Ring' },
+  { id:'plus', label:'Plus' }, { id:'diamond', label:'Diamond' }, { id:'line', label:'Line' }
+];
+function shapePath(ctx, kind, w, h){
+  var i, n, a, r;
+  function P(x, y){ return [x * w, y * h]; }
+  function poly(pts){ pts.forEach(function(q, k){ var p = P(q[0], q[1]); if(k) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); }
+  switch(kind){
+    case 'ellipse': ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI * 2); break;
+    case 'line': ctx.rect(-w/2, -Math.max(1, h/2), w, Math.max(2, h)); break;
+    case 'triangle': poly([[0, -0.5], [0.5, 0.5], [-0.5, 0.5]]); break;
+    case 'diamond': poly([[0, -0.5], [0.5, 0], [0, 0.5], [-0.5, 0]]); break;
+    case 'hexagon': var hx = []; for(i = 0; i < 6; i++){ a = Math.PI / 3 * i; hx.push([Math.cos(a) * 0.5, Math.sin(a) * 0.5]); } poly(hx); break;
+    case 'star': case 'burst': case 'sparkle':
+      n = kind === 'star' ? 5 : (kind === 'burst' ? 16 : 4);
+      var inner = kind === 'star' ? 0.2 : (kind === 'burst' ? 0.36 : 0.12), pts = [];
+      for(i = 0; i < n * 2; i++){ a = Math.PI * i / n - Math.PI / 2; r = i % 2 ? inner : 0.5; pts.push([Math.cos(a) * r, Math.sin(a) * r]); }
+      if(kind === 'sparkle'){
+        pts.forEach(function(q, k){ var p = P(q[0], q[1]); if(!k){ ctx.moveTo(p[0], p[1]); return; } var prev = P(pts[k-1][0], pts[k-1][1]); ctx.quadraticCurveTo(0, 0, p[0], p[1]); });
+        ctx.quadraticCurveTo(0, 0, P(pts[0][0], pts[0][1])[0], P(pts[0][0], pts[0][1])[1]); ctx.closePath();
+      } else poly(pts);
+      break;
+    case 'heart':
+      ctx.moveTo(0, 0.5 * h);
+      ctx.bezierCurveTo(-0.62 * w, 0.02 * h, -0.5 * w, -0.52 * h, 0, -0.22 * h);
+      ctx.bezierCurveTo(0.5 * w, -0.52 * h, 0.62 * w, 0.02 * h, 0, 0.5 * h); ctx.closePath(); break;
+    case 'bolt': poly([[0.1, -0.5], [-0.32, 0.06], [-0.02, 0.06], [-0.12, 0.5], [0.32, -0.08], [0.02, -0.08], [0.18, -0.5]]); break;
+    case 'crown': poly([[-0.5, 0.42], [-0.5, -0.32], [-0.25, 0.02], [0, -0.48], [0.25, 0.02], [0.5, -0.32], [0.5, 0.42]]); break;
+    case 'flame':
+      ctx.moveTo(0, 0.5 * h);
+      ctx.bezierCurveTo(-0.5 * w, 0.48 * h, -0.5 * w, -0.05 * h, -0.18 * w, -0.25 * h);
+      ctx.bezierCurveTo(-0.12 * w, -0.05 * h, -0.02 * w, -0.02 * h, 0.02 * w, -0.12 * h);
+      ctx.bezierCurveTo(0.04 * w, -0.32 * h, -0.02 * w, -0.42 * h, 0.06 * w, -0.5 * h);
+      ctx.bezierCurveTo(0.42 * w, -0.3 * h, 0.52 * w, 0.42 * h, 0, 0.5 * h); ctx.closePath(); break;
+    case 'drop':
+      ctx.moveTo(0, -0.5 * h);
+      ctx.bezierCurveTo(0.12 * w, -0.25 * h, 0.5 * w, 0.02 * h, 0.5 * w, 0.18 * h);
+      ctx.arc(0, 0.18 * h, 0.5 * Math.min(w, h * 0.64), 0, Math.PI, false);
+      ctx.bezierCurveTo(-0.5 * w, 0.02 * h, -0.12 * w, -0.25 * h, 0, -0.5 * h); ctx.closePath(); break;
+    case 'moon':
+      ctx.ellipse(0, 0, w/2, h/2, 0, Math.PI * 0.5, Math.PI * 1.5, false);
+      ctx.ellipse(-0.1 * w, 0, w * 0.32, h / 2, 0, Math.PI * 1.5, Math.PI * 0.5, true); ctx.closePath(); break;
+    case 'arrow': poly([[-0.5, -0.14], [0.08, -0.14], [0.08, -0.4], [0.5, 0], [0.08, 0.4], [0.08, 0.14], [-0.5, 0.14]]); break;
+    case 'plus': poly([[-0.16, -0.5], [0.16, -0.5], [0.16, -0.16], [0.5, -0.16], [0.5, 0.16], [0.16, 0.16], [0.16, 0.5], [-0.16, 0.5], [-0.16, 0.16], [-0.5, 0.16], [-0.5, -0.16], [-0.16, -0.16]]); break;
+    case 'ring': ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI * 2); ctx.moveTo(w * 0.28, 0); ctx.ellipse(0, 0, w * 0.28, h * 0.28, 0, 0, Math.PI * 2); break;
+    case 'speech':
+      var rr = Math.min(w, h) * 0.18, bw = w, bh = h * 0.78, x0 = -bw/2, y0 = -h/2;
+      ctx.moveTo(x0 + rr, y0); ctx.lineTo(x0 + bw - rr, y0); ctx.quadraticCurveTo(x0 + bw, y0, x0 + bw, y0 + rr);
+      ctx.lineTo(x0 + bw, y0 + bh - rr); ctx.quadraticCurveTo(x0 + bw, y0 + bh, x0 + bw - rr, y0 + bh);
+      ctx.lineTo(-0.05 * w, y0 + bh); ctx.lineTo(-0.28 * w, h / 2); ctx.lineTo(-0.22 * w, y0 + bh);
+      ctx.lineTo(x0 + rr, y0 + bh); ctx.quadraticCurveTo(x0, y0 + bh, x0, y0 + bh - rr);
+      ctx.lineTo(x0, y0 + rr); ctx.quadraticCurveTo(x0, y0, x0 + rr, y0); ctx.closePath(); break;
+    default: ctx.rect(-w/2, -h/2, w, h);
+  }
+}
+
+/* ---------- brush strokes: points relative to the box centre as first drawn (bw x bh) ---------- */
+var BRUSHES = [
+  { id:'pen', label:'Pen' }, { id:'marker', label:'Marker' }, { id:'airbrush', label:'Airbrush' },
+  { id:'neon', label:'Neon' }, { id:'calligraphy', label:'Calligraphy' }, { id:'dots', label:'Dots' }
+];
+var _sprites = {};
+function softDot(color){
+  if(_sprites[color]) return _sprites[color];
+  var c = document.createElement('canvas'); c.width = c.height = 64;
+  var g = c.getContext('2d'), rgb = hexToRgb(color), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(' + rgb.join(',') + ',1)'); gr.addColorStop(0.45, 'rgba(' + rgb.join(',') + ',0.55)'); gr.addColorStop(1, 'rgba(' + rgb.join(',') + ',0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  _sprites[color] = c; return c;
+}
+function seededRandom(seed){ var t = (seed >>> 0) || 1; return function(){ t += 0x6D2B79F5; var r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+function drawPath(ctx, l, s){
+  var pts = l.pts || []; if(!pts.length) return;
+  var sx = s * l.w / (l.bw || l.w || 1), sy = s * l.h / (l.bh || l.h || 1), k = Math.sqrt(Math.abs(sx * sy));
+  ctx.scale(sx, sy);
+  var size = l.size || 10, color = l.color || '#1E2749', style = l.style || 'pen';
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = color; ctx.lineWidth = size;
+  function trace(){
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    if(pts.length === 1){ ctx.lineTo(pts[0][0] + 0.01, pts[0][1]); return; }
+    for(var i = 1; i < pts.length - 1; i++){
+      var mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+    ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+  }
+  if(style === 'marker'){ ctx.lineCap = 'square'; ctx.lineJoin = 'bevel'; trace(); ctx.stroke(); return; }
+  if(style === 'dots'){ ctx.setLineDash([0.001, size * 1.9]); trace(); ctx.stroke(); ctx.setLineDash([]); return; }
+  if(style === 'neon'){
+    ctx.shadowColor = color; ctx.shadowBlur = size * 1.6 * k;
+    trace(); ctx.stroke(); ctx.stroke();
+    ctx.shadowBlur = size * 0.6 * k; ctx.strokeStyle = mixHex(color, '#FFFFFF', 0.72); ctx.lineWidth = size * 0.38;
+    trace(); ctx.stroke();
+    ctx.shadowBlur = 0; return;
+  }
+  if(style === 'calligraphy'){
+    var a = -0.7, nx = Math.cos(a) * size / 2, ny = Math.sin(a) * size / 2;
+    ctx.fillStyle = color;
+    for(var i = 1; i < pts.length; i++){
+      var p0 = pts[i - 1], p1 = pts[i];
+      ctx.beginPath(); ctx.moveTo(p0[0] + nx, p0[1] + ny); ctx.lineTo(p1[0] + nx, p1[1] + ny); ctx.lineTo(p1[0] - nx, p1[1] - ny); ctx.lineTo(p0[0] - nx, p0[1] - ny); ctx.closePath(); ctx.fill();
+    }
+    return;
+  }
+  if(style === 'airbrush'){
+    var rnd = seededRandom(l.seed || 7), dot = softDot(color), step = Math.max(0.5, size * 0.16);
+    ctx.globalAlpha *= 0.22;
+    for(var j = 0; j < pts.length; j++){
+      var q0 = pts[Math.max(0, j - 1)], q1 = pts[j], d = Math.hypot(q1[0] - q0[0], q1[1] - q0[1]), n = Math.max(1, Math.ceil(d / step));
+      for(var m = 0; m < n; m++){
+        var t = j ? m / n : 0, x = q0[0] + (q1[0] - q0[0]) * t, y = q0[1] + (q1[1] - q0[1]) * t;
+        for(var e = 0; e < 3; e++){
+          var rr = size * (0.35 + rnd() * 0.45), ang = rnd() * Math.PI * 2, off = size * 0.35 * Math.sqrt(rnd());
+          ctx.drawImage(dot, x + Math.cos(ang) * off - rr, y + Math.sin(ang) * off - rr, rr * 2, rr * 2);
+        }
+      }
+    }
+    return;
+  }
+  trace(); ctx.stroke();
+}
+
+/* ---------- fills: a whole panel in a colour, gradient or pattern ---------- */
+var FILLS = [
+  { id:'solid', label:'Solid' }, { id:'linear', label:'Gradient' }, { id:'radial', label:'Radial' }, { id:'stripes', label:'Stripes' },
+  { id:'dots', label:'Polka dots' }, { id:'checker', label:'Checker' }, { id:'grid', label:'Grid' }, { id:'waves', label:'Waves' },
+  { id:'halftone', label:'Halftone' }, { id:'camo', label:'Camo' }, { id:'tiedye', label:'Tie-dye' }
+];
+function drawFill(ctx, l, W, H, s){
+  var c1 = l.c1 || '#1E2749', c2 = l.c2 || '#FFFFFF', c3 = l.c3 || c2, u = Math.max(2, (l.scale || 60) * s), ang = (l.angle || 0) * Math.PI / 180;
+  var kind = l.fill || 'solid';
+  if(kind === 'solid'){ ctx.fillStyle = c1; ctx.fillRect(0, 0, W, H); return; }
+  if(kind === 'linear'){
+    var L = Math.abs(W * Math.cos(ang)) + Math.abs(H * Math.sin(ang)), dx = Math.cos(ang) * L / 2, dy = Math.sin(ang) * L / 2;
+    var g = ctx.createLinearGradient(W/2 - dx, H/2 - dy, W/2 + dx, H/2 + dy);
+    g.addColorStop(0, c1); if(l.c3){ g.addColorStop(0.5, c2); g.addColorStop(1, c3); } else g.addColorStop(1, c2);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); return;
+  }
+  if(kind === 'radial'){
+    var rg = ctx.createRadialGradient(W/2, H * 0.42, 0, W/2, H * 0.42, Math.max(W, H) * 0.72);
+    rg.addColorStop(0, c1); if(l.c3){ rg.addColorStop(0.5, c2); rg.addColorStop(1, c3); } else rg.addColorStop(1, c2);
+    ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H); return;
+  }
+  ctx.fillStyle = c1; ctx.fillRect(0, 0, W, H);
+  if(kind === 'camo' || kind === 'tiedye'){ ctx.drawImage(noiseFill(kind, c1, c2, c3, W / u, H / u, l.seed || 3), 0, 0, W, H); return; }
+  var R = Math.hypot(W, H);
+  ctx.save(); ctx.translate(W/2, H/2); ctx.rotate(ang);
+  ctx.fillStyle = c2; ctx.strokeStyle = c2;
+  var i, j, n = Math.ceil(R / u / 2) + 1;
+  if(kind === 'stripes'){ for(i = -n; i <= n; i++) ctx.fillRect(i * u, -R, u / 2, R * 2); }
+  else if(kind === 'dots'){ for(j = -n; j <= n; j++) for(i = -n; i <= n; i++){ ctx.beginPath(); ctx.arc(i * u + (j % 2 ? u / 2 : 0), j * u * 0.87, u * 0.27, 0, Math.PI * 2); ctx.fill(); } }
+  else if(kind === 'checker'){ for(j = -n; j <= n; j++) for(i = -n; i <= n; i++) if((i + j) % 2 === 0) ctx.fillRect(i * u, j * u, u, u); }
+  else if(kind === 'grid'){ ctx.lineWidth = Math.max(1, u * 0.08); for(i = -n; i <= n; i++){ ctx.beginPath(); ctx.moveTo(i * u, -R); ctx.lineTo(i * u, R); ctx.moveTo(-R, i * u); ctx.lineTo(R, i * u); ctx.stroke(); } }
+  else if(kind === 'waves'){
+    ctx.lineWidth = u * 0.32; ctx.lineCap = 'round';
+    for(j = -n; j <= n; j++){ ctx.beginPath(); for(var x = -R; x <= R; x += u / 8){ var y = j * u + Math.sin(x / u * Math.PI * 2) * u * 0.22; if(x === -R) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); }
+  }
+  else if(kind === 'halftone'){
+    for(j = -n; j <= n; j++) for(i = -n; i <= n; i++){
+      var t2 = Math.min(1, Math.max(0, (j * u + R / 2) / R)), rr = u * 0.48 * t2;
+      if(rr < 0.4) continue;
+      ctx.beginPath(); ctx.arc(i * u + (j % 2 ? u / 2 : 0), j * u, rr, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+/* camo blobs and tie-dye swirls: computed small, scaled up smooth */
+var _noiseCache = {};
+function noiseFill(kind, c1, c2, c3, cellsW, cellsH, seed){
+  var key = [kind, c1, c2, c3, Math.round(cellsW * 10), Math.round(cellsH * 10), seed].join('|');
+  if(_noiseCache[key]) return _noiseCache[key];
+  var gw = 360, gh = Math.max(8, Math.round(gw * cellsH / Math.max(0.01, cellsW))), c = document.createElement('canvas'); c.width = gw; c.height = gh;
+  var g = c.getContext('2d'), img = g.createImageData(gw, gh), A = hexToRgb(c1), B = hexToRgb(c2), C = hexToRgb(c3), x, y;
+  var f = cellsW / gw, ox = seed * 13.7, oy = seed * 7.3;
+  for(y = 0; y < gh; y++) for(x = 0; x < gw; x++){
+    var col, i = (y * gw + x) * 4;
+    if(kind === 'camo'){
+      var n1 = fbm(x * f * 1.3 + ox, y * f * 1.3 + oy), n2 = fbm(x * f * 1.3 + ox + 40, y * f * 1.3 + oy + 40);
+      col = n1 > 0.56 ? B : (n2 > 0.58 ? C : (n1 < 0.36 ? mixRgb(A, [0, 0, 0], 0.25) : A));
+    } else {
+      var cx = x - gw / 2, cy = y - gh / 2, r = Math.hypot(cx, cy) / gw * cellsW, a = Math.atan2(cy, cx);
+      var v = 0.5 + 0.5 * Math.sin(a * 3 + r * 2.4 + fbm(x * f + ox, y * f + oy) * 4);
+      col = v < 0.5 ? mixRgb(A, B, v * 2) : mixRgb(B, C, (v - 0.5) * 2);
+    }
+    img.data[i] = col[0]; img.data[i + 1] = col[1]; img.data[i + 2] = col[2]; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  var keys = Object.keys(_noiseCache); if(keys.length > 12) delete _noiseCache[keys[0]];
+  _noiseCache[key] = c;
+  return c;
+}
+function mixRgb(a, b, t){ return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
 /* exact = {w,h}: force the output pixel size (the 300 DPI exporter computes it from cm
    so a 32x42 cm panel is 3780x4961, not a rounding of the working size) */
 function renderArtboard(panelId, px, productId, exact){
@@ -871,6 +1171,9 @@ function renderArtboard(panelId, px, productId, exact){
   ctx.imageSmoothingQuality = 'high';
   pw.layers.forEach(function(l){ drawLayer(ctx, l, s, ab); });
   if(pw.technique === 'embroidery' && pw.layers.length) applyEmbroidery(c);
+  /* one canvas per panel and size: older revisions go (a drag on the 3D tee makes one per frame) */
+  var stale = productId + '|' + panelId + '|' + px + '|';
+  Object.keys(artboardCache).forEach(function(k){ if(k.indexOf(stale) === 0) delete artboardCache[k]; });
   var keys = Object.keys(artboardCache);
   if(keys.length > 48) delete artboardCache[keys[0]];
   artboardCache[key] = c;
@@ -881,10 +1184,18 @@ function renderPanelThumb(panelId, px, color){
   var art = renderArtboard(panelId, px);
   if(!art) return null;
   var c = document.createElement('canvas'); c.width = art.width; c.height = art.height;
-  var ctx = c.getContext('2d');
+  var ctx = c.getContext('2d'), panel = panelById(project.productId, panelId);
+  if(panel && panel.outline){ outlinePath(ctx, panel, c.width / panel.w_cm, c.height / panel.h_cm); ctx.clip(); }
   ctx.fillStyle = color || project.garmentColor; ctx.fillRect(0, 0, c.width, c.height);
   ctx.drawImage(art, 0, 0);
   return c;
+}
+/* a pattern piece's cut line as a canvas path, kx/ky = pixels per cm */
+function outlinePath(ctx, panel, kx, ky, ox, oy){
+  ox = ox || 0; oy = oy || 0;
+  ctx.beginPath();
+  panel.outline.forEach(function(q, i){ if(i) ctx.lineTo(ox + q[0] * kx, oy + q[1] * ky); else ctx.moveTo(ox + q[0] * kx, oy + q[1] * ky); });
+  ctx.closePath();
 }
 
 /* ---------- print techniques ---------- */
@@ -1436,7 +1747,28 @@ function loadImageFromData(data){
 }
 /* restore a serialised project; images from inline srcData or the image store.
    Fails loudly on a version mismatch rather than half-loading. */
+/* v4 designed the tee on print-area rectangles (front/back 32x42 cm, sleeves 10x9 cm); v5 designs
+   on the whole pattern piece. Old layers keep their real size and land where the print area sat. */
+var V4_TEE_AREAS = { front: { w:32, h:42, top:11 }, back: { w:32, h:42, top:7 }, sleeve_l: { w:10, h:9, top:3.5 }, sleeve_r: { w:10, h:9, top:3.5 } };
+function migrateV4(obj){
+  var tee = obj.work && obj.work.tee;
+  if(tee && tee.panels) Object.keys(tee.panels).forEach(function(pk){
+    var area = V4_TEE_AREAS[pk], piece = panelById('tee', pk); if(!area || !piece) return;
+    var oldK = PANEL_PX / Math.max(area.w, area.h), newK = artboardSize(piece).pxPerCm, r = newK / oldK;
+    var ox = (piece.w_cm - area.w) / 2, oy = area.top;
+    (tee.panels[pk].layers || []).forEach(function(l){
+      l.x = Math.round((l.x / oldK + ox) * newK); l.y = Math.round((l.y / oldK + oy) * newK);
+      l.w = Math.max(1, Math.round(l.w * r)); l.h = Math.max(1, Math.round(l.h * r));
+      if(l.size) l.size = Math.max(4, Math.round(l.size * r));
+      if(l.strokeW) l.strokeW = Math.round(l.strokeW * r * 10) / 10;
+      if(l.tracking) l.tracking = Math.round(l.tracking * r * 10) / 10;
+    });
+  });
+  obj.version = 5;
+  return obj;
+}
 async function restoreProject(obj){
+  if(obj && obj.version === 4) obj = migrateV4(JSON.parse(JSON.stringify(obj)));
   if(!obj || obj.version !== PROJECT_VERSION) throw new Error('This project file is version ' + (obj && obj.version) + '; this build reads version ' + PROJECT_VERSION + '.');
   var work = {};
   var pids = Object.keys(obj.work || {});
@@ -1532,7 +1864,7 @@ function printPxFor(panel){
   var w = Math.round(panel.w_cm / 2.54 * 300), h = Math.round(panel.h_cm / 2.54 * 300), capped = false;
   var m = Math.max(w, h);
   if(m > 6000){ var s = 6000 / m; w = Math.round(w*s); h = Math.round(h*s); capped = true; }
-  return { w:w, h:h, px: Math.max(w, h), capped: capped };
+  return { w:w, h:h, px: Math.max(w, h), capped: capped, dpi: Math.round(Math.max(w, h) / (Math.max(panel.w_cm, panel.h_cm) / 2.54)) };
 }
 function canvasToBlob(c){
   return new Promise(function(res){ if(c.toBlob) c.toBlob(res, 'image/png'); else res(null); });
