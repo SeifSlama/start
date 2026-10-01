@@ -222,6 +222,45 @@ input[type=range]{accent-color:var(--red)}
 @keyframes lockshake{0%,100%{transform:translateX(-50%)}25%{transform:translateX(calc(-50% - 6px))}75%{transform:translateX(calc(-50% + 6px))}}
 #lockBar.shake{animation:lockshake .35s ease}
 
+/* ---------- free trial (live build) ---------- */
+.rackitem.trial-locked{opacity:.55}
+.rackitem.trial-locked::after{content:"PRO";margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--red)}
+
+/* ---------- owner: read-only view of a customer's design ---------- */
+.viewbanner{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 14px;background:#FBF0E4;border-bottom:1.5px solid #E0B075;color:#7A5320;font-size:12.5px;font-weight:600}
+.viewbanner.hidden{display:none}
+
+/* ---------- owner dashboard ---------- */
+.modal .card.wide.dash{max-width:1120px;max-height:94vh}
+.dtable td:first-child{white-space:nowrap}
+.dashwrap{overflow-x:auto;margin-bottom:18px}
+.dashhead{display:flex;align-items:center;justify-content:space-between;margin:6px 0 8px}
+.dtable{width:100%;border-collapse:collapse;font-size:12.5px}
+.dtable th{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+.dtable td{padding:7px 8px;border-bottom:1px dashed var(--line);vertical-align:top}
+.dtable td.n{font-family:var(--mono);text-align:right}
+.dtable th.n{text-align:right}
+.dtable tr.click{cursor:pointer}
+.dtable tr.click:hover td{background:#F1F1EA}
+.evrow{display:grid;grid-template-columns:118px minmax(0,1.1fr) minmax(0,2fr);gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12.5px;align-items:baseline}
+.evrow .t{font-family:var(--mono);font-size:10.5px;color:var(--ink2)}
+.evrow .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evrow .who.anon{color:var(--ink2);font-family:var(--mono);font-size:11px}
+.evrow .what b{font-weight:600}
+.evrow .what small{color:var(--ink2);margin-left:6px}
+.pill{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid var(--line);border-radius:999px;padding:2px 8px;white-space:nowrap}
+.pill.on{border-color:var(--green);color:var(--green)}
+.pill.off{color:var(--ink2)}
+.pill.own{border-color:var(--ink);color:var(--ink)}
+.cuhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.cuhead h4{margin:0;font-size:16px}
+.cuacts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 18px}
+.cuacts input{width:70px;padding:6px 8px}
+.cusec{margin:18px 0 6px}
+@media (max-width:700px){
+  .evrow{grid-template-columns:1fr;gap:2px}
+}
+
 /* ---------- modal ---------- */
 .modal{position:fixed;inset:0;background:rgba(30,39,73,.35);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .modal.on{display:flex}

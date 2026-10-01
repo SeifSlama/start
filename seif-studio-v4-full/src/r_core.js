@@ -14,7 +14,6 @@
 var CFG           = window.SEIF_CONFIG || { demo: true };
 var DEMO_MODE     = CFG.demo !== false;
 var ADMIN_PIN     = DEMO_MODE ? 'DEMO' : null;     /* never in client code when not demo */
-var FALLBACK_CODE = DEMO_MODE ? 'DEMO' : null;
 var PRICE         = CFG.price || '100 EGP';
 var PRICE_PERIOD  = CFG.pricePeriod || '/month';
 var API_BASE      = CFG.apiBase || '';
@@ -34,37 +33,48 @@ window.addEventListener('error', function(e){
    window.storage (shared/personal) when the host provides it, localStorage
    otherwise. set() reports {ok, reason} so a full quota is not mistaken for
    an empty store; the UI shows a persistent strip when saving fails.
-   On the live build, once the customer is signed in (store.cloud), personal keys —
+   On the live build, once the customer has an active account (store.cloud), personal keys —
    projects, images, my products — live in their account on the server (/api/data),
-   so their work follows them to any device. Shared keys stay local. */
+   so their work follows them to any device. Shared keys — the owner's garment photos,
+   panel mapping and colours — live at /api/shared: everyone reads, only the owner writes.
+   The owner can open a customer's design read-only (viewBase + readOnly). */
 var CLOUD_CHUNK = 900000;   /* matches the server's INLINE_MAX / CHUNK_MAX */
 var store = {
   backend: (typeof window !== 'undefined' && window.storage) ? 'host' : (function(){ try { return window.localStorage ? 'local' : 'none'; } catch(e){ return 'none'; } })(),
   cloud: false,
+  sharedCloud: false,
+  sharedKeys: null,     /* keys that exist on the server, so missing ones cost no request */
+  viewBase: null,
+  readOnly: false,
   ok: true,
   lastError: null,
   _lk: function(key, shared){ return 'ss:' + (shared ? 's:' : 'p:') + key; },
-  _url: function(key, q){ return API_BASE + '/api/data/' + encodeURIComponent(key) + (q || ''); },
+  _url: function(key, q, shared){ return API_BASE + (shared ? '/api/shared/' : (this.viewBase || '/api/data/')) + encodeURIComponent(key) + (q || ''); },
   _req: async function(url, opts){
     var r = await fetch(url, Object.assign({ credentials: 'include' }, opts || {}));
     if(!r.ok){ var j = null; try { j = await r.json(); } catch(e){} throw new Error((j && j.error) || ('server error ' + r.status)); }
     return r;
   },
-  cloudGet: async function(key){
-    var j = await (await this._req(this._url(key))).json();
+  cloudGet: async function(key, shared){
+    var j = await (await this._req(this._url(key, '', shared))).json();
     if(!j.found) return null;
     if(typeof j.inline === 'string') return JSON.parse(j.inline);
     var self = this, parts = [];
-    for(var i=0;i<j.n;i++) parts.push(self._req(self._url(key, '?v=' + j.v + '&i=' + i)).then(function(r){ return r.text(); }));
+    for(var i=0;i<j.n;i++) parts.push(self._req(self._url(key, '?v=' + j.v + '&i=' + i, shared)).then(function(r){ return r.text(); }));
     return JSON.parse((await Promise.all(parts)).join(''));
   },
-  cloudSet: async function(key, s){
+  cloudSet: async function(key, s, shared){
     var put = { method: 'PUT', headers: { 'Content-Type': 'text/plain;charset=UTF-8' } };
-    if(s.length <= CLOUD_CHUNK){ await this._req(this._url(key), Object.assign({ body: s }, put)); return; }
+    if(s.length <= CLOUD_CHUNK){ await this._req(this._url(key, '', shared), Object.assign({ body: s }, put)); return; }
     var v = Array.from(crypto.getRandomValues(new Uint8Array(10)), function(b){ return (b % 36).toString(36); }).join('');
     var n = Math.ceil(s.length / CLOUD_CHUNK);
-    for(var i=0;i<n;i++) await this._req(this._url(key, '?v=' + v + '&i=' + i), Object.assign({ body: s.slice(i * CLOUD_CHUNK, (i + 1) * CLOUD_CHUNK) }, put));
-    await this._req(this._url(key, '?v=' + v + '&n=' + n + '&size=' + s.length), put);
+    for(var i=0;i<n;i++) await this._req(this._url(key, '?v=' + v + '&i=' + i, shared), Object.assign({ body: s.slice(i * CLOUD_CHUNK, (i + 1) * CLOUD_CHUNK) }, put));
+    await this._req(this._url(key, '?v=' + v + '&n=' + n + '&size=' + s.length, shared), put);
+  },
+  loadSharedKeys: async function(){
+    var map = {};
+    try { (await (await this._req(API_BASE + '/api/shared')).json()).keys.forEach(function(k){ map[k] = 1; }); } catch(e){}
+    this.sharedKeys = map;
   },
   cloudKeys: async function(prefix){
     var j = await (await this._req(API_BASE + '/api/data?prefix=' + encodeURIComponent(prefix || ''))).json();
@@ -72,7 +82,8 @@ var store = {
   },
   get: async function(key, shared){
     try {
-      if(this.cloud && !shared) return await this.cloudGet(key);
+      if(shared && this.sharedCloud) return this.sharedKeys && this.sharedKeys[key] ? await this.cloudGet(key, true) : null;
+      if(!shared && (this.cloud || this.viewBase)) return await this.cloudGet(key, false);
       if(this.backend === 'host'){ var r = await window.storage.get(key, !!shared); return r ? JSON.parse(r.value) : null; }
       if(this.backend === 'local'){ var v = localStorage.getItem(this._lk(key, shared)); return v ? JSON.parse(v) : null; }
       return null;
@@ -81,8 +92,13 @@ var store = {
   set: async function(key, val, shared){
     var s = JSON.stringify(val);
     try {
-      if(this.cloud && !shared){
-        await this.cloudSet(key, s);
+      if(!shared && this.readOnly){
+        return this._fail('you are viewing a customer’s design, so changes are not saved');
+      } else if(shared && this.sharedCloud){
+        await this.cloudSet(key, s, true);
+        if(this.sharedKeys) this.sharedKeys[key] = 1;
+      } else if(this.cloud && !shared){
+        await this.cloudSet(key, s, false);
       } else if(this.backend === 'host'){
         var r = await window.storage.set(key, s, !!shared);
         if(!r){ return this._fail('write rejected'); }
@@ -106,7 +122,9 @@ var store = {
   },
   del: async function(key, shared){
     try {
-      if(this.cloud && !shared) await this._req(this._url(key), { method: 'DELETE' });
+      if(!shared && this.readOnly) return;
+      if(shared && this.sharedCloud){ await this._req(this._url(key, '', true), { method: 'DELETE' }); if(this.sharedKeys) delete this.sharedKeys[key]; }
+      else if(this.cloud && !shared) await this._req(this._url(key), { method: 'DELETE' });
       else if(this.backend === 'host') await window.storage.delete(key, !!shared);
       else if(this.backend === 'local') localStorage.removeItem(this._lk(key, shared));
     } catch(e){}

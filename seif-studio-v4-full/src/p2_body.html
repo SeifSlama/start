@@ -4,12 +4,12 @@
 <div id="errbox" role="alert"></div>
 <div id="storageWarn" class="warnstrip hidden" role="alert"></div>
 
-<!-- ================= PREVIEW LOCK ================= -->
-<!-- Transparent shield over the studio: visitors can look, but any click opens the unlock modal. -->
+<!-- ================= PREVIEW LOCK / TRIAL BAR ================= -->
+<!-- The shield is unused on the live build (the T-shirt is a free trial); the bar shows the trial's terms. -->
 <div id="lockShield" aria-hidden="true"></div>
 <div id="lockBar" role="status">
-  <span class="lb-txt">&#128274; Preview mode<small>Enter an invite code or subscribe to use the studio</small></span>
-  <button id="lockBarBtn" class="btn">Unlock</button>
+  <span class="lb-txt"><span id="lbTitle">Free trial &middot; T-shirt</span><small id="lbSub">Sign in to unlock every garment and export</small></span>
+  <button id="lockBarBtn" class="btn">Sign in</button>
 </div>
 
 <!-- ================= GATE (unlock modal) ================= -->
@@ -18,7 +18,7 @@
     <button class="x" data-close="gate" aria-label="Close">&times;</button>
     <div class="speclabel" style="margin-bottom:10px">Spec sheet no. 001 &middot; Studio locked</div>
     <h1 id="gateTitle">UNLOCK SEIF STUDIO<i>.</i></h1>
-    <p class="tag">You&rsquo;re browsing in preview. To design on flat panels, assemble the mockup and export print files, unlock the studio below.</p>
+    <p class="tag" id="gateTag">Sign in with Google &mdash; your work follows you to any device.</p>
     <div class="cats">Tops &middot; Bottoms &middot; Hats &middot; Socks &middot; Bags &middot; Ties &middot; Accessories</div>
 
     <!-- live build: the account that owns the subscription and the saved designs -->
@@ -32,16 +32,7 @@
 
     <div class="hangtags">
       <div class="hangtag">
-        <div class="speclabel">Access A</div>
-        <h3>Have an invite?</h3>
-        <p>Codes are issued personally by Seif. Enter yours to unlock the studio.</p>
-        <input id="inviteInput" class="field" placeholder="SEIF-XXXX-XXXX" autocomplete="off" spellcheck="false" style="text-transform:uppercase;font-family:var(--mono)" aria-label="Invite code">
-        <div id="inviteMsg" class="gmsg" aria-live="polite"></div>
-        <button id="inviteBtn" class="btn primary" style="width:100%;margin-top:6px">Unlock the studio</button>
-      </div>
-
-      <div class="hangtag">
-        <div class="speclabel">Access B</div>
+        <div class="speclabel">Subscription</div>
         <h3>Get instant access</h3>
         <p class="price" id="priceTag">100 EGP &middot; PER MONTH</p>
         <ul>
@@ -53,7 +44,7 @@
         <div class="gmsg" id="payOpenMsg" aria-live="polite"></div>
       </div>
     </div>
-    <footer><button id="adminOpenBtn">Owner access &middot; admin</button></footer>
+    <footer class="hidden" id="adminFoot"><button id="adminOpenBtn">Owner access &middot; admin</button></footer>
   </div>
 </div>
 
@@ -74,8 +65,13 @@
     </div>
     <button id="myProductsBtn" class="btn ghost small">My products</button>
     <button id="exportBtn" class="btn primary small">Export</button>
-    <button id="signoutBtn" class="btn ghost small" title="Lock the studio">Lock</button>
+    <button id="ownerBtn" class="btn ghost small hidden" title="Your private dashboard">Admin</button>
+    <button id="signoutBtn" class="btn primary small signin">Sign in</button>
   </header>
+  <div id="viewBanner" class="viewbanner hidden" role="status">
+    <span id="viewTxt"></span>
+    <button id="viewBackBtn" class="btn small">Back to the dashboard</button>
+  </div>
 
   <div id="resumeStrip" class="resumestrip hidden" role="status">
     <span id="resumeTxt"></span>
@@ -382,22 +378,29 @@
     <button class="x" data-close="adminModal" aria-label="Close">&times;</button>
     <h3 id="adminTitle">Owner panel</h3>
     <div id="adminLock">
-      <div class="sub">Enter the owner PIN to manage invites, photos and panel mapping.</div>
+      <div class="sub">Enter the owner PIN to manage photos, panel mapping and colours.</div>
       <input id="pinInput" class="field" type="password" placeholder="Owner PIN" autocomplete="off" aria-label="Owner PIN">
       <div id="pinMsg" class="gmsg"></div>
       <button id="pinBtn" class="btn primary" style="width:100%;margin-top:8px">Open panel</button>
     </div>
     <div id="adminPanel" class="hidden">
       <div class="tabs">
-        <button id="adTabCodes" class="on">Invites</button>
+        <button id="adTabOverview" class="on">Overview</button>
+        <button id="adTabCustomers">Customers</button>
         <button id="adTabPhotos">Photos &amp; mapping</button>
         <button id="adTabColors">Colours</button>
       </div>
 
-      <div id="adCodes">
-        <div class="sub" id="adCodesSub">Invite codes are checked by the server. Revoked codes stop working immediately.</div>
-        <button id="genBtn" class="btn primary small" style="width:100%">Generate new invite code</button>
-        <div id="codeList" style="margin-top:14px"></div>
+      <div id="adOverview">
+        <div class="sub">Everything people do on the site, newest first. Your own activity is not counted.</div>
+        <div id="ovStats" class="dashwrap"></div>
+        <div class="dashhead"><span class="speclabel">Live activity</span><button id="ovRefresh" class="btn ghost small">Refresh</button></div>
+        <div id="ovFeed"></div>
+      </div>
+
+      <div id="adCustomers" class="hidden">
+        <div id="cuList"></div>
+        <div id="cuDetail" class="hidden"></div>
       </div>
 
       <div id="adPhotos" class="hidden">

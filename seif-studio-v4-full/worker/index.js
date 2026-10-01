@@ -1,48 +1,61 @@
 /* ============================================================
-   SEIF STUDIO — accounts, access, payments and saved designs
+   SEIF STUDIO — accounts, free trial, payments, saved designs, owner dashboard
    Cloudflare Pages advanced mode: build.sh copies this file to dist/_worker.js.
 
-   Customers sign in with Google (Firebase Authentication, in the browser); the ID token is
-   exchanged once for a signed httpOnly cookie that carries their uid. Subscriptions and
-   designs belong to the account, so they follow the customer to any device.
+   Anyone can use the studio on the T-shirt for free (the client enforces the trial; it
+   keeps that design in the browser). Everything else needs a Google account with an
+   active subscription. Customers sign in with Google (Firebase Authentication in the
+   browser); the ID token is exchanged once for a signed httpOnly cookie carrying the uid.
+   The owner is whoever signs in with an address in OWNER_EMAIL: always active, and the
+   only one who can open /admin (everyone else gets 404) or call /api/admin/*.
 
-     POST /api/login {idToken}           -> verifies the Firebase ID token, sets the session cookie
-     GET  /api/session                   -> {signedIn, email, name, active, plan, expiresAt}
+     POST /api/login {idToken, vid}      -> verifies the Firebase ID token, sets the session cookie
+     GET  /api/session                   -> {signedIn, email, name, active, owner, plan, expiresAt}
      POST /api/logout
-     POST /api/redeem   {code}           (signed in) invite code -> activates / extends the account
+     POST /api/event {type, vid, product, detail}   visit | trial_design | wall | export (activity log)
      POST /api/checkout {method}         (signed in) Paymob iframe URL (card) / redirect (wallet) / reference (Fawry)
      POST /api/webhook                   <- Paymob transaction callback, HMAC verified, activates the account (31 days)
-     GET  /api/admin/codes               (Bearer ADMIN_TOKEN) -> {codes}
-     POST /api/admin/codes {action,code} (Bearer ADMIN_TOKEN) create|revoke|restore
 
-   Saved designs — the client's personal store (projects, images, my products) when signed in:
-     GET    /api/data?prefix=P           -> {keys}
-     GET    /api/data/<key>              -> {found:false} | {found, inline:"<json>"} | {found, v, n}
-     GET    /api/data/<key>?v=V&i=I      -> chunk I of version V (text)
-     PUT    /api/data/<key>              body = JSON text up to INLINE_MAX chars  (active subscription)
-     PUT    /api/data/<key>?v=V&i=I      body = one chunk of a larger value       (active subscription)
-     PUT    /api/data/<key>?v=V&n=N      publishes version V once its N chunks exist
-     DELETE /api/data/<key>
-   Large values (images) travel in chunks so no single request holds more than ~1 MB:
-   Firestore caps a document at 1 MiB and Pages Functions get little CPU per request.
+   Stored values (the client's store) — personal ones at /api/data (signed in), the owner's
+   shared settings (garment photos, panel mapping, colours) at /api/shared (anyone reads):
+     GET    /api/data                    -> {keys}            GET /api/shared -> {keys} (one manifest read)
+     GET    <base>/<key>                 -> {found:false} | {found, inline:"<json>"} | {found, v, n}
+     GET    <base>/<key>?v=V&i=I         -> chunk I of version V (text)
+     PUT    <base>/<key>                 body = JSON text up to INLINE_MAX chars
+     PUT    <base>/<key>?v=V&i=I         body = one chunk of a larger value
+     PUT    <base>/<key>?v=V&n=N         publishes version V once its N chunks exist
+     DELETE <base>/<key>
+   Personal writes need an active subscription; shared writes need the owner. Large values
+   (images) travel in chunks so no request holds more than ~1 MB: Firestore caps a document
+   at 1 MiB and Pages Functions get little CPU per request.
 
-   Firestore layout (REST API, service account):
-     accounts/{uid}                  {uid, email, name, createdAt, lastLoginAt, active, plan, expiresAt, code, method, paidAt}
+   Owner dashboard (/api/admin/*, owner only):
+     GET  /api/admin/overview            -> {days: last 7 days of counters, events: latest activity}
+     GET  /api/admin/accounts            -> {accounts}
+     GET  /api/admin/accounts/<uid>      -> {account, events, before (as a visitor), orders, designs}
+     POST /api/admin/accounts/<uid> {action:'grant', days} | {action:'revoke'}
+     GET  /api/admin/accounts/<uid>/data/<key>   read a customer's stored value (same protocol)
+
+   Firestore layout (REST API, service account; rules stay deny-all):
+     accounts/{uid}                  {uid, email, name, emailVerified, vid, createdAt, lastLoginAt, lastSeenAt,
+                                      active, plan, expiresAt, method, paidAt}
      accounts/{uid}/data/{id}        {k, inline | v+n, size, updatedAt}       id = base64url(key)
      accounts/{uid}/chunks/{id.v.i}  {d}
-     codes/{CODE}                    {c, active, uses, maxUses, days, createdAt, expiresAt}
+     accounts/{uid}/events/{eid}     the customer's own timeline
+     events/{eid}                    {t, type, uid, vid, email, product, detail}   eid sorts by time
+     stats/{YYYY-MM-DD}              per-type daily counters
+     shared/{id}, sharedchunks/{id.v.i}, sharedmeta/manifest {keys}
      orders/{orderId}                {uid, method, createdAt, paid, paidAt}
-   Redeem and webhook commits are guarded by the documents' updateTime, so concurrent redeems
-   stop at maxUses and a webhook delivered twice extends the subscription once.
+   The webhook commit is guarded by the order's updateTime, so a repeated delivery extends once.
 
    Pages → Settings → Variables and Secrets:
-     secrets  FIREBASE_SERVICE_ACCOUNT (whole JSON), SESSION_SECRET (32+ chars), ADMIN_TOKEN,
+     secrets  FIREBASE_SERVICE_ACCOUNT (whole JSON), SESSION_SECRET (32+ chars),
               PAYMOB_API_KEY, PAYMOB_HMAC, PAYMOB_IFRAME_ID, PAYMOB_INTEGRATION_CARD / _WALLET / _KIOSK
-     text     FIREBASE_API_KEY (Firebase web app config — public), PRICE_EGP (default 100)
+     text     FIREBASE_API_KEY (Firebase web app config — public), OWNER_EMAIL (comma-separated), PRICE_EGP (default 100)
      local    INSECURE_COOKIES, FIRESTORE_EMULATOR_HOST, FIREBASE_AUTH_EMULATOR_HOST, FIREBASE_PROJECT_ID
 
-   With none of SESSION_SECRET / ADMIN_TOKEN / FIREBASE_SERVICE_ACCOUNT set, the site is served
-   as the demo build (access not enforced) and every /api route answers 503.
+   With neither SESSION_SECRET nor FIREBASE_SERVICE_ACCOUNT set, the site is served as the
+   demo build (nothing enforced, no accounts) and every /api route answers 503.
    ============================================================ */
 
 var INLINE_MAX = 900000;          /* chars of JSON stored inside the data document */
@@ -50,12 +63,14 @@ var CHUNK_MAX = 900000;           /* chars per chunk document */
 var MAX_CHUNKS = 64;              /* ~57 MB per value */
 var COOKIE_DAYS = 40;
 
+var CLIENT_EVENTS = { visit: 1, trial_design: 1, wall: 1, export: 1 };
+var VID_RE = /^[A-Za-z0-9_-]{8,40}$/;
+
 /* ---------- config ---------- */
 function config(env){
-  var secret = env.SESSION_SECRET, admin = env.ADMIN_TOKEN, fb = env.FIREBASE_SERVICE_ACCOUNT || env.FIRESTORE_EMULATOR_HOST;
-  if(!secret && !admin && !fb) return { live: false };
+  var secret = env.SESSION_SECRET, fb = env.FIREBASE_SERVICE_ACCOUNT || env.FIRESTORE_EMULATOR_HOST;
+  if(!secret && !fb) return { live: false };
   if(!secret || secret.length < 32) return { live: true, error: 'SESSION_SECRET must be set (32+ random chars).' };
-  if(!admin) return { live: true, error: 'ADMIN_TOKEN must be set.' };
   if(!fb) return { live: true, error: 'FIREBASE_SERVICE_ACCOUNT must be set (the service-account JSON).' };
   if(!env.FIRESTORE_EMULATOR_HOST){
     try { var sa = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT); if(!sa.project_id || !sa.client_email || !sa.private_key) throw 0; }
@@ -65,16 +80,28 @@ function config(env){
   return { live: true };
 }
 function priceEgp(env){ return +env.PRICE_EGP || 100; }
+function ownerEmails(env){ return String(env.OWNER_EMAIL || '').toLowerCase().split(/[\s,;]+/).filter(Boolean); }
+function isOwner(env, a){ return !!(a && a.email && a.emailVerified !== false && ownerEmails(env).indexOf(String(a.email).toLowerCase()) >= 0); }
 function projectId(env){ return env.FIRESTORE_EMULATOR_HOST ? (env.FIREBASE_PROJECT_ID || 'demo-seif') : JSON.parse(env.FIREBASE_SERVICE_ACCOUNT).project_id; }
 
 /* ---------- entry ---------- */
 export default {
-  async fetch(request, env){
+  async fetch(request, env, ctx){
     var u = new URL(request.url), cfg = config(env);
     if(u.pathname.indexOf('/api/') === 0){
       if(!cfg.live) return json(503, { error: 'demo build: no server configured' });
       if(cfg.error) return json(500, { error: cfg.error });
-      return api(request, env);
+      return api(request, env, ctx);
+    }
+    /* the owner dashboard: the studio page, served only to a signed-in owner — 404 for everyone else */
+    var admin = u.pathname === '/admin' || u.pathname === '/admin/';
+    if(admin){
+      var ok = false;
+      if(cfg.live && !cfg.error){
+        try { var ouid = await cookieUid(env, request), od = ouid ? await db(env).get('accounts', ouid) : null; ok = !!od && isOwner(env, od.data); } catch(e){}
+      }
+      if(!ok) return new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
+      request = new Request(new URL('/', request.url), request);
     }
     var res = await env.ASSETS.fetch(request);
     if(!cfg.live || !(res.headers.get('Content-Type') || '').startsWith('text/html')) return res;
@@ -85,6 +112,7 @@ export default {
     var cfgJs = { demo: false, price: priceEgp(env) + ' EGP', pricePeriod: '/month', apiBase: '',
                   firebase: { apiKey: env.FIREBASE_API_KEY, authDomain: pid + '.firebaseapp.com', projectId: pid } };
     if(env.FIREBASE_AUTH_EMULATOR_HOST) cfgJs.authEmulator = 'http://' + env.FIREBASE_AUTH_EMULATOR_HOST;
+    if(admin) cfgJs.admin = true;
     var html = await res.text();
     var headers = new Headers(res.headers);
     headers.set('Cache-Control', 'no-store');
@@ -109,7 +137,6 @@ async function body(request){
   var t = await bodyText(request, 1e6);
   try { return t ? JSON.parse(t) : {}; } catch(e){ throw new HttpError(400, 'bad json'); }
 }
-function bearer(request){ var a = request.headers.get('Authorization') || ''; return a.indexOf('Bearer ') === 0 ? a.slice(7) : null; }
 function safeEq(a, b){
   a = String(a || ''); b = String(b || '');
   if(a.length !== b.length) return false;
@@ -128,11 +155,6 @@ function hex(bytes){ return Array.from(new Uint8Array(bytes), function(b){ retur
 async function hmac(hash, key, data){
   var k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: hash }, false, ['sign']);
   return crypto.subtle.sign('HMAC', k, new TextEncoder().encode(data));
-}
-function rand4(){
-  var A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', r = crypto.getRandomValues(new Uint8Array(4)), s = '';
-  for(var i = 0; i < 4; i++) s += A[r[i] % A.length];
-  return s;
 }
 function isActive(a){ return !!(a && a.active && (!a.expiresAt || a.expiresAt > Date.now())); }
 function retryable(e){ return e.dbStatus === 'FAILED_PRECONDITION' || e.dbStatus === 'ABORTED' || e.dbStatus === 'ALREADY_EXISTS' || e.dbStatus === 'NOT_FOUND'; }
@@ -203,7 +225,7 @@ async function verifyIdToken(env, token){
   if(p.aud !== pid || p.iss !== 'https://securetoken.google.com/' + pid) throw new HttpError(401, 'sign-in token is for another project');
   if(!(p.exp > now) || !(p.iat <= now + 300) || (p.auth_time && p.auth_time > now + 300)) throw new HttpError(401, 'sign-in token expired');
   if(typeof p.sub !== 'string' || !p.sub || p.sub.length > 128) throw new HttpError(401, 'bad sign-in token');
-  return { uid: p.sub, email: p.email || '', name: p.name || '' };
+  return { uid: p.sub, email: p.email || '', name: p.name || '', emailVerified: p.email_verified === true };
 }
 
 /* ============================================================
@@ -241,7 +263,8 @@ function db(env){
       (Array.isArray(j) ? j : [j]).forEach(function(x){ if(x.found) by[x.found.name] = { data: fromFields(x.found.fields), updateTime: x.found.updateTime }; });
       return ids.map(function(id){ return by[name(col, id)] || null; });
     },
-    /* writes: [{col, id, data, fields?: [paths to touch, default all of data], exists?: bool, updateTime?: string}
+    /* writes: [{col, id, data, fields?: [paths to touch, default all of data], inc?: {field: n},
+                 exists?: bool, updateTime?: string}
                 | {col, id, del: true}]
        all-or-nothing; a failed guard throws with dbStatus FAILED_PRECONDITION / NOT_FOUND / ALREADY_EXISTS */
     async commit(writes){
@@ -249,22 +272,29 @@ function db(env){
         if(w.del) return { delete: name(w.col, w.id) };
         var out = { update: { name: name(w.col, w.id), fields: toFields(w.data) } };
         if(w.fields) out.updateMask = { fieldPaths: w.fields };
+        if(w.inc) out.updateTransforms = Object.keys(w.inc).map(function(f){ return { fieldPath: f, increment: toValue(w.inc[f]) }; });
         if(w.updateTime) out.currentDocument = { updateTime: w.updateTime };
         else if(w.exists !== undefined) out.currentDocument = { exists: w.exists };
         return out;
       }) });
     },
+    /* equality query on one field (served by Firestore's automatic indexes); newest first by eid/t */
+    async query(col, field, value, limit){
+      var j = await call('POST', root + ':runQuery', { structuredQuery: { from: [{ collectionId: col }],
+        where: { fieldFilter: { field: { fieldPath: field }, op: 'EQUAL', value: toValue(value) } }, limit: limit || 300 } });
+      return (Array.isArray(j) ? j : [j]).filter(function(x){ return x.document; }).map(function(x){ return fromFields(x.document.fields); });
+    },
     async list(col, opts){
-      var out = [], token = '';
+      var out = [], token = '', pages = 0;
       opts = opts || {};
       do {
-        var q = '?pageSize=300' + (opts.orderBy ? '&orderBy=' + encodeURIComponent(opts.orderBy) : '')
+        var q = '?pageSize=' + (opts.pageSize || 300) + (opts.orderBy ? '&orderBy=' + encodeURIComponent(opts.orderBy) : '')
               + (opts.mask || []).map(function(f){ return '&mask.fieldPaths=' + encodeURIComponent(f); }).join('')
               + (token ? '&pageToken=' + encodeURIComponent(token) : '');
         var j = await call('GET', root + '/' + col + q);
         (j.documents || []).forEach(function(d){ out.push(fromFields(d.fields)); });
         token = j.nextPageToken;
-      } while(token);
+      } while(token && ++pages < (opts.maxPages || 1000));
       return out;
     }
   };
@@ -301,10 +331,28 @@ async function cookieUid(env, request){
   if(v.length !== 2 || !v[0] || !(+v[1] > Date.now() - COOKIE_DAYS * 86400e3)) return null;
   return v[0];
 }
-function sessionJson(uid, a){
-  if(!uid) return { signedIn: false, active: false };
+function sessionJson(env, uid, a){
+  if(!uid) return { signedIn: false, active: false, owner: false };
   a = a || {};
-  return { signedIn: true, email: a.email || '', name: a.name || '', active: isActive(a), plan: a.plan || null, expiresAt: a.expiresAt || null };
+  var owner = isOwner(env, a);
+  return { signedIn: true, email: a.email || '', name: a.name || '', active: owner || isActive(a), owner: owner, plan: owner ? 'owner' : (a.plan || null), expiresAt: a.expiresAt || null };
+}
+
+/* ---------- activity log: global feed, the customer's own timeline, daily counters ---------- */
+function eventWrites(e){
+  var t = Date.now(), id = String(t).padStart(13, '0') + '-' + b64url(crypto.getRandomValues(new Uint8Array(6)));
+  var data = { t: t, type: e.type, uid: e.uid || null, vid: e.vid || null, email: e.email || null,
+               product: e.product ? String(e.product).slice(0, 40) : null, detail: e.detail != null ? String(e.detail).slice(0, 300) : null };
+  var inc = {}; inc[e.type] = 1;
+  var w = [{ col: 'events', id: id, data: data }, { col: 'stats', id: new Date(t).toISOString().slice(0, 10), data: {}, fields: [], inc: inc }];
+  if(e.uid) w.push({ col: 'accounts/' + e.uid + '/events', id: id, data: data });
+  return w;
+}
+/* logging never fails or slows the request it describes */
+function logEvent(ctx, store, e){
+  var p = store.commit(eventWrites(e)).catch(function(){});
+  if(ctx && ctx.waitUntil) ctx.waitUntil(p);
+  return p;
 }
 
 /* ---------- Paymob (accept.paymob.com) ---------- */
@@ -356,47 +404,23 @@ function extendWrite(uid, acctDoc, days, fields){
   return w;
 }
 
-/* ---------- redeem: code use count + account in one guarded commit ---------- */
-async function redeem(store, uid, code){
-  if(!/^[A-Z0-9-]{1,40}$/.test(code)) throw new HttpError(400, 'invalid code');
-  for(var attempt = 0; attempt < 5; attempt++){
-    var doc = await store.get('codes', code), hit = doc && doc.data;
-    if(!hit || !hit.active) throw new HttpError(400, 'invalid code');
-    if(hit.expiresAt && hit.expiresAt < Date.now()) throw new HttpError(400, 'code expired');
-    if(hit.maxUses && hit.uses >= hit.maxUses) throw new HttpError(400, 'code used up');
-    var acctDoc = await store.get('accounts', uid);
-    if(acctDoc && acctDoc.data.code === code && isActive(acctDoc.data)) throw new HttpError(400, 'you already used this code');
-    var aw = extendWrite(uid, acctDoc, hit.days || 30, { plan: 'invite', code: code, method: 'invite' });
-    try {
-      await store.commit([
-        { col: 'codes', id: code, data: { uses: (hit.uses || 0) + 1 }, fields: ['uses'], updateTime: doc.updateTime },
-        aw
-      ]);
-      return aw.data;
-    } catch(e){ if(!retryable(e)) throw e; }
-  }
-  throw new HttpError(503, 'busy, try again');
-}
-
 /* ============================================================
-   Saved designs
+   Stored values: personal (accounts/{uid}/data), shared (shared/), or a customer's, read by the owner
    ============================================================ */
 var KEY_RE = /^[A-Za-z0-9:_.\-]{1,300}$/, VER_RE = /^[a-z0-9]{6,16}$/;
 function dataId(key){ return b64urlText(key); }
 function chunkIds(id, v, n){ var out = []; for(var i = 0; i < n; i++) out.push(id + '.' + v + '.' + i); return out; }
 /* delete writes for the chunks of a stored version, if it was chunked */
-function chunkDeletes(uid, id, meta){
+function chunkDeletes(ccol, id, meta){
   if(!meta || !meta.v || !meta.n) return [];
-  return chunkIds(id, meta.v, meta.n).map(function(cid){ return { col: 'accounts/' + uid + '/chunks', id: cid, del: true }; });
+  return chunkIds(id, meta.v, meta.n).map(function(cid){ return { col: ccol, id: cid, del: true }; });
 }
-async function dataRoute(request, env, store, uid, acct, key, u){
-  var m = request.method, dcol = 'accounts/' + uid + '/data', ccol = 'accounts/' + uid + '/chunks';
-  if(key === null){
-    if(m !== 'GET') return json(405, { error: 'method not allowed' });
-    var prefix = u.searchParams.get('prefix') || '';
-    var rows = await store.list(dcol, { mask: ['k'] });
-    return json(200, { keys: rows.map(function(r){ return r.k; }).filter(function(k){ return k && k.indexOf(prefix) === 0; }) });
-  }
+function personalCols(uid){ return { dcol: 'accounts/' + uid + '/data', ccol: 'accounts/' + uid + '/chunks' }; }
+var SHARED = { dcol: 'shared', ccol: 'sharedchunks' };
+
+/* o: {dcol, ccol, write: null | 'reason it is refused' | true, onWrite(key, prevMeta, deleted)} */
+async function valueRoute(request, store, o, key, u){
+  var m = request.method;
   if(!KEY_RE.test(key)) return json(400, { error: 'bad key' });
   var id = dataId(key), v = u.searchParams.get('v'), i = u.searchParams.get('i'), n = u.searchParams.get('n');
   if(v !== null && !VER_RE.test(v)) return json(400, { error: 'bad version' });
@@ -405,56 +429,137 @@ async function dataRoute(request, env, store, uid, acct, key, u){
 
   if(m === 'GET'){
     if(v !== null && i !== null){
-      var c = await store.get(ccol, id + '.' + v + '.' + i);
+      var c = await store.get(o.ccol, id + '.' + v + '.' + i);
       if(!c) return json(404, { error: 'chunk missing' });
       return new Response(c.data.d || '', { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
     }
-    var meta = await store.get(dcol, id);
+    var meta = await store.get(o.dcol, id);
     if(!meta) return json(200, { found: false });
     if(meta.data.v) return json(200, { found: true, v: meta.data.v, n: meta.data.n });
     return json(200, { found: true, inline: meta.data.inline });
   }
+  if(m !== 'PUT' && m !== 'DELETE') return json(405, { error: 'method not allowed' });
+  if(o.write !== true) return json(403, { error: o.write || 'read-only' });
+
   if(m === 'DELETE'){
-    var old = await store.get(dcol, id);
-    if(old) await store.commit([{ col: dcol, id: id, del: true }].concat(chunkDeletes(uid, id, old.data)));
+    var old = await store.get(o.dcol, id);
+    if(old){
+      await store.commit([{ col: o.dcol, id: id, del: true }].concat(chunkDeletes(o.ccol, id, old.data)));
+      if(o.onWrite) await o.onWrite(key, old.data, true);
+    }
     return json(200, { ok: true });
   }
-  if(m !== 'PUT') return json(405, { error: 'method not allowed' });
-  if(!isActive(acct)) return json(403, { error: 'subscription inactive — designs are read-only' });
-
   if(v !== null && i !== null){                        /* one chunk */
     var text = await bodyText(request, CHUNK_MAX);
-    await store.commit([{ col: ccol, id: id + '.' + v + '.' + i, data: { d: text } }]);
+    await store.commit([{ col: o.ccol, id: id + '.' + v + '.' + i, data: { d: text } }]);
     return json(200, { ok: true });
   }
-  var prev = await store.get(dcol, id), prevMeta = prev && prev.data;
+  var prev = await store.get(o.dcol, id), prevMeta = prev && prev.data;
   if(v !== null && n !== null){                        /* publish a chunked version */
-    var have = await store.getMany(ccol, chunkIds(id, v, +n), ['x']);
+    var have = await store.getMany(o.ccol, chunkIds(id, v, +n), ['x']);
     if(have.some(function(x){ return !x; })) return json(409, { error: 'chunks missing' });
-    var drop = prevMeta && prevMeta.v !== v ? chunkDeletes(uid, id, prevMeta) : [];
-    await store.commit([{ col: dcol, id: id, data: { k: key, v: v, n: +n, size: +(u.searchParams.get('size') || 0), updatedAt: Date.now() } }].concat(drop));
-    return json(200, { ok: true });
+    var drop = prevMeta && prevMeta.v !== v ? chunkDeletes(o.ccol, id, prevMeta) : [];
+    await store.commit([{ col: o.dcol, id: id, data: { k: key, v: v, n: +n, size: +(u.searchParams.get('size') || 0), updatedAt: Date.now() } }].concat(drop));
+  } else {                                             /* small value, stored in place */
+    var inline = await bodyText(request, INLINE_MAX);
+    try { JSON.parse(inline); } catch(e){ return json(400, { error: 'value must be JSON' }); }
+    await store.commit([{ col: o.dcol, id: id, data: { k: key, inline: inline, size: inline.length, updatedAt: Date.now() } }].concat(chunkDeletes(o.ccol, id, prevMeta)));
   }
-  var inline = await bodyText(request, INLINE_MAX);    /* small value, stored in place */
-  try { JSON.parse(inline); } catch(e){ return json(400, { error: 'value must be JSON' }); }
-  await store.commit([{ col: dcol, id: id, data: { k: key, inline: inline, size: inline.length, updatedAt: Date.now() } }].concat(chunkDeletes(uid, id, prevMeta)));
+  if(o.onWrite) await o.onWrite(key, prevMeta, false);
   return json(200, { ok: true });
+}
+async function listKeys(store, dcol, prefix){
+  var rows = await store.list(dcol, { mask: ['k'] });
+  return rows.map(function(r){ return r.k; }).filter(function(k){ return k && k.indexOf(prefix || '') === 0; });
+}
+async function sharedKeys(store){
+  var m = await store.get('sharedmeta', 'manifest');
+  try { return m ? JSON.parse(m.data.keys || '[]') : []; } catch(e){ return []; }
+}
+/* the manifest lets every visitor learn which shared settings exist with one read */
+async function updateManifest(store, key, deleted){
+  var keys = await sharedKeys(store), at = keys.indexOf(key);
+  if(deleted && at >= 0) keys.splice(at, 1);
+  else if(!deleted && at < 0) keys.push(key);
+  else return;
+  await store.commit([{ col: 'sharedmeta', id: 'manifest', data: { keys: JSON.stringify(keys), updatedAt: Date.now() } }]);
+}
+function keyFromPath(p, prefix){ try { return decodeURIComponent(p.slice(prefix.length)); } catch(e){ return ''; } }
+
+/* ---------- owner: customers ---------- */
+function newestFirst(a, b){ return (b.t || 0) - (a.t || 0); }
+async function adminRoute(request, env, ctx, store, me, p, u){
+  var m = request.method;
+  if(p === '/api/admin/overview' && m === 'GET'){
+    var days = [], now = Date.now();
+    for(var d = 0; d < 7; d++) days.push(new Date(now - d * 86400e3).toISOString().slice(0, 10));
+    var stats = await store.getMany('stats', days);
+    var events = await store.list('events', { orderBy: 't desc', pageSize: 150, maxPages: 1 });
+    return json(200, { days: days.map(function(day, k){ return Object.assign({ day: day }, stats[k] ? stats[k].data : {}); }), events: events });
+  }
+  if(p === '/api/admin/accounts' && m === 'GET'){
+    var accts = await store.list('accounts');
+    accts.forEach(function(a){ a.activeNow = isActive(a); a.owner = isOwner(env, a); });
+    accts.sort(function(a, b){ return (b.lastSeenAt || b.lastLoginAt || 0) - (a.lastSeenAt || a.lastLoginAt || 0); });
+    return json(200, { accounts: accts });
+  }
+  var mm = /^\/api\/admin\/accounts\/([A-Za-z0-9_-]{1,128})(\/data(?:\/.*)?)?$/.exec(p);
+  if(!mm) return json(404, { error: 'not found' });
+  var uid = mm[1];
+  if(mm[2]){                                            /* a customer's stored values, read-only */
+    var cols = personalCols(uid);
+    if(mm[2] === '/data') return json(200, { keys: await listKeys(store, cols.dcol, u.searchParams.get('prefix')) });
+    return valueRoute(request, store, Object.assign({ write: 'the owner reads customer designs, never changes them' }, cols), keyFromPath(mm[2], '/data/'), u);
+  }
+  var ad = await store.get('accounts', uid);
+  if(!ad) return json(404, { error: 'no such customer' });
+  if(m === 'GET'){
+    var res = await Promise.all([
+      store.list('accounts/' + uid + '/events', { orderBy: 't desc', pageSize: 300, maxPages: 1 }),
+      ad.data.vid ? store.query('events', 'vid', ad.data.vid, 300) : Promise.resolve([]),
+      store.query('orders', 'uid', uid, 100),
+      store.list(personalCols(uid).dcol, { mask: ['k', 'size', 'updatedAt'] })
+    ]);
+    var a = Object.assign({}, ad.data, { activeNow: isActive(ad.data), owner: isOwner(env, ad.data) });
+    return json(200, { account: a, events: res[0],
+      before: res[1].filter(function(e){ return !e.uid; }).sort(newestFirst),
+      orders: res[2].sort(function(x, y){ return (y.createdAt || 0) - (x.createdAt || 0); }), designs: res[3] });
+  }
+  if(m !== 'POST') return json(405, { error: 'method not allowed' });
+  var b = await body(request);
+  for(var attempt = 0; attempt < 5; attempt++){
+    try {
+      if(b.action === 'grant'){
+        var days = Math.max(1, Math.min(3660, Math.round(+b.days || 30)));
+        await store.commit([extendWrite(uid, ad, days, { plan: 'gift', method: 'owner' })]);
+        logEvent(ctx, store, { type: 'access_granted', uid: uid, email: ad.data.email, detail: days + ' days by ' + me.email });
+      } else if(b.action === 'revoke'){
+        await store.commit([{ col: 'accounts', id: uid, data: { active: false, plan: 'revoked' }, fields: ['active', 'plan'], updateTime: ad.updateTime }]);
+        logEvent(ctx, store, { type: 'access_revoked', uid: uid, email: ad.data.email, detail: 'by ' + me.email });
+      } else return json(400, { error: 'unknown action' });
+      var fresh = await store.get('accounts', uid);
+      return json(200, { account: Object.assign({}, fresh.data, { activeNow: isActive(fresh.data), owner: isOwner(env, fresh.data) }) });
+    } catch(e){ if(!retryable(e)) throw e; ad = await store.get('accounts', uid); }
+  }
+  return json(503, { error: 'busy, try again' });
 }
 
 /* ---------- routes ---------- */
-async function api(request, env){
+async function api(request, env, ctx){
   var u = new URL(request.url), p = u.pathname, m = request.method, store = db(env);
   var ip = request.headers.get('CF-Connecting-IP') || (request.headers.get('X-Forwarded-For') || '').split(',')[0].trim();
   try {
     if(p === '/api/login' && m === 'POST'){
       if(limited(ip, 'login', 60, 3600e3)) return json(429, { error: 'too many attempts' });
-      var who = await verifyIdToken(env, (await body(request)).idToken);
+      var lb = await body(request), who = await verifyIdToken(env, lb.idToken), vid = VID_RE.test(String(lb.vid || '')) ? lb.vid : null;
       var existing = await store.get('accounts', who.uid), now = Date.now();
-      var upd = { uid: who.uid, email: who.email, name: who.name, lastLoginAt: now };
+      var upd = { uid: who.uid, email: who.email, name: who.name, emailVerified: who.emailVerified, lastLoginAt: now, lastSeenAt: now };
+      if(vid) upd.vid = vid;
       if(!existing) upd.createdAt = now;
       await store.commit([{ col: 'accounts', id: who.uid, data: upd, fields: Object.keys(upd) }]);
+      if(!isOwner(env, upd)) logEvent(ctx, store, { type: existing ? 'login' : 'signup', uid: who.uid, vid: vid, email: who.email });
       var acct = Object.assign({}, existing ? existing.data : {}, upd);
-      return json(200, sessionJson(who.uid, acct), { 'Set-Cookie': await cookieHeader(env, who.uid) });
+      return json(200, sessionJson(env, who.uid, acct), { 'Set-Cookie': await cookieHeader(env, who.uid) });
     }
     if(p === '/api/logout' && m === 'POST'){
       return json(200, { ok: true }, { 'Set-Cookie': 'ss_session=; HttpOnly; Path=/; Max-Age=0' });
@@ -463,57 +568,87 @@ async function api(request, env){
       var wb = await body(request), obj = wb.obj || wb, given = u.searchParams.get('hmac') || wb.hmac;
       if(!(await paymobHmacOk(env, obj, given))) return json(401, { error: 'bad hmac' });
       var orderId = obj.order && obj.order.id, ok = obj.success === true || obj.success === 'true';
-      if(!ok || orderId == null) return json(200, { ok: true });
+      if(orderId == null) return json(200, { ok: true });
+      var amount = obj.amount_cents != null ? (obj.amount_cents / 100) + ' ' + (obj.currency || 'EGP') : '';
       for(var attempt = 0; attempt < 5; attempt++){
         var od = await store.get('orders', orderId);
         if(!od || !od.data.uid || od.data.paid) return json(200, { ok: true });   /* unknown order, or already applied */
-        var ad = await store.get('accounts', od.data.uid);
+        var ad = await store.get('accounts', od.data.uid), who2 = ad ? ad.data.email : null;
+        if(!ok){
+          logEvent(ctx, store, { type: 'payment_failed', uid: od.data.uid, email: who2, detail: (od.data.method || '') + ' ' + amount });
+          return json(200, { ok: true });
+        }
         try {
           await store.commit([
             { col: 'orders', id: orderId, data: { paid: true, paidAt: Date.now(), txn: String(obj.id || '') }, fields: ['paid', 'paidAt', 'txn'], updateTime: od.updateTime },
             extendWrite(od.data.uid, ad, 31, { plan: 'monthly', method: od.data.method || 'card', paidAt: Date.now() })
           ]);
+          logEvent(ctx, store, { type: 'payment', uid: od.data.uid, email: who2, detail: (od.data.method || 'card') + ' ' + amount });
           return json(200, { ok: true });
         } catch(e){ if(!retryable(e)) throw e; }
       }
       return json(503, { error: 'busy, try again' });
     }
-    if(p === '/api/admin/codes'){
-      if(!safeEq(bearer(request), env.ADMIN_TOKEN)) return json(401, { error: 'unauthorised' });
-      if(m === 'GET') return json(200, { codes: await store.list('codes', { orderBy: 'createdAt desc' }) });
-      var ab = await body(request);
-      if(ab.action === 'create'){
-        var c = 'SEIF-' + rand4() + '-' + rand4();
-        await store.commit([{ col: 'codes', id: c, exists: false,
-          data: { c: c, active: true, uses: 0, maxUses: +ab.maxUses || 0, days: +ab.days || 30, createdAt: Date.now(), expiresAt: ab.expiresAt || null } }]);
-      } else if(ab.action === 'revoke' || ab.action === 'restore'){
-        if(!/^[A-Z0-9-]{1,40}$/.test(String(ab.code || ''))) return json(400, { error: 'unknown code' });
-        try { await store.commit([{ col: 'codes', id: String(ab.code), exists: true, fields: ['active'], data: { active: ab.action === 'restore' } }]); }
-        catch(e){ if(!retryable(e)) throw e; }
-      } else return json(400, { error: 'unknown action' });
-      return json(200, { codes: await store.list('codes', { orderBy: 'createdAt desc' }) });
+    /* the owner's shared settings: anyone reads them */
+    if((p === '/api/shared' || p.indexOf('/api/shared/') === 0) && m === 'GET'){
+      if(p === '/api/shared') return json(200, { keys: await sharedKeys(store) });
+      return valueRoute(request, store, Object.assign({ write: null }, SHARED), keyFromPath(p, '/api/shared/'), u);
     }
 
-    /* everything below belongs to a signed-in account */
     var uid = await cookieUid(env, request);
     var acctDoc = uid ? await store.get('accounts', uid) : null, account = acctDoc ? acctDoc.data : null;
-    if(p === '/api/session' && m === 'GET') return json(200, sessionJson(uid && account ? uid : null, account));
-    if(!uid || !account) return json(401, { error: 'sign in first' });
+    if(!account) uid = null;
+    var owner = isOwner(env, account);
 
-    if(p === '/api/redeem' && m === 'POST'){
-      if(limited(ip, 'redeem', 10, 3600e3)) return json(429, { error: 'too many attempts' });
-      var b = await body(request);
-      var a2 = await redeem(store, uid, String(b.code || '').trim().toUpperCase());
-      return json(200, sessionJson(uid, Object.assign({}, account, a2)));
+    if(p === '/api/event' && m === 'POST'){
+      if(limited(ip, 'event', 120, 3600e3)) return json(429, { error: 'too many events' });
+      var eb = await body(request);
+      if(!CLIENT_EVENTS[eb.type]) return json(400, { error: 'unknown event' });
+      if(!owner) await logEvent(null, store, { type: eb.type, uid: uid, email: account ? account.email : null,
+        vid: VID_RE.test(String(eb.vid || '')) ? eb.vid : null, product: eb.product, detail: eb.detail });
+      return json(200, { ok: true });
+    }
+    if(p === '/api/session' && m === 'GET'){
+      /* "last seen", at most every 10 minutes */
+      if(account && !(account.lastSeenAt > Date.now() - 600e3)){
+        var seen = store.commit([{ col: 'accounts', id: uid, data: { lastSeenAt: Date.now() }, fields: ['lastSeenAt'] }]).catch(function(){});
+        if(ctx && ctx.waitUntil) ctx.waitUntil(seen);
+      }
+      return json(200, sessionJson(env, uid, account));
+    }
+    if(p.indexOf('/api/shared/') === 0){
+      return valueRoute(request, store, Object.assign({ write: owner ? true : 'only the owner changes shared settings',
+        onWrite: function(key, prev, deleted){ return updateManifest(store, key, deleted); } }, SHARED), keyFromPath(p, '/api/shared/'), u);
+    }
+    if(!uid) return json(401, { error: 'sign in first' });
+
+    if(p.indexOf('/api/admin/') === 0){
+      if(!owner) return json(403, { error: 'owner only' });
+      return await adminRoute(request, env, ctx, store, account, p, u);
     }
     if(p === '/api/checkout' && m === 'POST'){
       if(limited(ip, 'checkout', 20, 3600e3)) return json(429, { error: 'too many attempts' });
       var cb = await body(request), method = ['card','wallet','fawry'].indexOf(cb.method) >= 0 ? cb.method : 'card';
-      return json(200, await paymobCheckout(env, store, method, uid, account));
+      try {
+        var r = await paymobCheckout(env, store, method, uid, account);
+        logEvent(ctx, store, { type: 'checkout_started', uid: uid, email: account.email, detail: method });
+        return json(200, r);
+      } catch(e){
+        logEvent(ctx, store, { type: 'checkout_failed', uid: uid, email: account.email, detail: method + ': ' + (e.message || 'error') });
+        throw e;
+      }
     }
-    if(p === '/api/data' || p.indexOf('/api/data/') === 0){
-      var key = p === '/api/data' ? null : (function(){ try { return decodeURIComponent(p.slice('/api/data/'.length)); } catch(e){ return ''; } })();
-      return await dataRoute(request, env, store, uid, account, key, u);
+    if(p === '/api/data' && m === 'GET') return json(200, { keys: await listKeys(store, personalCols(uid).dcol, u.searchParams.get('prefix')) });
+    if(p.indexOf('/api/data/') === 0){
+      return await valueRoute(request, store, Object.assign({
+        write: owner || isActive(account) ? true : 'subscription inactive — designs are read-only',
+        /* a project saved for the first time, or after 15 quiet minutes, is a moment worth logging */
+        onWrite: function(key, prev, deleted){
+          var mp = /^seifstudio:project:(?!index$)(.+)$/.exec(key);
+          if(!mp || deleted || owner || (prev && prev.updatedAt > Date.now() - 900e3)) return;
+          logEvent(ctx, store, { type: prev ? 'design_saved' : 'design_created', uid: uid, email: account.email, vid: account.vid, product: mp[1] });
+        }
+      }, personalCols(uid)), keyFromPath(p, '/api/data/'), u);
     }
     return json(404, { error: 'not found' });
   } catch(e){

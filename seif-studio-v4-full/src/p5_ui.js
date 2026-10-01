@@ -67,11 +67,15 @@ function renderRack(){
     host.appendChild(head);
     items.forEach(function(p){
       var b = document.createElement('button');
-      b.className = 'rackitem' + (p.id === project.productId ? ' on' : '');
+      b.className = 'rackitem' + (p.id === project.productId ? ' on' : '') + (!hasFullAccess() && p.id !== TRIAL_PRODUCT ? ' trial-locked' : '');
       b.dataset.pid = p.id;
       b.setAttribute('aria-label', p.name + (productHasWork(p.id) ? ' (has a design)' : ''));
       b.innerHTML = '<span class="sku">' + p.sku + '</span><span>' + p.name + '</span>' + (productHasWork(p.id) ? '<span class="dot" title="Has a design"></span>' : '');
-      b.addEventListener('click', function(){ if(p.id !== project.productId) buildProduct(p.id); });
+      b.addEventListener('click', function(){
+        if(p.id === project.productId) return;
+        if(p.id !== TRIAL_PRODUCT && !trialAllows('product', p.id)) return;
+        buildProduct(p.id);
+      });
       host.appendChild(b);
     });
   });
@@ -234,7 +238,10 @@ function onHistoryChanged(){
   u.title = undoLabel() ? 'Undo ' + undoLabel().toLowerCase() + ' (Ctrl+Z)' : 'Nothing to undo';
   r.title = redoLabel() ? 'Redo ' + redoLabel().toLowerCase() + ' (Ctrl+Shift+Z)' : 'Nothing to redo';
 }
-function onAutosaved(ts){ $('saveStatus').textContent = 'SAVED ' + new Date(ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); }
+function onAutosaved(ts){
+  $('saveStatus').textContent = 'SAVED ' + new Date(ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  if(!hasFullAccess()) track('trial_design', project.productId, null, true);
+}
 function onStoreStatus(ok, reason){
   var w = $('storageWarn'); if(!w) return;
   if(ok){ w.classList.add('hidden'); return; }
@@ -305,9 +312,7 @@ function bindUI(){
     }, 30);
   });
   $('signoutBtn').addEventListener('click', async function(){
-    if(!DEMO_MODE){ if(account.signedIn) await signOutAccount(); else openGate(); return; }
-    await store.del(K_ACCESS, false);
-    lockStudio();
+    if(account.signedIn) await signOutAccount(); else openGate();
   });
 
   /* modals */
@@ -341,57 +346,114 @@ function bindUI(){
 }
 
 /* ============================================================
-   ACCESS — preview lock / invite / pay
-   DEMO_MODE: everything is local and nothing is enforced.
-   Otherwise the server decides: /api/session, /api/redeem, /api/checkout.
+   ACCESS
+   Live build: the T-shirt is a free trial for everyone, kept in this browser. Other
+   garments, exports and My products need a Google account with an active subscription;
+   the owner (OWNER_EMAIL on the server) always has one. The server decides through
+   /api/session and /api/checkout; nothing enforced here is trusted for payment.
+   DEMO_MODE: everything is open and local; nothing is enforced.
    ============================================================ */
-var locked = true;
+var TRIAL_PRODUCT = 'tee';
+var locked = false;
 function showStudio(){ $('app').classList.add('on'); }
 function lockStudio(){
   locked = true;
   $('app').classList.add('locked');
   $('lockShield').classList.add('on');
-  $('lockBar').classList.add('on');
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 function unlockStudio(){
   locked = false;
   $('app').classList.remove('locked');
   $('lockShield').classList.remove('on');
-  $('lockBar').classList.remove('on');
   closeModal('gate');
 }
-function openGate(){
+function hasFullAccess(){ return DEMO_MODE || !!account.active; }
+var WALL_TEXT = {
+  product: 'The free trial covers the T-shirt. Every other garment comes with the subscription.',
+  export: 'Exporting mockups and 300 DPI print files comes with the subscription.',
+  my_products: 'Bringing your own blank products comes with the subscription.'
+};
+/* the wall between the free trial and the rest: sign in first, then pay */
+function trialAllows(reason, product){
+  if(hasFullAccess()) return true;
+  track('wall', product || null, reason, true);
+  if(account.signedIn){ openPay(WALL_TEXT[reason]); return false; }
+  openGate(WALL_TEXT[reason]);
+  return false;
+}
+function openGate(reasonText){
   $('priceTag').textContent = PRICE + ' · PER ' + PRICE_PERIOD.replace('/', '').toUpperCase();
-  $('inviteMsg').textContent = '';
+  $('gateTitle').innerHTML = (reasonText ? 'SIGN IN TO CONTINUE' : 'SIGN IN TO SEIF STUDIO') + '<i>.</i>';
+  $('gateTag').textContent = (reasonText ? reasonText + ' ' : '') + 'Sign in with Google — your T-shirt design comes with you, and your work follows you to any device.';
+  $('payOpenMsg').textContent = '';
   openModal('gate');
-  var bar = $('lockBar');
-  bar.classList.remove('shake'); void bar.offsetWidth; bar.classList.add('shake');
-  setTimeout(function(){ try { $('inviteInput').focus(); } catch(e){} }, 50);
+  setTimeout(function(){ try { $('googleBtn').focus(); } catch(e){} }, 50);
+}
+function openPay(note){
+  closeModal('gate');
+  $('payPrice').textContent = PRICE + PRICE_PERIOD;
+  $('payDemo').classList.toggle('hidden', !DEMO_MODE);
+  $('payFrameWrap').classList.add('hidden');
+  $('payMethods').classList.remove('hidden');
+  document.querySelectorAll('#payMethods button').forEach(function(b){ b.disabled = false; });
+  if(note) gmsg('payMsg', note, true); else $('payMsg').textContent = '';
+  openModal('payModal');
 }
 async function grant(method){
-  /* live build: start over signed in, so the studio loads this account's designs */
+  /* live build: start over, so the studio loads this account's designs */
   if(!DEMO_MODE){ location.reload(); return; }
   await store.set(K_ACCESS, { m:method, ts:Date.now() }, false);
   closeModal('payModal'); closeModal('adminModal');
-  $('inviteInput').value = ''; $('inviteBtn').disabled = false;
   unlockStudio();
 }
 async function api(path, body, opts){
   var o = { method: body ? 'POST' : 'GET', credentials:'include', headers:{} };
   if(body){ o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
-  if(opts && opts.token) o.headers['Authorization'] = 'Bearer ' + opts.token;
   var r = await fetch(API_BASE + path, o);
   var j = null; try { j = await r.json(); } catch(e){}
   if(!r.ok){ var err = new Error((j && j.error) || ('HTTP ' + r.status)); err.status = r.status; throw err; }
   return j || {};
 }
 async function checkSession(){
-  if(DEMO_MODE){ var acc = await store.get(K_ACCESS, false); return !!acc; }
+  if(DEMO_MODE) return true;
   try { account = await api('/api/session'); } catch(e){ account = { signedIn: false, active: false }; }
-  store.cloud = !!account.signedIn;
-  renderAccount();
+  /* the trial lives in this browser; an active account keeps its work on the server */
+  store.cloud = !!(account.signedIn && account.active);
+  store.sharedCloud = true;
   return !!account.active;
+}
+
+/* ============================================================
+   ACTIVITY — what visitors and customers do, for the owner's dashboard.
+   A visitor id ties what someone did before signing up to their account.
+   ============================================================ */
+var memVid = null, trackedOnce = {};
+function visitorId(){
+  var v = null;
+  try { v = localStorage.getItem('ss:vid'); } catch(e){}
+  if(!v) v = memVid;
+  if(!v){
+    v = Array.from(crypto.getRandomValues(new Uint8Array(12)), function(b){ return 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]; }).join('');
+    memVid = v;
+    try { localStorage.setItem('ss:vid', v); } catch(e){}
+  }
+  return v;
+}
+function track(type, product, detail, oncePerSession){
+  if(DEMO_MODE || account.owner || store.readOnly) return;
+  if(oncePerSession){
+    var k = 'ss:t:' + type + '|' + (product || '') + '|' + (detail || '');
+    try { if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); }
+    catch(e){ if(trackedOnce[k]) return; trackedOnce[k] = 1; }
+  }
+  fetch(API_BASE + '/api/event', { method: 'POST', credentials: 'include', keepalive: true, headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: type, vid: visitorId(), product: product || null, detail: detail || null }) }).catch(function(){});
+}
+function trackVisit(){
+  var ref = 'direct';
+  try { if(document.referrer && new URL(document.referrer).host !== location.host) ref = new URL(document.referrer).host; } catch(e){}
+  track('visit', null, ref + ' · ' + (matchMedia('(max-width:900px)').matches ? 'phone' : 'computer'), true);
 }
 
 /* ============================================================
@@ -399,7 +461,7 @@ async function checkSession(){
    The browser only uses Firebase to prove who the customer is; the server swaps the
    ID token for its own session cookie, and everything else goes through /api.
    ============================================================ */
-var account = { signedIn: false, active: false };
+var account = { signedIn: false, active: false, owner: false };
 var FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
 var firebaseReady = null;
 function loadScript(src){
@@ -425,22 +487,34 @@ function loadFirebase(){
   return firebaseReady;
 }
 function renderAccount(){
-  if(DEMO_MODE) return;
+  if(DEMO_MODE){
+    $('signoutBtn').classList.add('hidden');
+    $('ownerBtn').classList.remove('hidden');
+    $('lockBar').classList.remove('on');
+    return;
+  }
   $('acctBox').classList.remove('hidden');
   $('googleBtn').classList.toggle('hidden', !!account.signedIn);
   $('acctOutBtn').classList.toggle('hidden', !account.signedIn);
   $('acctTxt').textContent = account.signedIn
-    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + (account.active ? '' : ' — enter an invite code or subscribe below.')
-    : 'Sign in so your subscription and designs follow you to any device.';
-  /* signed out, the header button and the lock bar both lead to Google sign-in */
+    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + (account.active ? '' : ' — subscribe below to unlock everything.')
+    : 'Sign in so your designs and subscription follow you to any device.';
   $('signoutBtn').textContent = account.signedIn ? 'Sign out' : 'Sign in';
   $('signoutBtn').title = account.signedIn ? 'Sign out of ' + (account.email || 'your account') : 'Sign in with Google';
   $('signoutBtn').classList.toggle('primary', !account.signedIn);
-  $('signoutBtn').classList.toggle('signin', !account.signedIn);   /* stays visible while the studio is locked */
   $('signoutBtn').classList.toggle('ghost', !!account.signedIn);
-  $('lockBarBtn').textContent = account.signedIn ? 'Unlock' : 'Sign in';
-  var small = document.querySelector('#lockBar .lb-txt small');
-  if(small) small.textContent = account.signedIn ? 'Enter an invite code or subscribe to use the studio' : 'Sign in with Google to use the studio';
+  $('ownerBtn').classList.toggle('hidden', !account.owner);
+  /* the trial bar: what the free trial covers, and the way out of it */
+  var trial = !account.active;
+  $('lockBar').classList.toggle('on', trial);
+  $('lbTitle').textContent = 'Free trial · T-shirt';
+  $('lbSub').textContent = account.signedIn ? 'Subscribe to unlock every garment and export' : 'Sign in to unlock every garment and export';
+  $('lockBarBtn').textContent = account.signedIn ? 'Subscribe' : 'Sign in';
+  syncTrialRack();
+}
+function syncTrialRack(){
+  var open = hasFullAccess();
+  document.querySelectorAll('.rackitem').forEach(function(x){ x.classList.toggle('trial-locked', !open && x.dataset.pid !== TRIAL_PRODUCT); });
 }
 async function signInAccount(){
   var btn = $('googleBtn');
@@ -451,12 +525,14 @@ async function signInAccount(){
     var provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     var cred = await auth.signInWithPopup(provider);
-    account = await api('/api/login', { idToken: await cred.user.getIdToken() });
+    account = await api('/api/login', { idToken: await cred.user.getIdToken(), vid: visitorId() });
     auth.signOut().catch(function(){});
     if(account.active){ gmsg('acctMsg', 'Welcome back — loading your designs…', true); location.reload(); return; }
-    store.cloud = true;
+    btn.disabled = false; $('acctMsg').textContent = '';
     renderAccount();
-    gmsg('acctMsg', 'Signed in. Now unlock the studio with an invite code or a subscription.', true);
+    /* signed in, not subscribed yet: straight to payment */
+    openPay('Signed in as ' + (account.email || 'your Google account') + '. Choose how to pay to unlock every garment and export.');
+    return;
   } catch(e){
     var code = e && e.code;
     gmsg('acctMsg', code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' ? 'Sign-in was cancelled.'
@@ -467,15 +543,9 @@ async function signInAccount(){
 }
 async function signOutAccount(){
   await fetch(API_BASE + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
-  location.reload();
+  location.href = '/';
 }
-function needAccount(msgId){
-  if(DEMO_MODE || account.signedIn) return false;
-  gmsg(msgId, 'Sign in with Google first (above), so your access is saved to your account.');
-  $('googleBtn').focus();
-  return true;
-}
-/* designs saved in this browser before the customer had an account move into it once,
+/* designs saved in this browser before the customer had an active account move into it once,
    then leave the browser so they cannot end up in someone else's account later */
 async function migrateLocalWork(){
   if(store.backend !== 'local') return;
@@ -488,7 +558,7 @@ async function migrateLocalWork(){
     for(var i=0;i<keys.length;i++){
       if(have[keys[i]]) continue;
       var raw = localStorage.getItem(store._lk(keys[i], false));
-      if(raw) await store.cloudSet(keys[i], raw);
+      if(raw) await store.cloudSet(keys[i], raw, false);
     }
     keys.forEach(function(k){ localStorage.removeItem(store._lk(k, false)); });
     $('saveStatus').textContent = '';
@@ -497,9 +567,24 @@ async function migrateLocalWork(){
     onStoreStatus(false, 'could not move the designs saved in this browser to your account (' + e.message + '); they are kept here and will be retried');
   }
 }
+/* the owner's photos, mapping and colours saved in this browser before they were shared go up once */
+async function migrateSharedSettings(){
+  if(store.backend !== 'local' || !account.owner) return;
+  var keys = store.keys('seifstudio:', true).filter(function(k){ return k !== K_INVITES; });
+  if(!keys.length) return;
+  try {
+    for(var i=0;i<keys.length;i++){
+      var raw = localStorage.getItem(store._lk(keys[i], true));
+      if(raw && !(store.sharedKeys && store.sharedKeys[keys[i]])){ await store.cloudSet(keys[i], raw, true); store.sharedKeys[keys[i]] = 1; }
+    }
+    keys.forEach(function(k){ localStorage.removeItem(store._lk(k, true)); });
+  } catch(e){
+    onStoreStatus(false, 'could not publish the settings saved in this browser (' + e.message + '); they are kept here and will be retried');
+  }
+}
 function bindLock(){
   $('lockShield').addEventListener('click', function(e){ e.preventDefault(); openGate(); });
-  $('lockBarBtn').addEventListener('click', openGate);
+  $('lockBarBtn').addEventListener('click', function(){ if(account.signedIn) openPay(); else openGate(); });
   $('app').addEventListener('focusin', function(e){
     if(!locked) return;
     if(e.target && e.target.blur) e.target.blur();
@@ -512,54 +597,26 @@ function bindLock(){
   }, true);
 }
 function bindGate(){
-  $('inviteBtn').addEventListener('click', async function(){
-    var code = $('inviteInput').value.trim().toUpperCase();
-    if(needAccount('inviteMsg')) return;
-    if(!code){ gmsg('inviteMsg','Type your invite code first.'); return; }
-    this.disabled = true;
-    var btn = this;
-    if(DEMO_MODE){
-      var data = await store.get(K_INVITES, true);
-      var list = (data && data.codes) ? data.codes : [];
-      var hit = null;
-      for(var i=0;i<list.length;i++){ if(list[i].c === code && list[i].active){ hit = list[i]; break; } }
-      if(hit){ hit.uses = (hit.uses || 0) + 1; await store.set(K_INVITES, { codes:list }, true); }
-      if(hit || code === FALLBACK_CODE){
-        gmsg('inviteMsg','Code accepted — welcome in.', true);
-        setTimeout(function(){ grant('invite'); }, 350);
-      } else { gmsg('inviteMsg','That code isn’t valid or was revoked. (Demo build: the code DEMO always works.)'); btn.disabled = false; }
-      return;
-    }
-    try {
-      await api('/api/redeem', { code: code });
-      gmsg('inviteMsg','Code accepted — welcome in.', true);
-      setTimeout(function(){ grant('invite'); }, 350);
-    } catch(e){
-      gmsg('inviteMsg', e.status === 429 ? 'Too many attempts — try again in an hour.'
-        : e.status === 401 ? 'Your sign-in expired — sign in with Google again.'
-        : /already used/.test(e.message) ? 'You already used this code on your account.'
-        : 'That code isn’t valid or was revoked.');
-      btn.disabled = false;
-    }
-  });
-  $('inviteInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('inviteBtn').click(); });
   $('googleBtn').addEventListener('click', signInAccount);
   $('acctOutBtn').addEventListener('click', signOutAccount);
+  $('ownerBtn').addEventListener('click', function(){
+    if(!DEMO_MODE){ location.href = '/admin'; return; }
+    openModal('adminModal');
+    $('pinInput').value = '';
+    $('adminLock').classList.remove('hidden');
+    $('adminPanel').classList.add('hidden');
+  });
+  $('viewBackBtn').addEventListener('click', function(){ location.reload(); });
 
   $('payOpenBtn').addEventListener('click', function(){
-    if(needAccount('payOpenMsg')) return;
-    $('payPrice').textContent = PRICE + PRICE_PERIOD;
-    $('payDemo').classList.toggle('hidden', !DEMO_MODE);
-    $('payFrameWrap').classList.add('hidden');
-    $('payMethods').classList.remove('hidden');
-    $('payMsg').textContent = '';
-    openModal('payModal');
+    if(!DEMO_MODE && !account.signedIn){ gmsg('payOpenMsg', 'Sign in with Google first (above), so your subscription is saved to your account.'); $('googleBtn').focus(); return; }
+    openPay();
   });
   document.querySelectorAll('#payMethods button').forEach(function(b){
     b.addEventListener('click', async function(){
       var method = b.dataset.pay;
       if(DEMO_MODE){
-        gmsg('payMsg', 'Demo build — no provider connected. Entering the studio without payment.', true);
+        gmsg('payMsg', 'Demo build — no provider connected. Nothing is charged.', true);
         setTimeout(function(){ grant('demo'); }, 600);
         return;
       }
@@ -580,124 +637,231 @@ function bindGate(){
     });
   });
 
-  /* admin */
-  $('adminOpenBtn').addEventListener('click', function(){
-    openModal('adminModal');
-    $('pinInput').value = '';
-    $('adminLock').classList.remove('hidden');
-    $('adminPanel').classList.add('hidden');
-  });
-  $('pinBtn').addEventListener('click', async function(){
-    var pin = $('pinInput').value;
-    if(DEMO_MODE ? pin === ADMIN_PIN : false){
-      adminToken = null; openAdminPanel(); return;
-    }
-    if(!DEMO_MODE){
-      try { await api('/api/admin/codes', null, { token: pin }); adminToken = pin; openAdminPanel(); return; }
-      catch(e){ gmsg('pinMsg', 'Not authorised.'); return; }
-    }
-    gmsg('pinMsg','Wrong PIN. (Demo build: the PIN is DEMO.)');
+  /* demo build only: the owner panel behind a PIN (the live build uses /admin) */
+  $('pinBtn').addEventListener('click', function(){
+    if(DEMO_MODE && $('pinInput').value === ADMIN_PIN){ openAdminPanel(); return; }
+    gmsg('pinMsg', DEMO_MODE ? 'Wrong PIN. (Demo build: the PIN is DEMO.)' : 'The owner panel is at /admin.');
   });
   $('pinInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') $('pinBtn').click(); });
-  $('genBtn').addEventListener('click', async function(){
-    if(DEMO_MODE){
-      var data = await store.get(K_INVITES, true);
-      var list = (data && data.codes) ? data.codes : [];
-      list.unshift({ c:'SEIF-' + rand4() + '-' + rand4(), active:true, uses:0 });
-      var saved = await store.set(K_INVITES, { codes:list }, true);
-      renderCodes(list, saved.ok);
-      return;
-    }
-    try { await api('/api/admin/codes', { action:'create' }, { token: adminToken }); renderCodes(); }
-    catch(e){ inlineErr('genBtn', 'Could not create a code: ' + e.message); }
-  });
-  $('adminEnterBtn').addEventListener('click', function(){ grant('admin'); });
-  $('adTabCodes').addEventListener('click', function(){ adminTab('codes'); });
+  $('adminEnterBtn').addEventListener('click', function(){ closeModal('adminModal'); });
+  $('adTabOverview').addEventListener('click', function(){ adminTab('overview'); });
+  $('adTabCustomers').addEventListener('click', function(){ adminTab('customers'); });
   $('adTabPhotos').addEventListener('click', function(){ adminTab('photos'); });
   $('adTabColors').addEventListener('click', function(){ adminTab('colors'); });
+  $('ovRefresh').addEventListener('click', renderOverview);
 }
-var adminToken = null, sessionPoll = null;
+var sessionPoll = null;
 function pollSession(){
   clearInterval(sessionPoll);
   sessionPoll = setInterval(async function(){
     if(await checkSession()){ clearInterval(sessionPoll); grant('card'); }
   }, 4000);
 }
+/* demo build: photos and colours only */
 function openAdminPanel(){
   $('adminLock').classList.add('hidden');
   $('adminPanel').classList.remove('hidden');
-  $('adCodesSub').textContent = DEMO_MODE
-    ? 'Demo build: codes live in this browser only and are not enforced. The deployed build keeps them on the server.'
-    : 'Invite codes are checked by the server. Revoked codes stop working immediately.';
-  adminTab('codes');
-  renderCodes();
+  $('adTabOverview').classList.add('hidden');
+  $('adTabCustomers').classList.add('hidden');
+  adminTab('photos');
   peInit();
   renderColorRows();
 }
 function adminTab(t){
-  $('adTabCodes').classList.toggle('on', t === 'codes');
-  $('adTabPhotos').classList.toggle('on', t === 'photos');
-  $('adTabColors').classList.toggle('on', t === 'colors');
-  $('adCodes').classList.toggle('hidden', t !== 'codes');
-  $('adPhotos').classList.toggle('hidden', t !== 'photos');
-  $('adColors').classList.toggle('hidden', t !== 'colors');
+  [['overview', 'adTabOverview', 'adOverview'], ['customers', 'adTabCustomers', 'adCustomers'],
+   ['photos', 'adTabPhotos', 'adPhotos'], ['colors', 'adTabColors', 'adColors']].forEach(function(x){
+    $(x[1]).classList.toggle('on', t === x[0]);
+    $(x[2]).classList.toggle('hidden', t !== x[0]);
+  });
+  if(t === 'overview') renderOverview();
+  if(t === 'customers') renderCustomers();
   if(t === 'photos') peStage(PE.stage);
 }
-function rand4(){
-  var A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789', s = '';
-  for(var i=0;i<4;i++) s += A[Math.floor(Math.random()*A.length)];
-  return s;
+
+/* ============================================================
+   OWNER DASHBOARD (live build, /admin) — who is on the site and what they do
+   ============================================================ */
+var EV_LABEL = {
+  visit: 'Visited the site', trial_design: 'Designed on the free T-shirt', wall: 'Hit the sign-in wall',
+  signup: 'Created an account', login: 'Signed in', design_created: 'Started working on', design_saved: 'Came back to work on',
+  export: 'Exported', checkout_started: 'Opened checkout', checkout_failed: 'Checkout failed',
+  payment: 'Paid', payment_failed: 'Payment failed', access_granted: 'Was given access', access_revoked: 'Access revoked'
+};
+var WALL_LABEL = { product: 'wanted another garment', export: 'wanted to export', my_products: 'wanted My products' };
+var STAT_ROWS = [['visit', 'Visits'], ['trial_design', 'Free T-shirt designs'], ['wall', 'Hit the sign-in wall'], ['signup', 'New accounts'],
+  ['login', 'Sign-ins'], ['design_created', 'Garments designed'], ['export', 'Exports'], ['checkout_started', 'Opened checkout'],
+  ['checkout_failed', 'Checkout failed'], ['payment', 'Payments'], ['payment_failed', 'Failed payments']];
+function productName(id){ var d = PRODUCTS_BY_ID[id]; return d ? d.name : (id || ''); }
+function fmtWhen(ts){
+  if(!ts) return '—';
+  var d = new Date(ts);
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-async function renderCodes(list, savedFlag){
-  var host = $('codeList');
+function fmtDay(ts){ return ts ? new Date(ts).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) : '—'; }
+function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; }
+function openOwnerDashboard(){
+  $('adminModal').querySelector('.card').classList.add('dash');
+  $('adminTitle').textContent = 'Owner dashboard';
+  $('adminLock').classList.add('hidden');
+  $('adminPanel').classList.remove('hidden');
+  $('adminEnterBtn').textContent = 'Close the dashboard';
+  openModal('adminModal');
+  adminTab('overview');
+  peInit();
+  renderColorRows();
+}
+function renderEvents(host, events, opts){
   host.innerHTML = '';
-  if(!list){
-    if(DEMO_MODE){ var data = await store.get(K_INVITES, true); list = (data && data.codes) ? data.codes : []; }
-    else { try { var r = await api('/api/admin/codes', null, { token: adminToken }); list = r.codes || []; } catch(e){ host.textContent = 'Could not load codes: ' + e.message; return; } }
-  }
-  if(DEMO_MODE && (!store.ok || savedFlag === false)){
-    var w = document.createElement('div');
-    w.className = 'demoflag';
-    w.textContent = 'Storage is not available here, so codes won’t be saved between sessions.';
-    host.appendChild(w);
-  }
-  if(!list.length){
-    var e = document.createElement('div');
-    e.className = 'tiny';
-    e.textContent = 'No invite codes yet — generate your first one above.';
-    host.appendChild(e);
-    return;
-  }
-  list.forEach(function(row){
-    var d = document.createElement('div');
-    d.className = 'codeline' + (row.active ? '' : ' dead');
-    var c = document.createElement('span'); c.className = 'c'; c.textContent = row.c;
-    var u = document.createElement('span'); u.className = 'u'; u.textContent = (row.uses || 0) + '× used';
-    var copy = document.createElement('button'); copy.className = 'btn ghost small'; copy.textContent = 'Copy'; copy.setAttribute('aria-label', 'Copy code ' + row.c);
-    copy.addEventListener('click', function(){
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(row.c);
-        copy.textContent = 'Copied'; setTimeout(function(){ copy.textContent = 'Copy'; }, 1200);
-      }
-    });
-    var rev = document.createElement('button'); rev.className = 'btn ghost small';
-    rev.textContent = row.active ? 'Revoke' : 'Restore';
-    rev.setAttribute('aria-label', (row.active ? 'Revoke' : 'Restore') + ' code ' + row.c);
-    rev.addEventListener('click', async function(){
-      if(DEMO_MODE){
-        var data = await store.get(K_INVITES, true);
-        var fresh = (data && data.codes) ? data.codes : [];
-        for(var i=0;i<fresh.length;i++){ if(fresh[i].c === row.c){ fresh[i].active = !row.active; } }
-        await store.set(K_INVITES, { codes:fresh }, true);
-        renderCodes(fresh);
-      } else {
-        try { await api('/api/admin/codes', { action: row.active ? 'revoke' : 'restore', code: row.c }, { token: adminToken }); renderCodes(); }
-        catch(e){ inlineErr(d, e.message); }
-      }
-    });
-    d.appendChild(c); d.appendChild(u); d.appendChild(copy); d.appendChild(rev);
-    host.appendChild(d);
+  if(!events || !events.length){ host.appendChild(el('p', 'tiny', (opts && opts.empty) || 'Nothing yet.')); return; }
+  events.forEach(function(e){
+    var row = el('div', 'evrow');
+    row.appendChild(el('span', 't', fmtWhen(e.t)));
+    var who = el('span', 'who' + (e.email ? '' : ' anon'), e.email || ('Visitor ' + String(e.vid || '?').slice(0, 6)));
+    if(e.uid && (!opts || !opts.noWho)){ who.style.cursor = 'pointer'; who.title = 'Open this customer'; who.addEventListener('click', function(){ adminTab('customers'); showCustomer(e.uid); }); }
+    if(!opts || !opts.noWho) row.appendChild(who);
+    var what = el('span', 'what');
+    what.appendChild(el('b', null, EV_LABEL[e.type] || e.type));
+    var extra = [];
+    if(e.product) extra.push(productName(e.product));
+    if(e.type === 'wall' && WALL_LABEL[e.detail]) extra.push(WALL_LABEL[e.detail]);
+    else if(e.detail) extra.push(e.detail);
+    if(extra.length) what.appendChild(el('small', null, extra.join(' · ')));
+    row.appendChild(what);
+    if(opts && opts.noWho) row.style.gridTemplateColumns = '118px minmax(0,1fr)';
+    host.appendChild(row);
   });
+}
+async function renderOverview(){
+  var host = $('ovStats'); host.textContent = 'Loading…'; $('ovFeed').innerHTML = '';
+  var r;
+  try { r = await api('/api/admin/overview'); } catch(e){ host.textContent = 'Could not load the dashboard: ' + e.message; return; }
+  var t = el('table', 'dtable'), head = el('tr');
+  head.appendChild(el('th', null, ''));
+  r.days.forEach(function(d, i){ head.appendChild(el('th', 'n', i === 0 ? 'Today' : i === 1 ? 'Yesterday' : new Date(d.day + 'T12:00:00').toLocaleDateString([], { weekday: 'short', day: 'numeric' }))); });
+  head.appendChild(el('th', 'n', '7 days'));
+  t.appendChild(head);
+  STAT_ROWS.forEach(function(sr){
+    var tr = el('tr'), sum = 0;
+    tr.appendChild(el('td', null, sr[1]));
+    r.days.forEach(function(d){ var v = d[sr[0]] || 0; sum += v; tr.appendChild(el('td', 'n', v ? String(v) : '·')); });
+    var tot = el('td', 'n', String(sum)); tot.style.fontWeight = '700'; tr.appendChild(tot);
+    t.appendChild(tr);
+  });
+  host.innerHTML = ''; host.appendChild(t);
+  renderEvents($('ovFeed'), r.events, { empty: 'No activity yet — share the site and it shows up here.' });
+}
+function statusPill(a){
+  if(a.owner) return el('span', 'pill own', 'Owner');
+  if(a.activeNow) return el('span', 'pill on', 'Active · until ' + fmtDay(a.expiresAt));
+  return el('span', 'pill off', a.plan === 'revoked' ? 'Revoked' : (a.expiresAt ? 'Expired' : 'Free trial'));
+}
+async function renderCustomers(){
+  $('cuDetail').classList.add('hidden');
+  var host = $('cuList'); host.classList.remove('hidden'); host.textContent = 'Loading…';
+  var r;
+  try { r = await api('/api/admin/accounts'); } catch(e){ host.textContent = 'Could not load customers: ' + e.message; return; }
+  host.innerHTML = '';
+  var paying = r.accounts.filter(function(a){ return a.activeNow && !a.owner; }).length;
+  host.appendChild(el('div', 'sub', r.accounts.length + ' accounts · ' + paying + ' with access right now. Click a customer to see everything they did.'));
+  if(!r.accounts.length){ host.appendChild(el('p', 'tiny', 'Nobody has signed in yet.')); return; }
+  var wrap = el('div', 'dashwrap'), t = el('table', 'dtable'), head = el('tr');
+  ['Customer', 'Status', 'How', 'Joined', 'Last seen'].forEach(function(h){ head.appendChild(el('th', null, h)); });
+  t.appendChild(head);
+  r.accounts.forEach(function(a){
+    var tr = el('tr', 'click');
+    var c = el('td'); c.appendChild(el('div', null, a.email || a.uid)); if(a.name) c.appendChild(el('div', 'tiny', a.name)); tr.appendChild(c);
+    var st = el('td'); st.appendChild(statusPill(a)); tr.appendChild(st);
+    tr.appendChild(el('td', null, a.owner ? '—' : ({ monthly: 'Paid', gift: 'Given by you', revoked: '—' }[a.plan] || '—')));
+    tr.appendChild(el('td', null, fmtDay(a.createdAt)));
+    tr.appendChild(el('td', null, fmtWhen(a.lastSeenAt || a.lastLoginAt)));
+    tr.addEventListener('click', function(){ showCustomer(a.uid); });
+    t.appendChild(tr);
+  });
+  wrap.appendChild(t); host.appendChild(wrap);
+}
+async function showCustomer(uid){
+  $('cuList').classList.add('hidden');
+  var host = $('cuDetail'); host.classList.remove('hidden'); host.textContent = 'Loading…';
+  var r;
+  try { r = await api('/api/admin/accounts/' + encodeURIComponent(uid)); } catch(e){ host.textContent = 'Could not load this customer: ' + e.message; return; }
+  var a = r.account;
+  host.innerHTML = '';
+  var back = el('button', 'btn ghost small', '← All customers'); back.addEventListener('click', renderCustomers);
+  host.appendChild(back);
+  var hd = el('div', 'cuhead'); hd.style.marginTop = '14px';
+  hd.appendChild(el('h4', null, a.email || a.uid)); hd.appendChild(statusPill(a));
+  host.appendChild(hd);
+  host.appendChild(el('div', 'sub', [a.name, 'joined ' + fmtDay(a.createdAt), 'last seen ' + fmtWhen(a.lastSeenAt || a.lastLoginAt)].filter(Boolean).join(' · ')));
+
+  if(!a.owner){
+    var acts = el('div', 'cuacts'), days = el('input', 'field'); days.type = 'number'; days.min = '1'; days.value = '30'; days.setAttribute('aria-label', 'Days of access');
+    var give = el('button', 'btn primary small', 'Give access'), rev = el('button', 'btn ghost small', 'Revoke access'), msg = el('span', 'tiny');
+    acts.appendChild(give); acts.appendChild(days); acts.appendChild(el('span', 'tiny', 'days')); if(a.activeNow) acts.appendChild(rev); acts.appendChild(msg);
+    give.addEventListener('click', async function(){
+      give.disabled = true;
+      try { await api('/api/admin/accounts/' + encodeURIComponent(uid), { action: 'grant', days: +days.value || 30 }); showCustomer(uid); }
+      catch(e){ msg.textContent = 'Could not give access: ' + e.message; give.disabled = false; }
+    });
+    rev.addEventListener('click', async function(){
+      if(!window.confirm('Revoke access for ' + (a.email || 'this customer') + '? They keep their designs but cannot use the studio until they pay again.')) return;
+      try { await api('/api/admin/accounts/' + encodeURIComponent(uid), { action: 'revoke' }); showCustomer(uid); }
+      catch(e){ msg.textContent = 'Could not revoke: ' + e.message; }
+    });
+    host.appendChild(acts);
+  }
+
+  host.appendChild(el('div', 'speclabel cusec', 'Designs'));
+  var projects = (r.designs || []).filter(function(d){ return /^seifstudio:project:/.test(d.k) && d.k !== 'seifstudio:project:index'; });
+  var images = (r.designs || []).filter(function(d){ return /^seifstudio:img:/.test(d.k); });
+  if(!projects.length) host.appendChild(el('p', 'tiny', 'No saved designs yet.'));
+  else {
+    var dt = el('table', 'dtable'), dh = el('tr');
+    ['Garment', 'Last saved', ''].forEach(function(h){ dh.appendChild(el('th', null, h)); }); dt.appendChild(dh);
+    projects.sort(function(x, y){ return (y.updatedAt || 0) - (x.updatedAt || 0); }).forEach(function(d){
+      var pid = d.k.slice('seifstudio:project:'.length), tr = el('tr');
+      tr.appendChild(el('td', null, productName(pid))); tr.appendChild(el('td', null, fmtWhen(d.updatedAt)));
+      var td = el('td'), open = el('button', 'btn ghost small', 'Open (read only)');
+      open.addEventListener('click', function(){ ownerViewDesign(uid, a.email, pid); });
+      td.appendChild(open); tr.appendChild(td); dt.appendChild(tr);
+    });
+    host.appendChild(dt);
+    host.appendChild(el('p', 'tiny', images.length + ' uploaded image' + (images.length === 1 ? '' : 's') + ' in their account.'));
+  }
+
+  host.appendChild(el('div', 'speclabel cusec', 'Payments'));
+  if(!r.orders.length) host.appendChild(el('p', 'tiny', 'No payments started.'));
+  else {
+    var ot = el('table', 'dtable'), oh = el('tr');
+    ['Started', 'Method', 'Status'].forEach(function(h){ oh.appendChild(el('th', null, h)); }); ot.appendChild(oh);
+    r.orders.forEach(function(o){
+      var tr = el('tr');
+      tr.appendChild(el('td', null, fmtWhen(o.createdAt))); tr.appendChild(el('td', null, o.method || '—'));
+      tr.appendChild(el('td', null, o.paid ? 'Paid ' + fmtWhen(o.paidAt) : 'Not paid'));
+      ot.appendChild(tr);
+    });
+    host.appendChild(ot);
+  }
+
+  host.appendChild(el('div', 'speclabel cusec', 'Everything they did'));
+  var tl = el('div'); host.appendChild(tl);
+  renderEvents(tl, r.events, { noWho: true, empty: 'No activity recorded yet.' });
+  if(r.before && r.before.length){
+    host.appendChild(el('div', 'speclabel cusec', 'Before they signed up (same browser)'));
+    var bl = el('div'); host.appendChild(bl);
+    renderEvents(bl, r.before, { noWho: true });
+  }
+}
+/* the owner opens a customer's design in the studio; nothing they change is saved */
+async function ownerViewDesign(uid, email, pid){
+  store.viewBase = '/api/admin/accounts/' + encodeURIComponent(uid) + '/data/';
+  store.readOnly = true;
+  closeModal('adminModal');
+  $('viewTxt').textContent = 'Opening ' + (email || 'the customer') + '’s design…';
+  $('viewBanner').classList.remove('hidden');
+  try {
+    await restoreSavedProject(pid);
+    $('viewTxt').textContent = 'Viewing ' + (email || 'a customer') + '’s ' + productName(pid) + ' — read only, nothing you change is saved.';
+  } catch(e){ $('viewTxt').textContent = 'Could not open this design: ' + e.message; }
 }
 
 /* ---------- admin: colours ---------- */
@@ -1164,6 +1328,7 @@ function mpRenderList(){
 function bindMyProducts(){
   edBindCanvas(NP, 'npCanvas', function(){ npUpdateStatus(); });
   $('myProductsBtn').addEventListener('click', function(){
+    if(!trialAllows('my_products')) return;
     $('mpCreate').classList.add('hidden');
     $('mpList').classList.remove('hidden');
     mpRenderList();
@@ -1252,6 +1417,7 @@ function bindMyProducts(){
    ============================================================ */
 function bindExport(){
   $('exportBtn').addEventListener('click', function(){
+    if(!trialAllows('export', project.productId)) return;
     $('exProgress').textContent = ''; $('exOpenMsg').textContent = '';
     var warns = [];
     panelsFor(project.productId).forEach(function(p){
@@ -1285,6 +1451,8 @@ function bindExport(){
 function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 async function runExport(){
   var btn = $('exGo'); btn.disabled = true;
+  track('export', project.productId, [['exMock', 'mockups'], ['exPrint', 'print files'], ['exTech', 'tech pack'], ['exProj', 'project file']]
+    .filter(function(x){ return $(x[0]).checked; }).map(function(x){ return x[1]; }).join(', '));
   var prog = $('exProgress');
   var name = safeName(currentDef().name), items = [], i;
   function step(t){ prog.className = 'gmsg ok'; prog.textContent = t; }
@@ -1427,6 +1595,7 @@ function renderPanelSheet(){
 async function offerResume(){
   var idx = await loadSavedProjectIndex();
   if(!idx || !idx.productId) return;
+  if(!hasFullAccess() && idx.productId !== TRIAL_PRODUCT) return;   /* the trial only reopens the T-shirt */
   $('resumeTxt').textContent = 'Continue where you left off? ' + idx.productName + ' — saved ' + fmtTime(idx.savedAt) + '.';
   $('resumeStrip').classList.remove('hidden');
   $('resumeYes').onclick = async function(){
@@ -1445,8 +1614,12 @@ async function maybeOnboard(){
 async function init(){
   /* the session decides where personal data lives (account or this browser), so it comes first */
   var active = await checkSession();
-  if(!DEMO_MODE && !account.signedIn) loadFirebase().catch(function(){});
-  if(active) await migrateLocalWork();
+  if(!DEMO_MODE){
+    if(!account.signedIn) loadFirebase().catch(function(){});
+    await store.loadSharedKeys();
+    if(active) await migrateLocalWork();
+    if(account.owner) await migrateSharedSettings();
+  }
   await loadGarmentColors();
   await loadCustomProducts();
   bindProjectProduct('tee');
@@ -1462,16 +1635,18 @@ async function init(){
   bindSheet();
   bindTurntable();
   if(typeof bindEditor === 'function') bindEditor();
-  renderAccount();
   $('boot').style.display = 'none';
   $('demoBanner').classList.toggle('hidden', !DEMO_MODE);
   showStudio();
-  buildProduct('tee');
+  buildProduct(TRIAL_PRODUCT);
   setMode('design');
   onHistoryChanged();
-  if(active){ unlockStudio(); } else { lockStudio(); }
+  unlockStudio();          /* nobody is locked out: the T-shirt is the free trial */
+  renderAccount();
+  if(!DEMO_MODE) trackVisit();
+  if(CFG.admin && account.owner){ openOwnerDashboard(); return; }
   await offerResume();
-  if(active) maybeOnboard();
+  maybeOnboard();
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();

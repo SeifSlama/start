@@ -60,25 +60,38 @@ origin (simplest — cookies are `SameSite=Lax`).
 
 `./build.sh` also writes `dist/`: `index.html`, `assets/` and `_worker.js` (a copy of `worker/index.js`). Drag
 `dist/` (or a zip of it) onto a Cloudflare Pages project's upload page; every upload is kept as a deployment you can
-roll back to. `server/server.js` is the older Node build: invite cookies only, no accounts or saved designs.
+roll back to. `server/server.js` is the older Node build (invite cookies only); it is not deployed.
 
-**Accounts.** Customers sign in with Google (Firebase Authentication in the browser, SDK loaded from gstatic). The
-server verifies the Firebase ID token once and sets its own signed cookie carrying the uid. Invite codes and
-payments activate the *account*, so access and designs follow the customer to any device.
+**Free trial.** Anyone can open the site and design the T-shirt; that design stays in their browser. Another garment,
+Export or My products shows *Sign in to continue* → Google sign-in → the payment window. Once the account is active
+(payment, or access given by the owner) the T-shirt design moves into the account and everything unlocks.
 
-**Saved designs.** On the live build, once signed in, the client's personal store (projects, images, my products)
-goes to `/api/data` instead of `localStorage`. Values over 900 KB (images) are sent in 900 KB chunks and published
-as a version once complete. Designs saved in a browser before signing in move into the account on first unlock and
-are then removed from that browser. Shared keys (owner photos, panel mapping, colours) stay in `localStorage`.
+**Accounts.** Google sign-in through Firebase Authentication (SDK from gstatic). The server verifies the ID token
+once and sets its own signed cookie carrying the uid; subscriptions and designs belong to the account, so they
+follow the customer to any device. Values over 900 KB (images) are stored in 900 KB chunks.
+
+**Owner.** Whoever signs in with an address listed in `OWNER_EMAIL` always has full access, gets an *Admin*
+button, and is the only one who can open **`/admin`** (everyone else gets 404). The dashboard shows:
+
+- *Overview* — daily counts for the last 7 days (visits, free T-shirt designs, sign-in walls, new accounts,
+  sign-ins, garments designed, exports, checkouts, payments) and the live activity feed.
+- *Customers* — every account with status and last seen; each customer's page lists their designs (open any of
+  them read-only in the studio), payments, everything they did, and what they did before signing up in the same
+  browser. *Give access* for N days or *Revoke access*.
+- *Photos & mapping*, *Colours* — saved on the server (`/api/shared`), so every visitor sees them.
+
+The owner's own activity is not counted.
 
 Firestore (production mode, default deny-all rules — only the server's service account reads or writes it):
 
 | Path | Holds |
 |---|---|
-| `accounts/{uid}` | email, name, `active`, `plan`, `expiresAt`, `code`, `paidAt` |
-| `accounts/{uid}/data/{id}` | one stored key (`k`), inline JSON or the chunk version `v` + count `n` |
-| `accounts/{uid}/chunks/{id.v.i}` | chunk `i` of version `v` |
-| `codes/{CODE}` | invite codes |
+| `accounts/{uid}` | email, name, `active`, `plan`, `expiresAt`, `lastSeenAt`, visitor id |
+| `accounts/{uid}/data/{id}`, `/chunks/{id.v.i}` | the customer's designs |
+| `accounts/{uid}/events/{eid}` | the customer's timeline |
+| `events/{eid}` | every event (`t`, `type`, `uid`/`vid`, `product`, `detail`) |
+| `stats/{YYYY-MM-DD}` | daily counters per event type |
+| `shared/…`, `sharedchunks/…`, `sharedmeta/manifest` | the owner's photos, mapping and colours |
 | `orders/{orderId}` | Paymob order → uid, `paid` (a repeated webhook is ignored) |
 
 One-time Firebase setup: **Authentication → Sign-in method → Google → Enable**; **Authentication → Settings →
@@ -91,16 +104,17 @@ Pages → Settings → Variables and Secrets (Production), then upload again so 
 |---|---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | Secret | the whole JSON from Project settings → Service accounts → Generate new private key |
 | `SESSION_SECRET` | Secret | 32+ random characters |
-| `ADMIN_TOKEN` | Secret | the owner panel's password |
 | `FIREBASE_API_KEY` | Text | the web app's `apiKey` (public by design) |
+| `OWNER_EMAIL` | Text | the owner's Google address (several: comma-separated) |
 | `PAYMOB_API_KEY`, `PAYMOB_HMAC`, `PAYMOB_IFRAME_ID`, `PAYMOB_INTEGRATION_CARD` / `_WALLET` / `_KIOSK` | Secret | from the Paymob dashboard |
 | `PRICE_EGP` | Text | optional, default 100 |
 
-**Until `SESSION_SECRET`, `ADMIN_TOKEN` and `FIREBASE_SERVICE_ACCOUNT` are set the site serves the demo build** and
-`/api/*` answers 503. Point Paymob's callback at `https://<project>.pages.dev/api/webhook`.
+`ADMIN_TOKEN` is no longer used. **Until `SESSION_SECRET` and `FIREBASE_SERVICE_ACCOUNT` are set the site serves the
+demo build** (everything open, owner panel behind the PIN `DEMO`) and `/api/*` answers 503. Point Paymob's callback
+at `https://<project>.pages.dev/api/webhook`.
 
 Local test against the Firebase emulators (`firebase emulators:start --only auth,firestore --project demo-seif`): put
-the secrets plus `FIREBASE_API_KEY="fake"`, `INSECURE_COOKIES="1"`, `FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"`,
+the secrets plus `FIREBASE_API_KEY="fake"`, `OWNER_EMAIL`, `INSECURE_COOKIES="1"`, `FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"`,
 `FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9099"` and `FIREBASE_PROJECT_ID="demo-seif"` in `.dev.vars`, then
 `npx wrangler pages dev dist`. With `FIREBASE_AUTH_EMULATOR_HOST` set the server accepts the emulator's unsigned
 tokens, so never set it in production.
