@@ -4776,6 +4776,7 @@ function onProjectChanged(panelId){
     if(state.mode === '3d' && typeof s3dSyncPanelChips === 'function') s3dSyncPanelChips();
   }
   syncRack();
+  if(panelId === null) syncSwatches();           /* the garment colour changed (or everything did) */
   if(state.mode === 'design' && !state.panel) renderPanelSheet();
   if(typeof abOnProjectChanged === 'function') abOnProjectChanged(panelId);
   if(state.mode === 'preview') requestRender();
