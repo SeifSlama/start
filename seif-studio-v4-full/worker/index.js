@@ -80,8 +80,17 @@ function config(env){
   return { live: true };
 }
 function priceEgp(env){ return +env.PRICE_EGP || 100; }
-function ownerEmails(env){ return String(env.OWNER_EMAIL || '').toLowerCase().split(/[\s,;]+/).filter(Boolean); }
-function isOwner(env, a){ return !!(a && a.email && a.emailVerified !== false && ownerEmails(env).indexOf(String(a.email).toLowerCase()) >= 0); }
+/* addresses compared the way Google treats them: case, stray quotes and spaces ignored, and for
+   Gmail the dots and +tags too (seif.slama@gmail.com and SeifSlama+x@gmail.com are one inbox) */
+function normEmail(e){
+  e = String(e || '').trim().toLowerCase().replace(/^mailto:/, '').replace(/^["'<\s]+|["'>\s]+$/g, '');
+  var at = e.lastIndexOf('@'); if(at < 1) return e;
+  var local = e.slice(0, at), domain = e.slice(at + 1);
+  if(domain === 'gmail.com' || domain === 'googlemail.com'){ local = local.split('+')[0].replace(/\./g, ''); domain = 'gmail.com'; }
+  return local + '@' + domain;
+}
+function ownerEmails(env){ return String(env.OWNER_EMAIL || '').split(/[\s,;]+/).map(normEmail).filter(function(e){ return e.indexOf('@') > 0; }); }
+function isOwner(env, a){ return !!(a && a.email && a.emailVerified !== false && ownerEmails(env).indexOf(normEmail(a.email)) >= 0); }
 function projectId(env){ return env.FIRESTORE_EMULATOR_HOST ? (env.FIREBASE_PROJECT_ID || 'demo-seif') : JSON.parse(env.FIREBASE_SERVICE_ACCOUNT).project_id; }
 
 /* ---------- entry ---------- */
