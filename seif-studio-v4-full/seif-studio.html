@@ -8,20 +8,27 @@ window.SEIF_CONFIG = window.SEIF_CONFIG || { demo: true };
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seif Studio - 3D Apparel Design</title>
+<title>3D Design — Design by Seif</title>
+<meta name="theme-color" content="#EFE8DC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Design">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&family=Instrument+Serif:ital@0;1&family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!-- design fonts for text on garments (files download only when a font is used) -->
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Bungee&family=Black+Ops+One&family=Rubik+Mono+One&family=Righteous&family=Monoton&family=Press+Start+2P&family=Permanent+Marker&family=Pacifico&family=Lobster&family=Caveat:wght@400;700&family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Lalezar&family=Reem+Kufi:wght@400;700&family=Changa:wght@400;700;800&family=El+Messiri:wght@400;700&family=Rakkas&family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Marhey:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#ECEDE8; --panel:#FBFBF7; --ink:#1E2749; --ink2:#5A6178;
-  --red:#C3423F; --chalk:#8FA6C9; --line:#CDD0C4; --line2:#DDDFD5;
-  --amber:#B8801E; --green:#2C7A4B;
-  --disp:'Bricolage Grotesque',Georgia,serif;
-  --body:'Archivo',system-ui,-apple-system,sans-serif;
-  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --paper:#EFE8DC; --panel:#FBF8F2; --ink:#241C14; --ink2:#6E6354;
+  --red:#C2573A; --chalk:#A0937F; --line:#DCD1BF; --line2:#E7DDCC;
+  --amber:#B88320; --green:#5C7A47; --accent:#9A6A3C;
+  --disp:'Instrument Serif',Georgia,serif;
+  --body:'Geist',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --mono:'Geist Mono',ui-monospace,Menlo,monospace;
   --r:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -39,7 +46,7 @@ input,select,textarea{font-family:var(--body)}
 .btn:hover{background:var(--ink);color:var(--panel)}
 .btn:active{transform:scale(.97)}
 .btn.primary{background:var(--ink);color:var(--panel)}
-.btn.primary:hover{background:#2A3560}
+.btn.primary:hover{background:#3A2E22}
 .btn.red{border-color:var(--red);background:var(--red);color:#fff}
 .btn.red:hover{background:#A93532}
 .btn.small{padding:6px 12px;font-size:12px}
@@ -66,9 +73,9 @@ input,select,textarea{font-family:var(--body)}
 #app{display:none;height:100%;flex-direction:column}
 #app.on{display:flex}
 header.bar{height:58px;flex:0 0 58px;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1.5px solid var(--line);background:var(--panel)}
-.wordmark{font-family:var(--disp);font-weight:800;font-size:19px;letter-spacing:.01em;white-space:nowrap}
+.wordmark{font-family:var(--disp);font-weight:400;font-size:25px;letter-spacing:-.02em;line-height:1;white-space:nowrap;color:var(--ink);text-decoration:none;display:inline-flex;flex-direction:column;align-items:flex-start}
 .wordmark i{font-style:normal;color:var(--red)}
-.wordmark small{display:block;font-family:var(--mono);font-weight:400;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);line-height:1;margin-top:2px}
+.wordmark small{display:block;font-family:var(--body);font-weight:600;font-size:8px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent);line-height:1;margin-top:4px}
 .demobanner{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;background:#FBF0E4;border:1.5px solid #E0B075;color:#7A5320;border-radius:6px;padding:5px 10px;white-space:nowrap}
 .bar .spacer{flex:1}
 .bar .btn{white-space:nowrap}
@@ -99,10 +106,10 @@ main{flex:1;display:grid;grid-template-columns:230px 1fr 320px;min-height:0}
 /* panel sheet */
 #panelSheet{overflow-y:auto;padding:22px 28px 40px;background:var(--paper);background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);background-size:40px 40px}
 .sheethead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1.5px solid var(--ink);margin-bottom:22px}
-.sheettitle{font-family:var(--disp);font-weight:800;font-size:30px;line-height:1.05;margin:4px 0}
+.sheettitle{font-family:var(--disp);font-weight:400;font-size:30px;line-height:1.05;margin:4px 0}
 .panelcards{display:flex;flex-wrap:wrap;gap:22px;align-items:flex-end}
-.pcard{background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 rgba(30,39,73,.10);display:flex;flex-direction:column;cursor:pointer;transition:transform .12s;min-width:112px}
-.pcard:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 rgba(30,39,73,.14)}
+.pcard{background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;box-shadow:4px 4px 0 rgba(36,28,20,.10);display:flex;flex-direction:column;cursor:pointer;transition:transform .12s;min-width:112px}
+.pcard:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 rgba(36,28,20,.14)}
 .pcard .thumb{position:relative;flex:1;min-height:60px;background-image:linear-gradient(45deg,#e7e7e2 25%,transparent 25%),linear-gradient(-45deg,#e7e7e2 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e7e7e2 75%),linear-gradient(-45deg,transparent 75%,#e7e7e2 75%);background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0;border-bottom:1.5px solid var(--line)}
 .pcard .thumb canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .pcard .thumb .safe{position:absolute;inset:5%;border:1px dashed rgba(195,66,63,.6);pointer-events:none}
@@ -120,21 +127,21 @@ main{flex:1;display:grid;grid-template-columns:230px 1fr 320px;min-height:0}
 #artboard{background:var(--paper)}
 .abtoolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1.5px solid var(--line);background:var(--panel);flex-wrap:wrap}
 .abtoolbar .spacer{flex:1}
-.abtitle{font-family:var(--disp);font-weight:700;font-size:16px;white-space:nowrap}
+.abtitle{font-family:var(--disp);font-weight:400;font-size:19px;white-space:nowrap}
 .abzoom{min-width:44px;text-align:right}
 .menuwrap{position:relative}
-.menu{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:var(--panel);border:1.5px solid var(--ink);border-radius:8px;padding:4px;display:none;min-width:190px;box-shadow:4px 4px 0 rgba(30,39,73,.12)}
+.menu{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:var(--panel);border:1.5px solid var(--ink);border-radius:8px;padding:4px;display:none;min-width:190px;box-shadow:4px 4px 0 rgba(36,28,20,.12)}
 .menu.on{display:block}
 .menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:7px 10px;font-size:13px;color:var(--ink);border-radius:5px}
 .menu button:hover{background:#F1F1EA}
 .menu hr{border:none;border-top:1px dashed var(--line);margin:4px 0}
-#abStage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:radial-gradient(ellipse at 50% 42%,#f6f6f2 0%,#ECEDE8 80%)}
+#abStage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:radial-gradient(ellipse at 50% 42%,#F8F3EA 0%,#EAE2D4 80%)}
 #abCanvas{display:block;width:100%;height:100%;cursor:default;touch-action:none}
 #abCanvas.grab{cursor:grabbing}
 #abCanvas.move{cursor:move}
 .abempty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:13px;color:var(--ink2);pointer-events:none;background:rgba(251,251,247,.85);padding:14px 18px;border-radius:10px;border:1.5px dashed var(--line);line-height:1.5}
 .abempty b{display:block;color:var(--ink);margin-bottom:2px}
-#abStage.hot::after{content:"Drop to add the image";position:absolute;inset:12px;border:3px dashed var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:600;background:rgba(30,39,73,.06);pointer-events:none}
+#abStage.hot::after{content:"Drop to add the image";position:absolute;inset:12px;border:3px dashed var(--ink);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:600;background:rgba(36,28,20,.06);pointer-events:none}
 
 /* layer list */
 .layerlist{display:flex;flex-direction:column;gap:3px}
@@ -158,7 +165,7 @@ main{flex:1;display:grid;grid-template-columns:230px 1fr 320px;min-height:0}
 #mock{max-width:100%;max-height:100%;filter:drop-shadow(0 18px 22px rgba(30,32,42,0.20))}
 #photoEditCanvas,#npCanvas,#mapCanvas{display:block;width:100%;max-width:370px;aspect-ratio:1/1;border:1.5px solid var(--line);border-radius:8px;background:#fff;touch-action:none;cursor:crosshair;margin:10px 0}
 #specline{position:absolute;top:14px;left:34px;right:14px;pointer-events:none;display:flex;flex-direction:column;gap:2px;color:var(--ink)}
-#specline .name{font-family:var(--disp);font-weight:700;font-size:22px}
+#specline .name{font-family:var(--disp);font-weight:400;font-size:26px}
 #floorhint{position:absolute;bottom:12px;left:34px;pointer-events:none;color:var(--ink2)}
 .floorbtn{position:absolute;top:14px;right:14px}
 #three.turnable #mock{cursor:grab}
@@ -196,7 +203,7 @@ input[type=range]{accent-color:var(--red)}
 
 /* ---------- gate (unlock modal) ---------- */
 #gate .card{max-width:760px;text-align:center}
-#gate h1{font-family:var(--disp);font-weight:800;font-size:clamp(34px,6vw,54px);letter-spacing:-.02em;line-height:.95;margin:6px 0 4px}
+#gate h1{font-family:var(--disp);font-weight:400;font-size:clamp(34px,6vw,54px);letter-spacing:-.02em;line-height:.95;margin:6px 0 4px}
 #gate h1 i{font-style:normal;color:var(--red)}
 #gate .tag{margin:10px auto 6px;font-size:14.5px;color:var(--ink2);max-width:460px;line-height:1.55}
 #gate .cats{margin:10px auto 26px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--chalk)}
@@ -204,9 +211,9 @@ input[type=range]{accent-color:var(--red)}
 .acctbox .speclabel{flex-basis:100%}
 .acctbox .gmsg{flex-basis:100%;margin:0}
 .hangtags{display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
-.hangtag{position:relative;width:310px;background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;padding:34px 24px 26px;text-align:left;box-shadow:6px 6px 0 rgba(30,39,73,.12)}
+.hangtag{position:relative;width:310px;background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;padding:34px 24px 26px;text-align:left;box-shadow:6px 6px 0 rgba(36,28,20,.12)}
 .hangtag::before{content:"";position:absolute;top:12px;left:50%;transform:translateX(-50%);width:14px;height:14px;border-radius:50%;background:var(--paper);border:1.5px solid var(--ink)}
-.hangtag h3{font-family:var(--disp);font-weight:700;font-size:20px;margin:10px 0 6px}
+.hangtag h3{font-family:var(--disp);font-weight:400;font-size:24px;margin:10px 0 6px}
 .hangtag p{font-size:13px;color:var(--ink2);line-height:1.55;margin-bottom:14px}
 .hangtag .price{font-family:var(--mono);font-size:12px;color:var(--red);letter-spacing:.08em}
 .hangtag ul{list-style:none;margin:0 0 16px;font-size:12.5px;color:var(--ink2)}
@@ -222,7 +229,7 @@ input[type=range]{accent-color:var(--red)}
 /* ---------- preview lock (see, but can't touch) ---------- */
 #lockShield{position:fixed;inset:0;z-index:55;display:none;cursor:pointer;background:transparent}
 #lockShield.on{display:block}
-#lockBar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:56;display:none;align-items:center;gap:12px;background:var(--ink);color:var(--panel);border-radius:999px;padding:9px 10px 9px 18px;box-shadow:0 12px 30px rgba(30,39,73,.28);max-width:calc(100vw - 24px);white-space:nowrap}
+#lockBar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:56;display:none;align-items:center;gap:12px;background:var(--ink);color:var(--panel);border-radius:999px;padding:9px 10px 9px 18px;box-shadow:0 12px 30px rgba(36,28,20,.28);max-width:calc(100vw - 24px);white-space:nowrap}
 #lockBar.on{display:flex}
 #lockBar .lb-txt{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
 #lockBar .lb-txt small{display:block;font-weight:400;font-size:11.5px;opacity:.75}
@@ -233,11 +240,11 @@ input[type=range]{accent-color:var(--red)}
 #lockBar.shake{animation:lockshake .35s ease}
 
 /* ---------- 3D studio ---------- */
-#studio3d{background:radial-gradient(ellipse at 50% 40%,#ffffff 0%,#f4f4ef 58%,#e6e7e0 100%);overflow:hidden}
+#studio3d{background:radial-gradient(ellipse at 50% 40%,#FDFBF6 0%,#F3EDE2 58%,#E6DDCE 100%);overflow:hidden}
 .gl3dhost{position:absolute;inset:0;touch-action:none}
 .gl3dhost canvas{display:block;outline:none;touch-action:none;cursor:grab}
 .s3dnote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);text-align:center;max-width:80%;line-height:1.6}
-.s3dtools{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;background:rgba(251,251,247,.94);border:1.5px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(30,39,73,.12);z-index:5}
+.s3dtools{position:absolute;left:14px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;background:rgba(251,251,247,.94);border:1.5px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(36,28,20,.12);z-index:5}
 .s3dtools button{width:56px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:transparent;border-radius:10px;color:var(--ink);cursor:pointer;font-size:10px;font-weight:600}
 .s3dtools button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
 .s3dtools button:hover{background:#EFEFE8}
@@ -247,14 +254,14 @@ input[type=range]{accent-color:var(--red)}
 .s3dviews button{border:0;background:transparent;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
 .s3dviews button:hover{color:var(--ink);background:#EFEFE8}
 .s3dviews button[aria-pressed="true"]{background:var(--ink);color:#fff}
-.s3dpop{position:absolute;left:88px;top:50%;transform:translateY(-50%);width:300px;max-height:72%;overflow-y:auto;background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;padding:12px;z-index:6;box-shadow:0 14px 40px rgba(30,39,73,.2)}
+.s3dpop{position:absolute;left:88px;top:50%;transform:translateY(-50%);width:300px;max-height:72%;overflow-y:auto;background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;padding:12px;z-index:6;box-shadow:0 14px 40px rgba(36,28,20,.2)}
 .stickgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px}
 .stickgrid button{aspect-ratio:1;border:1.5px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center}
 .stickgrid button:hover{border-color:var(--ink)}
 .stickgrid button canvas{width:100%;height:100%}
 .stickgrid.emoji button{font-size:22px;line-height:1}
 .s3dhint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);white-space:nowrap;color:var(--ink2);pointer-events:none}
-.s3dmsg{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;max-width:80%;z-index:7;box-shadow:0 8px 24px rgba(30,39,73,.25)}
+.s3dmsg{position:absolute;bottom:42px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;max-width:80%;z-index:7;box-shadow:0 8px 24px rgba(36,28,20,.25)}
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 10px}
 .chips button{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:600;color:var(--ink2);cursor:pointer}
 .chips button.on{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -262,11 +269,11 @@ input[type=range]{accent-color:var(--red)}
 .brushseg{flex-wrap:wrap}
 .brushseg button{flex:1 0 30%}
 .minisw{display:flex;gap:4px;margin-left:8px;flex-wrap:wrap}
-.minisw button{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(30,39,73,.25);cursor:pointer;padding:0}
+.minisw button{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(36,28,20,.25);cursor:pointer;padding:0}
 .fillgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 10px}
 .fillgrid button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:3px 3px 4px;cursor:pointer;font-size:10px;font-weight:600;color:var(--ink2)}
 .fillgrid button canvas{width:100%;aspect-ratio:1.4;display:block;border-radius:7px;margin-bottom:3px}
-.fillgrid button.on{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 2px rgba(30,39,73,.15)}
+.fillgrid button.on{border-color:var(--ink);color:var(--ink);box-shadow:0 0 0 2px rgba(36,28,20,.15)}
 .actgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:4px}
 .actgrid .btn{padding:7px 4px;font-size:11.5px}
 .stylegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
@@ -325,12 +332,12 @@ input[type=range]{accent-color:var(--red)}
 }
 
 /* ---------- modal ---------- */
-.modal{position:fixed;inset:0;background:rgba(30,39,73,.35);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
+.modal{position:fixed;inset:0;background:rgba(36,28,20,.35);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .modal.on{display:flex}
 .modal.top{z-index:62}
 .modal .card{background:var(--panel);border:1.5px solid var(--ink);border-radius:14px;max-width:430px;width:100%;padding:26px;max-height:88vh;overflow-y:auto}
 .modal .card.wide{max-width:520px}
-.modal .card h3{font-family:var(--disp);font-size:21px;margin-bottom:4px}
+.modal .card h3{font-family:var(--disp);font-weight:400;font-size:28px;letter-spacing:-.02em;margin-bottom:4px}
 .modal .card .sub{font-size:12.5px;color:var(--ink2);margin-bottom:16px;line-height:1.5}
 .modal .x{float:right;border:none;background:none;font-size:20px;color:var(--ink2);line-height:1}
 .demoflag{background:#FBF0E4;border:1.5px solid #E0B075;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.55;color:#7A5320;margin-bottom:16px}
@@ -364,8 +371,12 @@ input[type=range]{accent-color:var(--red)}
 @media (max-width:900px){
   main{grid-template-columns:1fr;grid-template-rows:auto 1fr;position:relative}
   header.bar{gap:8px;padding:0 12px;overflow-x:auto}
-  .wordmark small,#saveStatus,#myProductsBtn{display:none}
-  .modeseg{width:140px}
+  .wordmark small,#saveStatus,#myProductsBtn,#dashBtn{display:none!important}
+  header.bar #toStoreBtn .lg{display:none}
+  header.bar #toStoreBtn .sm{display:inline}
+  .modeseg{width:104px}
+  #redoBtn{display:none}
+  .wordmark{font-size:21px}
   .modeseg button{padding:6px 2px;font-size:11.5px}
   .wordmark{font-size:16px}
   #exportBtn,#signoutBtn{padding:5px 9px;font-size:11px}
@@ -388,7 +399,7 @@ input[type=range]{accent-color:var(--red)}
   .turnrow{bottom:70px}
   .turnrow input[type=range]{width:110px}
   /* bottom sheet with three detents: peek / half / full */
-  #sheet{position:absolute;left:0;right:0;bottom:0;top:auto;height:82vh;border-left:none;border-top:1.5px solid var(--ink);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(30,39,73,.18);transform:translateY(calc(82vh - 56px));transition:transform .25s ease;padding:0 16px 40px;z-index:30;overflow:hidden;display:flex;flex-direction:column}
+  #sheet{position:absolute;left:0;right:0;bottom:0;top:auto;height:82vh;border-left:none;border-top:1.5px solid var(--ink);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(36,28,20,.18);transform:translateY(calc(82vh - 56px));transition:transform .25s ease;padding:0 16px 40px;z-index:30;overflow:hidden;display:flex;flex-direction:column}
   #sheet.half{transform:translateY(calc(82vh - 46vh))}
   #sheet.full{transform:translateY(0)}
   #sheet.dragging{transition:none}
@@ -415,6 +426,18 @@ input[type=range]{accent-color:var(--red)}
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
 }
+/* ---------- Design by Seif ---------- */
+#gate .hangtags{display:none}
+#toStoreBtn .sm{display:none}
+#gate .acctbox{margin-top:18px}
+.tsrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tschip{height:34px;min-width:44px;padding:0 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);font-weight:600;font-size:13px;color:var(--ink2)}
+.tschip.on{background:var(--ink);border-color:var(--ink);color:var(--panel)}
+.tssw{width:30px;height:30px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1.5px var(--line);cursor:pointer;padding:0}
+.tssw.on{box-shadow:0 0 0 2px var(--ink)}
+.tslab{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin-top:14px}
+.tsprev{display:flex;gap:6px;overflow-x:auto;margin-top:10px}
+.tsprev img{width:72px;height:96px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:none}
 </style>
 </head>
 <body>
@@ -427,7 +450,7 @@ input[type=range]{accent-color:var(--red)}
 <!-- The shield is unused on the live build (the T-shirt is a free trial); the bar shows the trial's terms. -->
 <div id="lockShield" aria-hidden="true"></div>
 <div id="lockBar" role="status">
-  <span class="lb-txt"><span id="lbTitle">Free trial &middot; T-shirt</span><small id="lbSub">Sign in to unlock every garment and export</small></span>
+  <span class="lb-txt"><span id="lbTitle">Designing as a guest</span><small id="lbSub">Sign in to save your work and export — it’s free</small></span>
   <button id="lockBarBtn" class="btn">Sign in</button>
 </div>
 
@@ -435,10 +458,10 @@ input[type=range]{accent-color:var(--red)}
 <div class="modal" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
   <div class="card">
     <button class="x" data-close="gate" aria-label="Close">&times;</button>
-    <div class="speclabel" style="margin-bottom:10px">Spec sheet no. 001 &middot; Studio locked</div>
-    <h1 id="gateTitle">UNLOCK SEIF STUDIO<i>.</i></h1>
+    <div class="speclabel" style="margin-bottom:10px">Design by Seif &middot; free account</div>
+    <h1 id="gateTitle">Sign in to keep going<i>.</i></h1>
     <p class="tag" id="gateTag">Sign in with Google &mdash; your work follows you to any device.</p>
-    <div class="cats">Tops &middot; Bottoms &middot; Hats &middot; Socks &middot; Bags &middot; Ties &middot; Accessories</div>
+    
 
     <!-- live build: the account that owns the subscription and the saved designs -->
     <div id="acctBox" class="acctbox hidden">
@@ -470,7 +493,7 @@ input[type=range]{accent-color:var(--red)}
 <!-- ================= APP ================= -->
 <div id="app">
   <header class="bar">
-    <div class="wordmark">SEIF STUDIO<i>.</i><small>3D apparel studio</small></div>
+    <a class="wordmark" href="/" title="Design by Seif — home">Design<small>by Seif</small></a>
     <div id="demoBanner" class="demobanner hidden" title="Nothing enforced in client JavaScript is enforced. A server must supply SEIF_CONFIG before launch.">DEMO MODE &mdash; access is not enforced</div>
     <div class="seg modeseg" id="modeSeg" role="radiogroup" aria-label="Workspace">
       <button data-mode="3d" role="radio" aria-checked="false" class="hidden">3D</button>
@@ -484,7 +507,9 @@ input[type=range]{accent-color:var(--red)}
       <button id="redoBtn" class="btn ghost small" title="Redo" aria-label="Redo" disabled>&#8631;</button>
     </div>
     <button id="myProductsBtn" class="btn ghost small">My products</button>
-    <button id="exportBtn" class="btn primary small">Export</button>
+    <button id="exportBtn" class="btn ghost small">Export</button>
+    <button id="toStoreBtn" class="btn primary small hidden" title="Make this design a product in your store"><span class="lg">Add to my store</span><span class="sm">+ Store</span></button>
+    <a id="dashBtn" class="btn ghost small hidden" href="/dashboard">Dashboard</a>
     <button id="ownerBtn" class="btn ghost small hidden" title="Your private dashboard">Admin</button>
     <button id="signoutBtn" class="btn primary small signin">Sign in</button>
   </header>
@@ -885,6 +910,17 @@ input[type=range]{accent-color:var(--red)}
       <input type="file" id="exOpenFile" accept="application/json,.json" class="hidden">
     </div>
     <div id="exOpenMsg" class="gmsg"></div>
+  </div>
+</div>
+
+<!-- ================= ADD TO MY STORE ================= -->
+<div class="modal" id="storeModal" role="dialog" aria-modal="true" aria-labelledby="tsHead">
+  <div class="card">
+    <button class="x" data-close="storeModal" aria-label="Close">&times;</button>
+    <h3 id="tsHead">Add to my store</h3>
+    <div class="sub">Your design becomes a product: a photo for every colour you pick, with sizes.</div>
+    <div id="tsBody"></div>
+    <div id="tsMsg" class="gmsg" aria-live="polite"></div>
   </div>
 </div>
 
@@ -4578,13 +4614,12 @@ function renderRack(){
     host.appendChild(head);
     items.forEach(function(p){
       var b = document.createElement('button');
-      b.className = 'rackitem' + (p.id === project.productId ? ' on' : '') + (!hasFullAccess() && p.id !== TRIAL_PRODUCT ? ' trial-locked' : '');
+      b.className = 'rackitem' + (p.id === project.productId ? ' on' : '');
       b.dataset.pid = p.id;
       b.setAttribute('aria-label', p.name + (productHasWork(p.id) ? ' (has a design)' : ''));
       b.innerHTML = '<span class="sku">' + p.sku + '</span><span>' + p.name + '</span>' + (productHasWork(p.id) ? '<span class="dot" title="Has a design"></span>' : '');
       b.addEventListener('click', function(){
         if(p.id === project.productId) return;
-        if(p.id !== TRIAL_PRODUCT && !trialAllows('product', p.id)) return;
         buildProduct(p.id);
       });
       host.appendChild(b);
@@ -4905,10 +4940,10 @@ function bindUI(){
 
 /* ============================================================
    ACCESS
-   Live build: the T-shirt is a free trial for everyone, kept in this browser. Other
-   garments, exports and My products need a Google account with an active subscription;
-   the owner (OWNER_EMAIL on the server) always has one. The server decides through
-   /api/session and /api/checkout; nothing enforced here is trusted for payment.
+   Live build: anyone can design anything; that work stays in this browser. Exports,
+   My products and Add to my store need a (free) Google account, and a signed-in
+   account keeps its designs on the server. The membership only matters for taking a
+   store live, which the dashboard and the server handle.
    DEMO_MODE: everything is open and local; nothing is enforced.
    ============================================================ */
 var TRIAL_PRODUCT = 'tee';
@@ -4926,29 +4961,29 @@ function unlockStudio(){
   $('lockShield').classList.remove('on');
   closeModal('gate');
 }
-function hasFullAccess(){ return DEMO_MODE || !!account.active; }
+function hasFullAccess(){ return DEMO_MODE || !!account.signedIn; }
 var WALL_TEXT = {
-  product: 'The free trial covers the T-shirt. Every other garment comes with the subscription.',
-  export: 'Exporting mockups and 300 DPI print files comes with the subscription.',
-  my_products: 'Bringing your own blank products comes with the subscription.'
+  export: 'Exporting mockups and 300 DPI print files needs a free account.',
+  my_products: 'Bringing your own blank products needs a free account.',
+  store: 'Sign in to put your designs in your own store.'
 };
-/* the wall between the free trial and the rest: sign in first, then pay */
+/* the only wall: sign in (free). Nothing here asks for payment. */
 function trialAllows(reason, product){
   if(hasFullAccess()) return true;
   track('wall', product || null, reason, true);
-  if(account.signedIn){ openPay(WALL_TEXT[reason]); return false; }
   openGate(WALL_TEXT[reason]);
   return false;
 }
 function openGate(reasonText){
-  $('priceTag').textContent = PRICE + ' · PER ' + PRICE_PERIOD.replace('/', '').toUpperCase();
-  $('gateTitle').innerHTML = (reasonText ? 'SIGN IN TO CONTINUE' : 'SIGN IN TO SEIF STUDIO') + '<i>.</i>';
-  $('gateTag').textContent = (reasonText ? reasonText + ' ' : '') + 'Sign in with Google — your T-shirt design comes with you, and your work follows you to any device.';
+  $('gateTitle').innerHTML = (reasonText ? 'Sign in to keep going' : 'Sign in to Design') + '<i>.</i>';
+  $('gateTag').textContent = (reasonText ? reasonText + ' ' : '') + 'It’s free — what you designed here comes with you, and your work follows you to any device.';
   $('payOpenMsg').textContent = '';
   openModal('gate');
   setTimeout(function(){ try { $('googleBtn').focus(); } catch(e){} }, 50);
 }
 function openPay(note){
+  /* memberships live on their own page now */
+  if(!DEMO_MODE){ location.href = '/pricing'; return; }
   closeModal('gate');
   $('payPrice').textContent = PRICE + PRICE_PERIOD;
   $('payDemo').classList.toggle('hidden', !DEMO_MODE);
@@ -4976,10 +5011,10 @@ async function api(path, body, opts){
 async function checkSession(){
   if(DEMO_MODE) return true;
   try { account = await api('/api/session'); } catch(e){ account = { signedIn: false, active: false }; }
-  /* the trial lives in this browser; an active account keeps its work on the server */
-  store.cloud = !!(account.signedIn && account.active);
+  /* a guest's work lives in this browser; a signed-in account keeps its work on the server */
+  store.cloud = !!account.signedIn;
   store.sharedCloud = true;
-  return !!account.active;
+  return !!account.signedIn;
 }
 
 /* ============================================================
@@ -5055,24 +5090,24 @@ function renderAccount(){
   $('googleBtn').classList.toggle('hidden', !!account.signedIn);
   $('acctOutBtn').classList.toggle('hidden', !account.signedIn);
   $('acctTxt').textContent = account.signedIn
-    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + (account.active ? '' : ' — subscribe below to unlock everything.')
-    : 'Sign in so your designs and subscription follow you to any device.';
-  $('signoutBtn').textContent = account.signedIn ? 'Sign out' : 'Sign in';
-  $('signoutBtn').title = account.signedIn ? 'Sign out of ' + (account.email || 'your account') : 'Sign in with Google';
-  $('signoutBtn').classList.toggle('primary', !account.signedIn);
-  $('signoutBtn').classList.toggle('ghost', !!account.signedIn);
-  $('ownerBtn').classList.toggle('hidden', !account.owner);
-  /* the trial bar: what the free trial covers, and the way out of it */
-  var trial = !account.active;
-  $('lockBar').classList.toggle('on', trial);
-  $('lbTitle').textContent = 'Free trial · T-shirt';
-  $('lbSub').textContent = account.signedIn ? 'Subscribe to unlock every garment and export' : 'Sign in to unlock every garment and export';
-  $('lockBarBtn').textContent = account.signedIn ? 'Subscribe' : 'Sign in';
+    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + '.'
+    : 'Sign in so your designs follow you to any device.';
+  /* signed in: the dashboard and Add to my store; a guest: Sign in */
+  $('signoutBtn').textContent = 'Sign in';
+  $('signoutBtn').classList.toggle('hidden', !!account.signedIn);
+  $('dashBtn').classList.toggle('hidden', !account.signedIn);
+  document.querySelector('header.bar .wordmark').setAttribute('href', account.signedIn ? '/dashboard' : '/');
+  $('toStoreBtn').classList.toggle('hidden', !account.signedIn);
+  $('ownerBtn').classList.add('hidden');
+  /* the guest bar: work stays in this browser until they sign in */
+  $('lockBar').classList.toggle('on', !account.signedIn);
+  $('lbTitle').textContent = 'Designing as a guest';
+  $('lbSub').textContent = 'Sign in to save your work and export — it’s free';
+  $('lockBarBtn').textContent = 'Sign in';
   syncTrialRack();
 }
 function syncTrialRack(){
-  var open = hasFullAccess();
-  document.querySelectorAll('.rackitem').forEach(function(x){ x.classList.toggle('trial-locked', !open && x.dataset.pid !== TRIAL_PRODUCT); });
+  document.querySelectorAll('.rackitem').forEach(function(x){ x.classList.remove('trial-locked'); });
 }
 async function signInAccount(){
   var btn = $('googleBtn');
@@ -5085,12 +5120,8 @@ async function signInAccount(){
     var cred = await auth.signInWithPopup(provider);
     account = await api('/api/login', { idToken: await cred.user.getIdToken(), vid: visitorId() });
     auth.signOut().catch(function(){});
-    if(account.active){ gmsg('acctMsg', 'Welcome back — loading your designs…', true); location.reload(); return; }
-    btn.disabled = false; $('acctMsg').textContent = '';
-    renderAccount();
-    /* signed in, not subscribed yet: straight to payment */
-    openPay('Signed in as ' + (account.email || 'your Google account') + '. Choose how to pay to unlock every garment and export.');
-    return;
+    /* start over signed in: the account's designs load, and this browser's work moves into it */
+    gmsg('acctMsg', 'Signed in — loading your designs…', true); location.reload(); return;
   } catch(e){
     var code = e && e.code;
     gmsg('acctMsg', code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' ? 'Sign-in was cancelled.'
@@ -5101,6 +5132,7 @@ async function signInAccount(){
 }
 async function signOutAccount(){
   await fetch(API_BASE + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
+  try { sessionStorage.removeItem('ds.session'); } catch(e){}
   location.href = '/';
 }
 /* designs saved in this browser before the customer had an active account move into it once,
@@ -5142,7 +5174,7 @@ async function migrateSharedSettings(){
 }
 function bindLock(){
   $('lockShield').addEventListener('click', function(e){ e.preventDefault(); openGate(); });
-  $('lockBarBtn').addEventListener('click', function(){ if(account.signedIn) openPay(); else openGate(); });
+  $('lockBarBtn').addEventListener('click', function(){ if(!account.signedIn) openGate(); });
   $('app').addEventListener('focusin', function(e){
     if(!locked) return;
     if(e.target && e.target.blur) e.target.blur();
@@ -6009,6 +6041,115 @@ function bindExport(){
     rd.readAsText(f);
   });
 }
+/* ============================================================
+   ADD TO MY STORE — the design becomes a product in one of the account's
+   stores: a photo per chosen colour (3D render on the brand backdrop),
+   Colour and Size options, the colour photos wired to the colours.
+   ============================================================ */
+var TS = { stores: null, sid: null, colors: null, sizes: ['S', 'M', 'L', 'XL'] };
+var TS_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+function bindToStore(){
+  $('toStoreBtn').addEventListener('click', function(){ if(!trialAllows('store', project.productId)) return; openToStore(); });
+}
+async function openToStore(){
+  $('tsMsg').textContent = '';
+  $('tsBody').innerHTML = '<p class="tiny">Loading your stores…</p>';
+  openModal('storeModal');
+  try { TS.stores = (await api('/api/stores')).stores; }
+  catch(e){ $('tsBody').innerHTML = ''; gmsg('tsMsg', 'Could not load your stores: ' + e.message); return; }
+  if(!TS.stores.length){
+    $('tsBody').innerHTML = '<p class="tiny" style="font-size:13px">You don’t have a store yet. Make one in a minute — it’s free to build — then come back and add this design.</p><a class="btn primary" style="display:block;text-align:center;margin-top:12px;text-decoration:none" href="/dashboard/new">Create your store</a>';
+    return;
+  }
+  if(!TS.sid || !TS.stores.some(function(x){ return x.sid === TS.sid; })){ var last = null; try { last = localStorage.getItem('ds.sid'); } catch(e){} TS.sid = TS.stores.some(function(x){ return x.sid === last; }) ? last : TS.stores[0].sid; }
+  TS.colors = [project.garmentColor];
+  var def = currentDef(), saved = TS.title && TS.titleFor === project.productId ? TS.title : '';
+  var palette = GARMENT_COLORS.map(function(c){ return c.hex; });
+  if(palette.map(function(h){ return h.toLowerCase(); }).indexOf(project.garmentColor.toLowerCase()) < 0) palette.unshift(project.garmentColor);
+  $('tsBody').innerHTML = (TS.stores.length > 1 ? '<label class="tslab">Store</label><select id="tsStore" class="field" style="margin-top:6px">' + TS.stores.map(function(x){ return '<option value="' + esc(x.sid) + '"' + (x.sid === TS.sid ? ' selected' : '') + '>' + esc(x.name) + ' — /' + esc(x.slug) + '</option>'; }).join('') + '</select>' : '<p class="tiny" style="font-size:13px">Into <b>' + esc(TS.stores[0].name) + '</b> — /' + esc(TS.stores[0].slug) + '</p>')
+    + '<label class="tslab">Product name</label><input id="tsTitle" class="field" style="margin-top:6px" maxlength="120" value="' + esc(saved || (def ? def.name : 'New design')) + '">'
+    + '<label class="tslab">Price</label><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input id="tsPrice" class="field" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 650" value="' + esc(TS.price || '') + '" style="max-width:160px"><span class="tiny" style="margin:0">EGP</span></div>'
+    + '<label class="tslab">Colours <span style="text-transform:none;letter-spacing:0">— one photo each</span></label><div class="tsrow" id="tsColors">' + palette.map(function(h){ return '<button class="tssw' + (h.toLowerCase() === project.garmentColor.toLowerCase() ? ' on' : '') + '" data-c="' + esc(h) + '" title="' + esc(colorNameFor(h)) + '" style="background:' + esc(h) + '"></button>'; }).join('') + '</div>'
+    + '<label class="tslab">Sizes</label><div class="tsrow" id="tsSizes">' + TS_SIZES.map(function(z){ return '<button class="tschip' + (TS.sizes.indexOf(z) >= 0 ? ' on' : '') + '" data-z="' + z + '">' + z + '</button>'; }).join('') + '</div>'
+    + '<div class="tsprev" id="tsPrev"></div>'
+    + '<button id="tsGo" class="btn primary" style="width:100%;margin-top:16px">Add to store</button>';
+  var st = $('tsStore'); if(st) st.onchange = function(){ TS.sid = st.value; };
+  document.querySelectorAll('#tsColors [data-c]').forEach(function(b){ b.onclick = function(){
+    var h = b.dataset.c, i = TS.colors.indexOf(h);
+    if(i >= 0){ if(TS.colors.length > 1){ TS.colors.splice(i, 1); b.classList.remove('on'); } }
+    else if(TS.colors.length < 8){ TS.colors.push(h); b.classList.add('on'); }
+    else gmsg('tsMsg', 'Up to 8 colours at a time.');
+  }; });
+  document.querySelectorAll('#tsSizes [data-z]').forEach(function(b){ b.onclick = function(){
+    var z = b.dataset.z, i = TS.sizes.indexOf(z);
+    if(i >= 0) TS.sizes.splice(i, 1); else TS.sizes.push(z);
+    TS.sizes.sort(function(a, c){ return TS_SIZES.indexOf(a) - TS_SIZES.indexOf(c); });
+    b.classList.toggle('on', i < 0);
+  }; });
+  $('tsGo').onclick = addToStore;
+}
+/* the product photo: the render on the same warm backdrop as the sample stores, 3:4 */
+function productShot(src){
+  var W = 900, H = 1200, o = document.createElement('canvas'); o.width = W; o.height = H;
+  var g = o.getContext('2d');
+  var gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#F1ECE3'); gr.addColorStop(1, '#E4DCCF'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  var rg = g.createRadialGradient(W / 2, H * 0.42, 40, W / 2, H * 0.42, W * 0.8); rg.addColorStop(0, 'rgba(255,255,255,.55)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  g.save(); g.filter = 'blur(26px)'; g.fillStyle = 'rgba(60,45,30,.18)'; g.beginPath(); g.ellipse(W / 2, H * 0.9, W * 0.34, 34, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  var k = Math.min(1190 / src.width, 1190 / src.height), w = src.width * k, h = src.height * k;
+  g.drawImage(src, (W - w) / 2, (H - h) / 2 - 24, w, h);
+  return o.toDataURL('image/jpeg', 0.86);
+}
+async function addToStore(){
+  var title = ($('tsTitle').value || '').trim(), price = +$('tsPrice').value;
+  if(!title){ gmsg('tsMsg', 'Give it a name.'); return; }
+  if(!($('tsPrice').value !== '' && price >= 0)){ gmsg('tsMsg', 'Add a price.'); $('tsPrice').focus(); return; }
+  if(!TS.sizes.length){ gmsg('tsMsg', 'Pick at least one size.'); return; }
+  TS.title = title; TS.titleFor = project.productId; TS.price = price;
+  var btn = $('tsGo'); btn.disabled = true;
+  var three = is3D(project.productId) && (await s3dEnsure());
+  var orig = project.garmentColor, images = [], vimg = {}, names = [], prev = $('tsPrev');
+  var backHas = layersFor('back').length > 0;
+  try {
+    for(var i = 0; i < TS.colors.length; i++){
+      var hex = TS.colors[i], nm = colorNameFor(hex);
+      if(/^[0-9A-F]{6}$/i.test(nm)) nm = 'Custom #' + nm.toUpperCase();
+      while(names.indexOf(nm) >= 0) nm += '+';
+      names.push(nm);
+      gmsg('tsMsg', 'Photographing ' + nm + ' (' + (i + 1) + ' of ' + TS.colors.length + ')…', true);
+      setGarmentColor(hex); await wait(80);
+      var cv = three ? s3dRenderView('front', 1200, {}) : compositeView(project.productId, 'front', { px: 1200, stamp: false });
+      var data = productShot(cv);
+      var up = await api('/api/stores/' + TS.sid + '/media', { data: data, w: 900, h: 1200 });
+      images.push(up.url); vimg[nm] = up.url;
+      prev.insertAdjacentHTML('beforeend', '<img src="' + esc(data) + '" alt="">');
+      if(i === 0 && backHas && three){
+        var bv = productShot(s3dRenderView('back', 1200, {}));
+        var ub = await api('/api/stores/' + TS.sid + '/media', { data: bv, w: 900, h: 1200 });
+        images.splice(1, 0, ub.url);
+        prev.insertAdjacentHTML('beforeend', '<img src="' + esc(bv) + '" alt="">');
+      }
+    }
+    setGarmentColor(orig);
+    gmsg('tsMsg', 'Creating the product…', true);
+    var options = [{ name: 'Color', values: names }, { name: 'Size', values: TS.sizes.slice() }], variants = [];
+    names.forEach(function(n){ TS.sizes.forEach(function(z){ variants.push({ id: Math.random().toString(36).slice(2, 8), o: [n, z], price: null, stock: null }); }); });
+    var def = currentDef();
+    var r = await api('/api/stores/' + TS.sid + '/products', { title: title, price: price, images: images, options: options, variants: variants, variantImages: vimg,
+      category: def && def.cat ? def.cat.charAt(0) + def.cat.slice(1).toLowerCase() : '', status: 'active', featured: true, trackStock: false,
+      description: '', designKey: 'seifstudio:project:' + project.productId });
+    track('store_add', project.productId, names.length + ' colours');
+    $('tsBody').innerHTML = '<p style="font-size:14px;margin-top:10px"><b>' + esc(title) + '</b> is in your store with ' + names.length + ' colour' + (names.length === 1 ? '' : 's') + ' and ' + TS.sizes.length + ' size' + (TS.sizes.length === 1 ? '' : 's') + '.</p>'
+      + '<div class="tsprev">' + prev.innerHTML + '</div>'
+      + '<a class="btn primary" style="display:block;text-align:center;margin-top:14px;text-decoration:none" href="/dashboard/products/' + encodeURIComponent(r.product.pid) + '">Edit in your dashboard</a>'
+      + '<button class="btn ghost" style="width:100%;margin-top:8px" data-close="storeModal">Keep designing</button>';
+    $('tsBody').querySelector('[data-close]').onclick = function(){ closeModal('storeModal'); };
+    $('tsMsg').textContent = '';
+  } catch(e){
+    setGarmentColor(orig);
+    btn.disabled = false;
+    gmsg('tsMsg', 'Could not add it: ' + e.message);
+  }
+}
 function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 async function runExport(){
   var btn = $('exGo'); btn.disabled = true;
@@ -6224,6 +6365,7 @@ async function init(){
   bindColorsAdmin();
   bindMyProducts();
   bindExport();
+  bindToStore();
   bindSheet();
   bindTurntable();
   if(typeof bindEditor === 'function') bindEditor();
@@ -7715,7 +7857,7 @@ function s3dRenderView(view, px, opts){
   if(opts.bg && opts.bg !== 'transparent'){
     var out = document.createElement('canvas'); out.width = out.height = px;
     var o = out.getContext('2d'), gr = o.createRadialGradient(px / 2, px * 0.4, px * 0.05, px / 2, px * 0.45, px * 0.75);
-    gr.addColorStop(0, '#FBFBF7'); gr.addColorStop(1, '#E2E3DC'); o.fillStyle = gr; o.fillRect(0, 0, px, px);
+    gr.addColorStop(0, '#F8F3EA'); gr.addColorStop(1, '#E6DDCF'); o.fillStyle = gr; o.fillRect(0, 0, px, px);
     o.drawImage(c, 0, 0); c = out;
   }
   if(opts.watermark && typeof drawWatermark === 'function') drawWatermark(c.getContext('2d'), px);
@@ -8056,13 +8198,13 @@ async function s3dContactSheet(){
     var c = document.createElement('canvas');
     c.width = cols * (cell + pad) + pad; c.height = rows * (cell + label + pad) + pad;
     var ctx = c.getContext('2d');
-    ctx.fillStyle = '#ECEDE8'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = '#EFE8DC'; ctx.fillRect(0, 0, c.width, c.height);
     var base = S3D.src.base;
     try {
       GARMENT_COLORS.forEach(function(col, i){
         var x = pad + (i % cols) * (cell + pad), y = pad + Math.floor(i / cols) * (cell + label + pad);
         S3D.src.base = function(){ return col.hex; };
-        ctx.fillStyle = '#FBFBF7'; ctx.fillRect(x, y, cell, cell + label);
+        ctx.fillStyle = '#FBF8F2'; ctx.fillRect(x, y, cell, cell + label);
         ctx.drawImage(s3dRenderView(view, cell, { bg: 'studio' }), x, y);
         ctx.fillStyle = col.hex; ctx.fillRect(x + 12, y + cell + 12, 20, 20);
         ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.strokeRect(x + 12.5, y + cell + 12.5, 19, 19);

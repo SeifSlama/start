@@ -1,20 +1,118 @@
-# Seif Studio v4 — 3D T-shirt studio and panel-based apparel mockups
+# Design by Seif — design clothes in 3D, build a store, sell with cash on delivery
 
-A garment is a set of **flat panels** (the pieces a factory prints, with real cm sizes). The **T-shirt is 3D**: a
-hollow tee the customer turns in every direction and designs on directly — anywhere, under the arms and across the
-seams too — and every pixel lands on the real sewing pattern piece that gets printed. The other garments are
-designed panel by panel on flat artboards and assembled onto garment photos for the mockup. Every panel exports as a
-print file.
+A small Shopify for Egyptian clothing brands. People design T-shirts on a real 3D model, turn a design into a product
+in one tap, and sell it from their own store at `yoursite/store-name`, with cash-on-delivery orders from all 27
+governorates. A private dashboard shows orders, customers, products and numbers; the look of each store is edited
+live in a theme editor. Building is free; a monthly membership (`PRICE_EGP`, default 500) takes a store live.
 
-Single-file web app, no bundler. `build.sh` concatenates `src/` into `seif-studio.html`; the only client library is
-three.js, self-hosted as one ES module in `assets/vendor/` and loaded when the 3D studio first opens.
+Light beige design system shared by every page (Instrument Serif + Geist), with a top bar and an iOS-style
+liquid-glass tab bar on phones; add it to the iPhone home screen and it opens like an app.
 
-## Source layout (concat order)
+## What's where
+
+| Path | What |
+|---|---|
+| `site/shared/ds.css`, `shell.js` | The design system and app shell: tokens, type, buttons, cards, forms, glass top bar, liquid-glass tab bar (drag the pill), menu sheet, sheets, toasts, Google sign-in, session, install banner |
+| `site/pages/*.html` | Landing (`/`), membership (`/pricing`), `/terms`, `/privacy`, `/contact`. Includes: `<!--@head title="…" desc="…"-->`, `<!--@shell-->`, `<!--@engine-->` |
+| `site/dashboard/` | The merchant app at `/dashboard/…` (and `/admin` for the owner): `_page.html` + CSS + JS parts joined in name order — core/routes, create-a-store wizard, home, orders, products, customers & discounts, theme editor, settings, admin, start |
+| `site/store/i18n.js` | Store words in English and Arabic, Egypt's governorates, colour names → swatches |
+| `site/store/themes.js` | Six themes (Atelier, Concrete, Bloom, Noir, Souk, Gallery), palettes, fonts, section types, Remix, and the checks that keep stored settings safe to put in CSS |
+| `site/store/render.js` | The storefront renderer: one pure function from (theme, settings, products, page) to HTML. The server uses it for every store page; the dashboard and landing page use it for live previews |
+| `site/store/store.css`, `runtime.js` | Every store's stylesheet and its one script: bag, options and stock, checkout, order tracking, countdowns, the preview bridge |
+| `site/store/demo.js`, `preview.js` | Sample products (photos in `site/static/demo/`, rendered with the studio) and the in-page preview |
+| `site/static/` | Icons, manifest, service worker, offline page, sample photos — copied into `dist/` |
+| `worker/stores.js` | Stores, products, photos, orders, customers, discounts, numbers, store pages |
+| `worker/index.js` | Accounts, sessions, membership, saved designs, the owner's API, routing |
+| `src/` | The 3D studio (see below) |
+| `tools/build.js` | Builds everything into `dist/` (also `seif-studio.html`, the studio on its own) |
+| `tools/render-demo.mjs`, `render-hero.mjs` | Re-render the sample product photos with the studio |
+
+## Build
+
+```
+./build.sh          # = node tools/build.js
+```
+
+`dist/` is exactly what gets uploaded to Cloudflare Pages: the pages, `design.html` (the studio), `ds/`, `sf/`,
+`assets/`, icons and `_worker.js` (the store renderer + `worker/stores.js` + `worker/index.js`).
+
+## Deploy (Cloudflare Pages + Firebase)
+
+Zip the **contents** of `dist/` (files at the top of the zip) and upload it to the Pages project. Every upload is a
+deployment you can roll back to.
+
+Pages → Settings → Variables and Secrets (Production), then upload again so they apply:
+
+| Name | Type | Value |
+|---|---|---|
+| `FIREBASE_SERVICE_ACCOUNT` | Secret | the whole JSON from Firebase → Project settings → Service accounts → Generate new private key |
+| `SESSION_SECRET` | Secret | 32+ random characters |
+| `FIREBASE_API_KEY` | Text | the web app's `apiKey` (public by design) |
+| `OWNER_EMAIL` | Text | the owner's Google address (several: comma-separated) |
+| `PRICE_EGP` | Text | the monthly membership, default **500** |
+| `PAYMOB_*` | Secret | for online payment later (not used by the pages yet) |
+
+One-time Firebase setup: Authentication → Sign-in method → Google → Enable; Authentication → Settings →
+Authorized domains → add the Pages domain (and any custom domain). Firestore stays in production mode with
+deny-all rules — only the server's service account reads or writes it.
+
+Until `SESSION_SECRET` and `FIREBASE_SERVICE_ACCOUNT` are set the site runs as a demo (no accounts, `/api/*` → 503).
+
+## How it works
+
+- **Accounts.** Google sign-in through Firebase Authentication in the browser; the server verifies the ID token once
+  and sets its own signed `ss_session` cookie (40 days). Signing in is free.
+- **Membership.** Publishing a store needs an active membership; building, designing and exporting don't. Online
+  payment (Paymob) is not switched on yet: the membership page has *Request activation*, which shows up in the
+  owner's admin (`/admin` → Accounts → *+31 days*). When a membership ends the store shows “opening soon”; nothing is
+  deleted.
+- **Stores** live at `/<slug>`. Pages: home, `/shop` (categories, search, sort), `/p/<handle>`, `/cart`, `/checkout`,
+  `/order/<n>?k=<key>`, `/track`, `/pages/about|returns|shipping|privacy|terms`. Each store's data is kept in memory
+  for 20 seconds per server instance, so a saved change shows within seconds. The owner sees an unpublished store
+  with a preview bar and can place test orders.
+- **Orders** are cash on delivery. The server re-prices everything, checks stock, the governorate's delivery price
+  (or “no delivery”), the discount code and the Egyptian mobile number, then writes the order, the store's order
+  counter, the stock, the customer and the day's numbers in one guarded commit. Cancelling puts stock back.
+- **Photos** are resized in the browser (≤1600 px JPEG, logos PNG) and stored in Firestore (`media/{id}`), served
+  from `/m/<id>` with a one-year cache.
+- **Studio → store.** In `/design`, *Add to my store* photographs the design in each chosen colour on the brand
+  backdrop and creates the product with Colour and Size options and a photo per colour.
+
+Firestore:
+
+| Path | Holds |
+|---|---|
+| `accounts/{uid}` | email, name, `active`, `plan`, `expiresAt`, `subRequestedAt`, `lastSeenAt`, visitor id |
+| `accounts/{uid}/data/…`, `/chunks/…` | saved studio designs |
+| `stores/{sid}` | owner, slug, name, `published`, language, theme, settings, discount codes, order counter, logo |
+| `slugs/{slug}` | the address → store |
+| `stores/{sid}/products/{pid}` | title, prices, photos, options, variants (price/stock), colour photos, stock tracking |
+| `stores/{sid}/orders/{number}` | items, totals, customer, address, status + timeline, private note, key |
+| `stores/{sid}/customers/{phone}` | name, address, orders, spent |
+| `stores/{sid}/stats/{YYYY-MM-DD}` | views, visitors, orders, revenue, cancelled |
+| `media/{id}` | an uploaded photo |
+| `events/…`, `stats/…` | the platform's activity feed and daily counters (owner's admin) |
+
+## Test locally
+
+Firebase emulators (`firebase emulators:start --only auth,firestore --project demo-seif`) and
+`npx wrangler pages dev dist` with a `.dev.vars` holding `SESSION_SECRET`, `FIREBASE_API_KEY="fake"`, `OWNER_EMAIL`,
+`INSECURE_COOKIES="1"`, `FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"`, `FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9099"` and
+`FIREBASE_PROJECT_ID="demo-seif"`. With `FIREBASE_AUTH_EMULATOR_HOST` set the server accepts the emulator's unsigned
+tokens, so never set it in production — and never commit `.dev.vars`.
+
+`server/server.js` is an older Node build kept for reference; it is not deployed.
+
+## The 3D studio (/design)
+
+Anyone can design; sign in (free) to save designs to the account, export, and add designs to a store.
+
+### Source (joined in this order into `design.html`)
 
 | File | What |
 |---|---|
 | `src/p0_config.js` | `window.SEIF_CONFIG` default (`{demo:true}`). The server injects the real config ahead of it. |
-| `src/p1_head.html` | CSS — paper / tech-pack identity, panel sheet, artboard editor, responsive rules (bottom sheet under 900 px) |
+| `src/p1_head.html` | CSS — beige Design by Seif identity, panel sheet, artboard editor, responsive rules (bottom sheet under 900 px) |
 | `src/p2_body.html` | Markup — lock/gate, header (Design / Preview), rack, panel sheet, artboard editor, preview floor, right pane, modals (export, admin, my products, onboarding, checkout) |
 | `src/r_core.js` | Engine — storage wrapper, project + layer API, `renderArtboard()`, `recolorGarment()` (luminance ramp), `compositeView()` (24×24 affine quad mapping, silhouette clip, fold shading, optional displacement), history, autosave, exports, DPI / technique analysis, named colours |
 | `src/r_models.js` | 16 vector garment drawings — **placeholders** shown until a photo is uploaded |
@@ -26,106 +124,6 @@ three.js, self-hosted as one ES module in `assets/vendor/` and loaded when the 3
 | `src/p6_tail.html` | closing tags |
 | `assets/vendor/three-r186.min.js` | three.js r186 + OrbitControls + RoomEnvironment, one minified ES module (MIT). Rebuild with `tools/build-three.sh` |
 
-`NOTES.md` is the Phase 0 audit of the v3 engine this replaced.
-
-## Rebuild after edits
-
-```
-./build.sh
-```
-
-## Run it
-
-Serve the folder over http for the **demo build** (`python3 -m http.server`, then open `/seif-studio.html` — the 3D
-engine is an ES module, which browsers do not load from `file://`): access is not enforced (amber banner), the
-owner PIN is `DEMO`, everything is stored in the browser (`localStorage`, or the host's `window.storage` when
-present). Add `?debug=1` to draw the panel quads and safe areas over the assembled mockup and show composite timings.
-
-### Deployed build (Phase 11)
-
-Nothing enforced in client JavaScript is enforced. `server/server.js` is a dependency-free Node server that:
-
-- serves `seif-studio.html` with `SEIF_CONFIG = {demo:false}` injected — the bundle cannot be flipped back to demo by a client flag;
-- `POST /api/redeem {code}` → signed httpOnly session cookie; codes live in `server/data/codes.json` with use counts and expiry and are never sent to the client;
-- `GET /api/session` → `{active, plan, expiresAt}`; the client shows the studio only if `active`;
-- `GET/POST /api/admin/codes` behind `Authorization: Bearer $ADMIN_TOKEN` (the owner panel asks for the token where the PIN used to be);
-- `POST /api/checkout {method: card|wallet|fawry}` → Paymob order + payment key → card iframe URL, Vodafone Cash redirect, or Fawry reference;
-- `POST /api/webhook` ← Paymob transaction callback, HMAC-SHA512 verified, activates the subscription (31 days);
-- rate limits `/api/redeem` to 10 attempts per IP per hour.
-
-```
-cp server/.env.example server/.env   # fill in SESSION_SECRET, ADMIN_TOKEN, Paymob keys
-cd server && node server.js          # http://localhost:8787
-```
-
-Point Paymob's transaction-processed callback at `https://your-host/api/webhook`. Local dev over plain http needs
-`INSECURE_COOKIES=1`. Deploy the server on Cloudflare Workers / Vercel / any Node host; the HTML can sit on the same
-origin (simplest — cookies are `SameSite=Lax`).
-
-### Cloudflare Pages + Firebase (current deployment)
-
-`./build.sh` also writes `dist/`: `index.html`, `assets/` and `_worker.js` (a copy of `worker/index.js`). Drag
-`dist/` (or a zip of it) onto a Cloudflare Pages project's upload page; every upload is kept as a deployment you can
-roll back to. `server/server.js` is the older Node build (invite cookies only); it is not deployed.
-
-**Free trial.** Anyone can open the site and design the T-shirt; that design stays in their browser. Another garment,
-Export or My products shows *Sign in to continue* → Google sign-in → the payment window. Once the account is active
-(payment, or access given by the owner) the T-shirt design moves into the account and everything unlocks.
-
-**Accounts.** Google sign-in through Firebase Authentication (SDK from gstatic). The server verifies the ID token
-once and sets its own signed cookie carrying the uid; subscriptions and designs belong to the account, so they
-follow the customer to any device. Values over 900 KB (images) are stored in 900 KB chunks.
-
-**Owner.** Whoever signs in with an address listed in `OWNER_EMAIL` always has full access, gets an *Admin*
-button, and is the only one who can open **`/admin`** (everyone else gets 404). The dashboard shows:
-
-- *Overview* — daily counts for the last 7 days (visits, free T-shirt designs, sign-in walls, new accounts,
-  sign-ins, garments designed, exports, checkouts, payments) and the live activity feed.
-- *Customers* — every account with status and last seen; each customer's page lists their designs (open any of
-  them read-only in the studio), payments, everything they did, and what they did before signing up in the same
-  browser. *Give access* for N days or *Revoke access*.
-- *Photos & mapping*, *Colours* — saved on the server (`/api/shared`), so every visitor sees them.
-
-The owner's own activity is not counted.
-
-Firestore (production mode, default deny-all rules — only the server's service account reads or writes it):
-
-| Path | Holds |
-|---|---|
-| `accounts/{uid}` | email, name, `active`, `plan`, `expiresAt`, `lastSeenAt`, visitor id |
-| `accounts/{uid}/data/{id}`, `/chunks/{id.v.i}` | the customer's designs |
-| `accounts/{uid}/events/{eid}` | the customer's timeline |
-| `events/{eid}` | every event (`t`, `type`, `uid`/`vid`, `product`, `detail`) |
-| `stats/{YYYY-MM-DD}` | daily counters per event type |
-| `shared/…`, `sharedchunks/…`, `sharedmeta/manifest` | the owner's photos, mapping and colours |
-| `orders/{orderId}` | Paymob order → uid, `paid` (a repeated webhook is ignored) |
-
-One-time Firebase setup: **Authentication → Sign-in method → Google → Enable**; **Authentication → Settings →
-Authorized domains → add** `<project>.pages.dev` (and any custom domain); **Project settings → Your apps → Web (`</>`)**
-to get the `apiKey`.
-
-Pages → Settings → Variables and Secrets (Production), then upload again so they apply:
-
-| Name | Type | Value |
-|---|---|---|
-| `FIREBASE_SERVICE_ACCOUNT` | Secret | the whole JSON from Project settings → Service accounts → Generate new private key |
-| `SESSION_SECRET` | Secret | 32+ random characters |
-| `FIREBASE_API_KEY` | Text | the web app's `apiKey` (public by design) |
-| `OWNER_EMAIL` | Text | the owner's Google address (several: comma-separated) |
-| `PAYMOB_API_KEY`, `PAYMOB_HMAC`, `PAYMOB_IFRAME_ID`, `PAYMOB_INTEGRATION_CARD` / `_WALLET` / `_KIOSK` | Secret | from the Paymob dashboard |
-| `PRICE_EGP` | Text | optional, default 100 |
-
-`ADMIN_TOKEN` is no longer used. **Until `SESSION_SECRET` and `FIREBASE_SERVICE_ACCOUNT` are set the site serves the
-demo build** (everything open, owner panel behind the PIN `DEMO`) and `/api/*` answers 503. Point Paymob's callback
-at `https://<project>.pages.dev/api/webhook`.
-
-Local test against the Firebase emulators (`firebase emulators:start --only auth,firestore --project demo-seif`): put
-the secrets plus `FIREBASE_API_KEY="fake"`, `OWNER_EMAIL`, `INSECURE_COOKIES="1"`, `FIRESTORE_EMULATOR_HOST="127.0.0.1:8080"`,
-`FIREBASE_AUTH_EMULATOR_HOST="127.0.0.1:9099"` and `FIREBASE_PROJECT_ID="demo-seif"` in `.dev.vars`, then
-`npx wrangler pages dev dist`. With `FIREBASE_AUTH_EMULATOR_HOST` set the server accepts the emulator's unsigned
-tokens, so never set it in production.
-
-## What the studio does
 
 - **3D studio (the T-shirt)** — drag to turn the tee any way (over the shoulders, underneath, into the sleeves),
   scroll / pinch to zoom, right-drag to pan, or jump to Front · Back · Left · Right · Top · Underarm · Below, or Spin.

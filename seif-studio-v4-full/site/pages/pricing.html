@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--@head title="Membership — Design by Seif" desc="Build your store for free. Go live and take cash-on-delivery orders for one monthly price, with no commission."-->
+<style>
+.mhead{max-width:760px;padding-top:clamp(14px,4vw,50px)}
+.mhead h1{margin-top:14px}
+.mhead .lead{margin-top:20px}
+.mgrid{display:grid;gap:40px;margin-top:clamp(36px,6vw,64px)}
+@media (min-width:1000px){.mgrid{grid-template-columns:1fr 1fr;gap:56px}.mgrid>.left{padding-right:56px;border-right:1px solid var(--line)}}
+.status{display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--subtle)}
+.status svg{width:15px;height:15px}
+.status.on{color:var(--olive)}
+.left h2{margin-top:16px}
+.priceblock{margin-top:28px;padding-top:26px;border-top:1px solid var(--line)}
+.priceline{display:flex;align-items:baseline;gap:10px;margin-top:14px}
+.priceline b{font-family:var(--sans);font-weight:500;font-size:58px;letter-spacing:-.03em;line-height:1}
+.priceline span{font-size:20px;color:var(--muted)}
+.per{font-size:14.5px;color:var(--muted);margin-top:8px}
+.legal{margin-top:24px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--subtle);line-height:1.55}
+.pay-label{display:flex;align-items:center;gap:8px;margin-top:28px;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--subtle)}
+.pay-label svg{width:14px;height:14px}
+.paybox{margin-top:12px;padding:22px;border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card)}
+.soon{display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:var(--surface-2);border:1px dashed var(--line-strong);color:var(--muted);font-size:14px}
+.soon .cards{display:flex;gap:6px}
+.soon .cards i{width:34px;height:22px;border-radius:5px;background:linear-gradient(135deg,#E9E0D2,#D8CBB6);box-shadow:inset 0 0 0 1px rgba(36,28,20,.08)}
+.soon b{display:block;color:var(--fg);font-weight:500}
+.req{margin-top:18px}
+.req p{font-size:14px;color:var(--muted);margin-bottom:12px}
+.done{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:18px;background:var(--olive-soft);color:#3E5530;font-size:14.5px}
+.done svg{width:20px;height:20px;flex:none;margin-top:1px}
+.right .inc-head{display:flex;gap:16px;align-items:center}
+.ring{width:46px;height:46px;border-radius:50%;border:2px solid var(--accent);position:relative;flex:none;box-shadow:0 0 0 6px var(--accent-soft)}
+.ring::after{content:'';position:absolute;width:6px;height:6px;border-radius:50%;background:var(--fg);left:50%;bottom:-3px;transform:translateX(-50%)}
+.groups{margin-top:24px;border:1px solid rgba(154,106,60,.35);border-radius:30px;padding:8px;background:linear-gradient(180deg,rgba(154,106,60,.07),transparent 40%);box-shadow:var(--shadow-card)}
+.group{padding:20px 18px}
+.group+.group{border-top:1px solid var(--line)}
+.gh{display:flex;gap:14px;align-items:center}
+.gh .ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 6px 14px -6px rgba(0,0,0,.35)}
+.gh .ic svg{width:22px;height:22px}
+.gh b{display:block;font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+.gh span{font-size:14px;color:var(--muted)}
+.items{display:grid;gap:16px 22px;margin-top:18px}
+@media (min-width:560px){.items{grid-template-columns:1fr 1fr}}
+.inc-it{display:flex;gap:12px}
+.inc-it i{width:22px;height:22px;border-radius:50%;background:var(--olive);color:#fff;display:grid;place-items:center;flex:none}
+.inc-it i svg{width:12px;height:12px}
+.inc-it b{display:block;font-weight:500;font-size:15px}
+.inc-it small{display:block;font-size:13px;color:var(--muted);margin-top:3px;line-height:1.45}
+.mfaq{max-width:780px;margin-top:clamp(70px,10vw,120px)}
+.mfaq details{border-bottom:1px solid var(--line)}
+.mfaq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:20px;padding:18px 0;font-size:16.5px;font-weight:500}
+.mfaq summary::-webkit-details-marker{display:none}
+.mfaq summary::after{content:'+';font-size:22px;line-height:1;color:var(--muted)}
+.mfaq details[open] summary::after{content:'–'}
+.mfaq p{color:var(--muted);padding-bottom:18px}
+</style>
+</head>
+<body>
+<div id="dsTop"></div>
+<main class="page wrap">
+  <header class="mhead">
+    <span class="eyebrow">Membership</span>
+    <h1 class="display h-1" style="font-size:clamp(46px,7vw,76px)">Your membership.</h1>
+    <p class="lead">Build your store and design in 3D for free. Go live for one monthly price — no commission on anything you sell. Everything you make stays yours either way.</p>
+  </header>
+
+  <div class="mgrid">
+    <section class="left">
+      <div class="status" id="mStatus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span>Free to build</span></div>
+      <h2 class="display h-1" style="font-size:clamp(36px,5vw,54px)">Take your store live, <span class="it">for less than a delivery a day.</span></h2>
+      <div class="priceblock">
+        <span class="offer">Launch price</span>
+        <div class="priceline"><b id="mPrice">500</b><span>EGP</span></div>
+        <p class="per">/ month · unlimited orders · no commission · stop any time</p>
+      </div>
+      <p class="legal">By joining you agree to the <a class="link" href="/terms">Terms</a> and <a class="link" href="/privacy">Privacy policy</a>. A month that has started isn't refunded, so build and test your store for free first — it's all there before you pay.</p>
+
+      <div class="pay-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>Pay by card · Paymob</div>
+      <div class="paybox" id="mBox">
+        <div class="soon"><span class="cards"><i></i><i></i></span><span><b>Online payment is coming soon</b>Card, wallet and Fawry through Paymob.</span></div>
+        <div class="req" id="mAction"></div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="inc-head"><span class="ring"></span><div><span class="eyebrow">Everything included</span><h2 class="display h-3" style="margin-top:6px">One membership. <span class="it">All of Design.</span></h2></div></div>
+      <div class="groups" id="mGroups"></div>
+    </section>
+  </div>
+
+  <section class="mfaq">
+    <span class="eyebrow">Questions</span>
+    <details><summary>What is free, exactly?</summary><p>Signing in, building stores, adding products, editing themes, previewing your store and designing in the 3D studio — including exporting your designs. The membership is what puts your store online for shoppers and lets it take orders.</p></details>
+    <details><summary>What happens if my membership ends?</summary><p>Your store goes back to “opening soon” for visitors, and nothing is deleted: products, orders, customers and designs all stay. Renew and it's live again in a second.</p></details>
+    <details><summary>How do I pay until online payment is ready?</summary><p>Press “Request activation”. We get in touch with you, you pay by InstaPay or wallet transfer, and your membership is switched on — usually the same day.</p></details>
+    <details><summary>Is there a commission on my sales?</summary><p>No. You keep everything your customers pay you on delivery.</p></details>
+  </section>
+</main>
+<div id="dsFoot"></div>
+<div id="dsTabs"></div>
+<!--@shell-->
+<script>
+(function(){
+  var ck = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var G = [
+    { k: 'Store', t: 'A store that looks like yours.', c: '#9A6A3C', ic: DS.I.store, items: [
+      ['Your own address', 'yoursite/your-name — change it whenever you like.'], ['Six themes, endless remixes', 'Colours, fonts, shapes, every section editable.'],
+      ['Arabic or English', 'Right-to-left stores with real Arabic type.'], ['Up to 3 stores', 'Separate brands, one account.'] ] },
+    { k: 'Sell', t: 'Orders that just arrive.', c: '#5C7A47', ic: DS.I.orders, items: [
+      ['Cash-on-delivery checkout', 'Egyptian numbers checked, address by governorate.'], ['Delivery prices by governorate', 'Flat, per zone, free over an amount.'],
+      ['Discount codes & drops', 'Percent, fixed, free delivery, countdowns.'], ['Order tracking page', 'Customers check their order with their number.'] ] },
+    { k: 'Manage', t: 'Know your business at a glance.', c: '#4A6FA5', ic: DS.I.products, items: [
+      ['Orders dashboard', 'Statuses, notes, WhatsApp in a tap, packing slips.'], ['Customers', 'Who bought, where they live, what they spent — export CSV.'],
+      ['Stock that counts itself', 'Sold-out sizes switch off on their own.'], ['Works like an app', 'Add it to your iPhone home screen.'] ] },
+    { k: 'Design', t: 'Make the product, too.', c: '#C2573A', ic: DS.I.design, items: [
+      ['3D T-shirt studio', 'Draw, write and place stickers on a real 3D tee.'], ['Print-ready export', 'Every panel at print resolution.'],
+      ['Add to my store', 'Your design becomes a product with every colour.'], ['Saved to your account', 'Open your designs on any device.'] ] }
+  ];
+  document.getElementById('mGroups').innerHTML = G.map(function(g){
+    return '<div class="group"><div class="gh"><span class="ic" style="background:' + g.c + '">' + g.ic + '</span><div><b style="color:' + g.c + '">' + g.k + '</b><span>' + g.t + '</span></div></div>'
+      + '<div class="items">' + g.items.map(function(it){ return '<div class="inc-it"><i>' + ck + '</i><div><b>' + it[0] + '</b><small>' + it[1] + '</small></div></div>'; }).join('') + '</div></div>';
+  }).join('');
+  if(DS.CFG.priceNum) document.getElementById('mPrice').textContent = DS.CFG.priceNum;
+
+  function render(s){
+    var st = document.getElementById('mStatus'), a = document.getElementById('mAction');
+    if(!s || !s.signedIn){
+      st.lastChild.textContent = 'Free to build';
+      a.innerHTML = '<p>Sign in first — it is free — then request activation when your store is ready.</p><button class="btn btn-primary btn-block" id="mIn">Sign in with Google</button>';
+      document.getElementById('mIn').onclick = function(){ DS.openSignIn('/pricing', 'Sign in to start your membership.'); };
+      return;
+    }
+    if(s.active){
+      st.classList.add('on');
+      st.lastChild.textContent = s.owner ? 'Owner · always active' : 'Active' + (s.expiresAt ? ' · until ' + DS.date(s.expiresAt) : '');
+      a.innerHTML = '<div class="done">' + DS.I.check + '<span><b>You are a member.</b> Your stores can go live and take orders.</span></div><a class="btn btn-primary btn-block" style="margin-top:14px" href="/dashboard">Go to your dashboard</a>';
+      return;
+    }
+    st.lastChild.textContent = s.expiresAt ? 'Ended ' + DS.date(s.expiresAt) : 'Not active yet';
+    if(s.subRequestedAt && s.subRequestedAt > Date.now() - 7 * 864e5){
+      a.innerHTML = '<div class="done">' + DS.I.check + '<span><b>Request sent ' + DS.ago(s.subRequestedAt) + '.</b> We will contact you at ' + DS.esc(s.email) + ' to switch your membership on. Keep building meanwhile.</span></div>'
+        + '<a class="btn btn-ghost btn-block" style="margin-top:14px" href="/dashboard">Back to your dashboard</a>';
+      return;
+    }
+    a.innerHTML = '<p>Until online payment is ready, ask us to switch your membership on — we reply quickly and you pay by InstaPay or wallet.</p>'
+      + '<label class="field"><span>Anything we should know? <i class="subtle" style="font-style:normal">(optional)</i></span><input class="input" id="mNote" maxlength="200" placeholder="Your WhatsApp number, your store name…"></label>'
+      + '<button class="btn btn-primary btn-block" style="margin-top:12px" id="mReq">Request activation</button>';
+    document.getElementById('mReq').onclick = async function(){
+      var b = this; b.classList.add('is-busy');
+      try { await DS.api('/api/sub/request', { note: document.getElementById('mNote').value }); s.subRequestedAt = Date.now(); try { sessionStorage.removeItem('ds.session'); } catch(e){} render(s); DS.toast('Request sent — we will be in touch.', 'ok'); }
+      catch(e){ b.classList.remove('is-busy'); DS.toast(e.message, 'bad'); }
+    };
+  }
+  render(DS.session);
+  DS.boot({ page: 'pricing', tab: 'pricing', nav: 'pricing', next: '/pricing', onSession: render });
+  DS.track('pricing');
+})();
+</script>
+</body>
+</html>

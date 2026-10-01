@@ -8,7 +8,7 @@
 <!-- The shield is unused on the live build (the T-shirt is a free trial); the bar shows the trial's terms. -->
 <div id="lockShield" aria-hidden="true"></div>
 <div id="lockBar" role="status">
-  <span class="lb-txt"><span id="lbTitle">Free trial &middot; T-shirt</span><small id="lbSub">Sign in to unlock every garment and export</small></span>
+  <span class="lb-txt"><span id="lbTitle">Designing as a guest</span><small id="lbSub">Sign in to save your work and export — it’s free</small></span>
   <button id="lockBarBtn" class="btn">Sign in</button>
 </div>
 
@@ -16,10 +16,10 @@
 <div class="modal" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
   <div class="card">
     <button class="x" data-close="gate" aria-label="Close">&times;</button>
-    <div class="speclabel" style="margin-bottom:10px">Spec sheet no. 001 &middot; Studio locked</div>
-    <h1 id="gateTitle">UNLOCK SEIF STUDIO<i>.</i></h1>
+    <div class="speclabel" style="margin-bottom:10px">Design by Seif &middot; free account</div>
+    <h1 id="gateTitle">Sign in to keep going<i>.</i></h1>
     <p class="tag" id="gateTag">Sign in with Google &mdash; your work follows you to any device.</p>
-    <div class="cats">Tops &middot; Bottoms &middot; Hats &middot; Socks &middot; Bags &middot; Ties &middot; Accessories</div>
+    
 
     <!-- live build: the account that owns the subscription and the saved designs -->
     <div id="acctBox" class="acctbox hidden">
@@ -51,7 +51,7 @@
 <!-- ================= APP ================= -->
 <div id="app">
   <header class="bar">
-    <div class="wordmark">SEIF STUDIO<i>.</i><small>3D apparel studio</small></div>
+    <a class="wordmark" href="/" title="Design by Seif — home">Design<small>by Seif</small></a>
     <div id="demoBanner" class="demobanner hidden" title="Nothing enforced in client JavaScript is enforced. A server must supply SEIF_CONFIG before launch.">DEMO MODE &mdash; access is not enforced</div>
     <div class="seg modeseg" id="modeSeg" role="radiogroup" aria-label="Workspace">
       <button data-mode="3d" role="radio" aria-checked="false" class="hidden">3D</button>
@@ -65,7 +65,9 @@
       <button id="redoBtn" class="btn ghost small" title="Redo" aria-label="Redo" disabled>&#8631;</button>
     </div>
     <button id="myProductsBtn" class="btn ghost small">My products</button>
-    <button id="exportBtn" class="btn primary small">Export</button>
+    <button id="exportBtn" class="btn ghost small">Export</button>
+    <button id="toStoreBtn" class="btn primary small hidden" title="Make this design a product in your store"><span class="lg">Add to my store</span><span class="sm">+ Store</span></button>
+    <a id="dashBtn" class="btn ghost small hidden" href="/dashboard">Dashboard</a>
     <button id="ownerBtn" class="btn ghost small hidden" title="Your private dashboard">Admin</button>
     <button id="signoutBtn" class="btn primary small signin">Sign in</button>
   </header>
@@ -466,6 +468,17 @@
       <input type="file" id="exOpenFile" accept="application/json,.json" class="hidden">
     </div>
     <div id="exOpenMsg" class="gmsg"></div>
+  </div>
+</div>
+
+<!-- ================= ADD TO MY STORE ================= -->
+<div class="modal" id="storeModal" role="dialog" aria-modal="true" aria-labelledby="tsHead">
+  <div class="card">
+    <button class="x" data-close="storeModal" aria-label="Close">&times;</button>
+    <h3 id="tsHead">Add to my store</h3>
+    <div class="sub">Your design becomes a product: a photo for every colour you pick, with sizes.</div>
+    <div id="tsBody"></div>
+    <div id="tsMsg" class="gmsg" aria-live="polite"></div>
   </div>
 </div>
 

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--@head title="Contact — Design by Seif" desc="Get in touch with Design by Seif."-->
+<style>
+.doc{max-width:760px;padding-top:clamp(14px,4vw,50px)}
+.doc h1{margin-top:14px}
+.doc .lead{margin-top:18px}
+.doc h2{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:-.02em;margin-top:44px}
+.doc p,.doc li{color:var(--muted);margin-top:12px;line-height:1.7}
+.doc ul{padding-left:20px}
+.doc .upd{margin-top:40px;font-size:13px;color:var(--subtle)}
+</style>
+</head>
+<body>
+<div id="dsTop"></div>
+<main class="page wrap"><article class="doc">
+<span class="eyebrow">Contact</span>
+<h1 class="display h-1">Say hello.</h1>
+<p class="lead">Questions about your store, your membership or the studio — write to us and we'll reply by email.</p>
+<form id="cForm" class="card card-pad" style="margin-top:30px;display:grid;gap:14px">
+  <label class="field"><span>Your name</span><input class="input" name="name" maxlength="80" autocomplete="name"></label>
+  <label class="field"><span>Email</span><input class="input" name="email" type="email" required maxlength="120" autocomplete="email"></label>
+  <label class="field"><span>Message</span><textarea class="textarea" name="message" required maxlength="1500" rows="5"></textarea></label>
+  <button class="btn btn-primary" type="submit">Send message</button>
+  <p class="tiny" id="cMsg"></p>
+</form>
+</article></main>
+<div id="dsFoot"></div>
+<div id="dsTabs"></div>
+<!--@shell-->
+<script>
+document.getElementById('cForm').addEventListener('submit', async function(e){
+  e.preventDefault(); var f = e.target, b = f.querySelector('button'), m = document.getElementById('cMsg');
+  if(DS.DEMO){ m.textContent = 'This copy has no server — messages work on the live site.'; return; }
+  b.classList.add('is-busy');
+  try { await DS.api('/api/contact', { name: f.name.value, email: f.email.value, message: f.message.value, vid: DS.visitorId() }); f.reset(); m.textContent = 'Thanks — we got it and will reply by email.'; m.style.color = 'var(--olive)'; }
+  catch(err){ m.textContent = err.message; m.style.color = 'var(--clay)'; }
+  b.classList.remove('is-busy');
+});
+
+DS.boot({ page: 'contact', tab: 'none', nav: 'contact' });
+</script>
+</body>
+</html>

@@ -67,13 +67,12 @@ function renderRack(){
     host.appendChild(head);
     items.forEach(function(p){
       var b = document.createElement('button');
-      b.className = 'rackitem' + (p.id === project.productId ? ' on' : '') + (!hasFullAccess() && p.id !== TRIAL_PRODUCT ? ' trial-locked' : '');
+      b.className = 'rackitem' + (p.id === project.productId ? ' on' : '');
       b.dataset.pid = p.id;
       b.setAttribute('aria-label', p.name + (productHasWork(p.id) ? ' (has a design)' : ''));
       b.innerHTML = '<span class="sku">' + p.sku + '</span><span>' + p.name + '</span>' + (productHasWork(p.id) ? '<span class="dot" title="Has a design"></span>' : '');
       b.addEventListener('click', function(){
         if(p.id === project.productId) return;
-        if(p.id !== TRIAL_PRODUCT && !trialAllows('product', p.id)) return;
         buildProduct(p.id);
       });
       host.appendChild(b);
@@ -394,10 +393,10 @@ function bindUI(){
 
 /* ============================================================
    ACCESS
-   Live build: the T-shirt is a free trial for everyone, kept in this browser. Other
-   garments, exports and My products need a Google account with an active subscription;
-   the owner (OWNER_EMAIL on the server) always has one. The server decides through
-   /api/session and /api/checkout; nothing enforced here is trusted for payment.
+   Live build: anyone can design anything; that work stays in this browser. Exports,
+   My products and Add to my store need a (free) Google account, and a signed-in
+   account keeps its designs on the server. The membership only matters for taking a
+   store live, which the dashboard and the server handle.
    DEMO_MODE: everything is open and local; nothing is enforced.
    ============================================================ */
 var TRIAL_PRODUCT = 'tee';
@@ -415,29 +414,29 @@ function unlockStudio(){
   $('lockShield').classList.remove('on');
   closeModal('gate');
 }
-function hasFullAccess(){ return DEMO_MODE || !!account.active; }
+function hasFullAccess(){ return DEMO_MODE || !!account.signedIn; }
 var WALL_TEXT = {
-  product: 'The free trial covers the T-shirt. Every other garment comes with the subscription.',
-  export: 'Exporting mockups and 300 DPI print files comes with the subscription.',
-  my_products: 'Bringing your own blank products comes with the subscription.'
+  export: 'Exporting mockups and 300 DPI print files needs a free account.',
+  my_products: 'Bringing your own blank products needs a free account.',
+  store: 'Sign in to put your designs in your own store.'
 };
-/* the wall between the free trial and the rest: sign in first, then pay */
+/* the only wall: sign in (free). Nothing here asks for payment. */
 function trialAllows(reason, product){
   if(hasFullAccess()) return true;
   track('wall', product || null, reason, true);
-  if(account.signedIn){ openPay(WALL_TEXT[reason]); return false; }
   openGate(WALL_TEXT[reason]);
   return false;
 }
 function openGate(reasonText){
-  $('priceTag').textContent = PRICE + ' · PER ' + PRICE_PERIOD.replace('/', '').toUpperCase();
-  $('gateTitle').innerHTML = (reasonText ? 'SIGN IN TO CONTINUE' : 'SIGN IN TO SEIF STUDIO') + '<i>.</i>';
-  $('gateTag').textContent = (reasonText ? reasonText + ' ' : '') + 'Sign in with Google — your T-shirt design comes with you, and your work follows you to any device.';
+  $('gateTitle').innerHTML = (reasonText ? 'Sign in to keep going' : 'Sign in to Design') + '<i>.</i>';
+  $('gateTag').textContent = (reasonText ? reasonText + ' ' : '') + 'It’s free — what you designed here comes with you, and your work follows you to any device.';
   $('payOpenMsg').textContent = '';
   openModal('gate');
   setTimeout(function(){ try { $('googleBtn').focus(); } catch(e){} }, 50);
 }
 function openPay(note){
+  /* memberships live on their own page now */
+  if(!DEMO_MODE){ location.href = '/pricing'; return; }
   closeModal('gate');
   $('payPrice').textContent = PRICE + PRICE_PERIOD;
   $('payDemo').classList.toggle('hidden', !DEMO_MODE);
@@ -465,10 +464,10 @@ async function api(path, body, opts){
 async function checkSession(){
   if(DEMO_MODE) return true;
   try { account = await api('/api/session'); } catch(e){ account = { signedIn: false, active: false }; }
-  /* the trial lives in this browser; an active account keeps its work on the server */
-  store.cloud = !!(account.signedIn && account.active);
+  /* a guest's work lives in this browser; a signed-in account keeps its work on the server */
+  store.cloud = !!account.signedIn;
   store.sharedCloud = true;
-  return !!account.active;
+  return !!account.signedIn;
 }
 
 /* ============================================================
@@ -544,24 +543,24 @@ function renderAccount(){
   $('googleBtn').classList.toggle('hidden', !!account.signedIn);
   $('acctOutBtn').classList.toggle('hidden', !account.signedIn);
   $('acctTxt').textContent = account.signedIn
-    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + (account.active ? '' : ' — subscribe below to unlock everything.')
-    : 'Sign in so your designs and subscription follow you to any device.';
-  $('signoutBtn').textContent = account.signedIn ? 'Sign out' : 'Sign in';
-  $('signoutBtn').title = account.signedIn ? 'Sign out of ' + (account.email || 'your account') : 'Sign in with Google';
-  $('signoutBtn').classList.toggle('primary', !account.signedIn);
-  $('signoutBtn').classList.toggle('ghost', !!account.signedIn);
-  $('ownerBtn').classList.toggle('hidden', !account.owner);
-  /* the trial bar: what the free trial covers, and the way out of it */
-  var trial = !account.active;
-  $('lockBar').classList.toggle('on', trial);
-  $('lbTitle').textContent = 'Free trial · T-shirt';
-  $('lbSub').textContent = account.signedIn ? 'Subscribe to unlock every garment and export' : 'Sign in to unlock every garment and export';
-  $('lockBarBtn').textContent = account.signedIn ? 'Subscribe' : 'Sign in';
+    ? 'Signed in as ' + (account.email || account.name || 'your Google account') + '.'
+    : 'Sign in so your designs follow you to any device.';
+  /* signed in: the dashboard and Add to my store; a guest: Sign in */
+  $('signoutBtn').textContent = 'Sign in';
+  $('signoutBtn').classList.toggle('hidden', !!account.signedIn);
+  $('dashBtn').classList.toggle('hidden', !account.signedIn);
+  document.querySelector('header.bar .wordmark').setAttribute('href', account.signedIn ? '/dashboard' : '/');
+  $('toStoreBtn').classList.toggle('hidden', !account.signedIn);
+  $('ownerBtn').classList.add('hidden');
+  /* the guest bar: work stays in this browser until they sign in */
+  $('lockBar').classList.toggle('on', !account.signedIn);
+  $('lbTitle').textContent = 'Designing as a guest';
+  $('lbSub').textContent = 'Sign in to save your work and export — it’s free';
+  $('lockBarBtn').textContent = 'Sign in';
   syncTrialRack();
 }
 function syncTrialRack(){
-  var open = hasFullAccess();
-  document.querySelectorAll('.rackitem').forEach(function(x){ x.classList.toggle('trial-locked', !open && x.dataset.pid !== TRIAL_PRODUCT); });
+  document.querySelectorAll('.rackitem').forEach(function(x){ x.classList.remove('trial-locked'); });
 }
 async function signInAccount(){
   var btn = $('googleBtn');
@@ -574,12 +573,8 @@ async function signInAccount(){
     var cred = await auth.signInWithPopup(provider);
     account = await api('/api/login', { idToken: await cred.user.getIdToken(), vid: visitorId() });
     auth.signOut().catch(function(){});
-    if(account.active){ gmsg('acctMsg', 'Welcome back — loading your designs…', true); location.reload(); return; }
-    btn.disabled = false; $('acctMsg').textContent = '';
-    renderAccount();
-    /* signed in, not subscribed yet: straight to payment */
-    openPay('Signed in as ' + (account.email || 'your Google account') + '. Choose how to pay to unlock every garment and export.');
-    return;
+    /* start over signed in: the account's designs load, and this browser's work moves into it */
+    gmsg('acctMsg', 'Signed in — loading your designs…', true); location.reload(); return;
   } catch(e){
     var code = e && e.code;
     gmsg('acctMsg', code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request' ? 'Sign-in was cancelled.'
@@ -590,6 +585,7 @@ async function signInAccount(){
 }
 async function signOutAccount(){
   await fetch(API_BASE + '/api/logout', { method:'POST', credentials:'include' }).catch(function(){});
+  try { sessionStorage.removeItem('ds.session'); } catch(e){}
   location.href = '/';
 }
 /* designs saved in this browser before the customer had an active account move into it once,
@@ -631,7 +627,7 @@ async function migrateSharedSettings(){
 }
 function bindLock(){
   $('lockShield').addEventListener('click', function(e){ e.preventDefault(); openGate(); });
-  $('lockBarBtn').addEventListener('click', function(){ if(account.signedIn) openPay(); else openGate(); });
+  $('lockBarBtn').addEventListener('click', function(){ if(!account.signedIn) openGate(); });
   $('app').addEventListener('focusin', function(e){
     if(!locked) return;
     if(e.target && e.target.blur) e.target.blur();
@@ -1498,6 +1494,115 @@ function bindExport(){
     rd.readAsText(f);
   });
 }
+/* ============================================================
+   ADD TO MY STORE — the design becomes a product in one of the account's
+   stores: a photo per chosen colour (3D render on the brand backdrop),
+   Colour and Size options, the colour photos wired to the colours.
+   ============================================================ */
+var TS = { stores: null, sid: null, colors: null, sizes: ['S', 'M', 'L', 'XL'] };
+var TS_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+function bindToStore(){
+  $('toStoreBtn').addEventListener('click', function(){ if(!trialAllows('store', project.productId)) return; openToStore(); });
+}
+async function openToStore(){
+  $('tsMsg').textContent = '';
+  $('tsBody').innerHTML = '<p class="tiny">Loading your stores…</p>';
+  openModal('storeModal');
+  try { TS.stores = (await api('/api/stores')).stores; }
+  catch(e){ $('tsBody').innerHTML = ''; gmsg('tsMsg', 'Could not load your stores: ' + e.message); return; }
+  if(!TS.stores.length){
+    $('tsBody').innerHTML = '<p class="tiny" style="font-size:13px">You don’t have a store yet. Make one in a minute — it’s free to build — then come back and add this design.</p><a class="btn primary" style="display:block;text-align:center;margin-top:12px;text-decoration:none" href="/dashboard/new">Create your store</a>';
+    return;
+  }
+  if(!TS.sid || !TS.stores.some(function(x){ return x.sid === TS.sid; })){ var last = null; try { last = localStorage.getItem('ds.sid'); } catch(e){} TS.sid = TS.stores.some(function(x){ return x.sid === last; }) ? last : TS.stores[0].sid; }
+  TS.colors = [project.garmentColor];
+  var def = currentDef(), saved = TS.title && TS.titleFor === project.productId ? TS.title : '';
+  var palette = GARMENT_COLORS.map(function(c){ return c.hex; });
+  if(palette.map(function(h){ return h.toLowerCase(); }).indexOf(project.garmentColor.toLowerCase()) < 0) palette.unshift(project.garmentColor);
+  $('tsBody').innerHTML = (TS.stores.length > 1 ? '<label class="tslab">Store</label><select id="tsStore" class="field" style="margin-top:6px">' + TS.stores.map(function(x){ return '<option value="' + esc(x.sid) + '"' + (x.sid === TS.sid ? ' selected' : '') + '>' + esc(x.name) + ' — /' + esc(x.slug) + '</option>'; }).join('') + '</select>' : '<p class="tiny" style="font-size:13px">Into <b>' + esc(TS.stores[0].name) + '</b> — /' + esc(TS.stores[0].slug) + '</p>')
+    + '<label class="tslab">Product name</label><input id="tsTitle" class="field" style="margin-top:6px" maxlength="120" value="' + esc(saved || (def ? def.name : 'New design')) + '">'
+    + '<label class="tslab">Price</label><div style="display:flex;gap:8px;align-items:center;margin-top:6px"><input id="tsPrice" class="field" type="number" min="0" step="any" inputmode="decimal" placeholder="e.g. 650" value="' + esc(TS.price || '') + '" style="max-width:160px"><span class="tiny" style="margin:0">EGP</span></div>'
+    + '<label class="tslab">Colours <span style="text-transform:none;letter-spacing:0">— one photo each</span></label><div class="tsrow" id="tsColors">' + palette.map(function(h){ return '<button class="tssw' + (h.toLowerCase() === project.garmentColor.toLowerCase() ? ' on' : '') + '" data-c="' + esc(h) + '" title="' + esc(colorNameFor(h)) + '" style="background:' + esc(h) + '"></button>'; }).join('') + '</div>'
+    + '<label class="tslab">Sizes</label><div class="tsrow" id="tsSizes">' + TS_SIZES.map(function(z){ return '<button class="tschip' + (TS.sizes.indexOf(z) >= 0 ? ' on' : '') + '" data-z="' + z + '">' + z + '</button>'; }).join('') + '</div>'
+    + '<div class="tsprev" id="tsPrev"></div>'
+    + '<button id="tsGo" class="btn primary" style="width:100%;margin-top:16px">Add to store</button>';
+  var st = $('tsStore'); if(st) st.onchange = function(){ TS.sid = st.value; };
+  document.querySelectorAll('#tsColors [data-c]').forEach(function(b){ b.onclick = function(){
+    var h = b.dataset.c, i = TS.colors.indexOf(h);
+    if(i >= 0){ if(TS.colors.length > 1){ TS.colors.splice(i, 1); b.classList.remove('on'); } }
+    else if(TS.colors.length < 8){ TS.colors.push(h); b.classList.add('on'); }
+    else gmsg('tsMsg', 'Up to 8 colours at a time.');
+  }; });
+  document.querySelectorAll('#tsSizes [data-z]').forEach(function(b){ b.onclick = function(){
+    var z = b.dataset.z, i = TS.sizes.indexOf(z);
+    if(i >= 0) TS.sizes.splice(i, 1); else TS.sizes.push(z);
+    TS.sizes.sort(function(a, c){ return TS_SIZES.indexOf(a) - TS_SIZES.indexOf(c); });
+    b.classList.toggle('on', i < 0);
+  }; });
+  $('tsGo').onclick = addToStore;
+}
+/* the product photo: the render on the same warm backdrop as the sample stores, 3:4 */
+function productShot(src){
+  var W = 900, H = 1200, o = document.createElement('canvas'); o.width = W; o.height = H;
+  var g = o.getContext('2d');
+  var gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#F1ECE3'); gr.addColorStop(1, '#E4DCCF'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  var rg = g.createRadialGradient(W / 2, H * 0.42, 40, W / 2, H * 0.42, W * 0.8); rg.addColorStop(0, 'rgba(255,255,255,.55)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  g.save(); g.filter = 'blur(26px)'; g.fillStyle = 'rgba(60,45,30,.18)'; g.beginPath(); g.ellipse(W / 2, H * 0.9, W * 0.34, 34, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  var k = Math.min(1190 / src.width, 1190 / src.height), w = src.width * k, h = src.height * k;
+  g.drawImage(src, (W - w) / 2, (H - h) / 2 - 24, w, h);
+  return o.toDataURL('image/jpeg', 0.86);
+}
+async function addToStore(){
+  var title = ($('tsTitle').value || '').trim(), price = +$('tsPrice').value;
+  if(!title){ gmsg('tsMsg', 'Give it a name.'); return; }
+  if(!($('tsPrice').value !== '' && price >= 0)){ gmsg('tsMsg', 'Add a price.'); $('tsPrice').focus(); return; }
+  if(!TS.sizes.length){ gmsg('tsMsg', 'Pick at least one size.'); return; }
+  TS.title = title; TS.titleFor = project.productId; TS.price = price;
+  var btn = $('tsGo'); btn.disabled = true;
+  var three = is3D(project.productId) && (await s3dEnsure());
+  var orig = project.garmentColor, images = [], vimg = {}, names = [], prev = $('tsPrev');
+  var backHas = layersFor('back').length > 0;
+  try {
+    for(var i = 0; i < TS.colors.length; i++){
+      var hex = TS.colors[i], nm = colorNameFor(hex);
+      if(/^[0-9A-F]{6}$/i.test(nm)) nm = 'Custom #' + nm.toUpperCase();
+      while(names.indexOf(nm) >= 0) nm += '+';
+      names.push(nm);
+      gmsg('tsMsg', 'Photographing ' + nm + ' (' + (i + 1) + ' of ' + TS.colors.length + ')…', true);
+      setGarmentColor(hex); await wait(80);
+      var cv = three ? s3dRenderView('front', 1200, {}) : compositeView(project.productId, 'front', { px: 1200, stamp: false });
+      var data = productShot(cv);
+      var up = await api('/api/stores/' + TS.sid + '/media', { data: data, w: 900, h: 1200 });
+      images.push(up.url); vimg[nm] = up.url;
+      prev.insertAdjacentHTML('beforeend', '<img src="' + esc(data) + '" alt="">');
+      if(i === 0 && backHas && three){
+        var bv = productShot(s3dRenderView('back', 1200, {}));
+        var ub = await api('/api/stores/' + TS.sid + '/media', { data: bv, w: 900, h: 1200 });
+        images.splice(1, 0, ub.url);
+        prev.insertAdjacentHTML('beforeend', '<img src="' + esc(bv) + '" alt="">');
+      }
+    }
+    setGarmentColor(orig);
+    gmsg('tsMsg', 'Creating the product…', true);
+    var options = [{ name: 'Color', values: names }, { name: 'Size', values: TS.sizes.slice() }], variants = [];
+    names.forEach(function(n){ TS.sizes.forEach(function(z){ variants.push({ id: Math.random().toString(36).slice(2, 8), o: [n, z], price: null, stock: null }); }); });
+    var def = currentDef();
+    var r = await api('/api/stores/' + TS.sid + '/products', { title: title, price: price, images: images, options: options, variants: variants, variantImages: vimg,
+      category: def && def.cat ? def.cat.charAt(0) + def.cat.slice(1).toLowerCase() : '', status: 'active', featured: true, trackStock: false,
+      description: '', designKey: 'seifstudio:project:' + project.productId });
+    track('store_add', project.productId, names.length + ' colours');
+    $('tsBody').innerHTML = '<p style="font-size:14px;margin-top:10px"><b>' + esc(title) + '</b> is in your store with ' + names.length + ' colour' + (names.length === 1 ? '' : 's') + ' and ' + TS.sizes.length + ' size' + (TS.sizes.length === 1 ? '' : 's') + '.</p>'
+      + '<div class="tsprev">' + prev.innerHTML + '</div>'
+      + '<a class="btn primary" style="display:block;text-align:center;margin-top:14px;text-decoration:none" href="/dashboard/products/' + encodeURIComponent(r.product.pid) + '">Edit in your dashboard</a>'
+      + '<button class="btn ghost" style="width:100%;margin-top:8px" data-close="storeModal">Keep designing</button>';
+    $('tsBody').querySelector('[data-close]').onclick = function(){ closeModal('storeModal'); };
+    $('tsMsg').textContent = '';
+  } catch(e){
+    setGarmentColor(orig);
+    btn.disabled = false;
+    gmsg('tsMsg', 'Could not add it: ' + e.message);
+  }
+}
 function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 async function runExport(){
   var btn = $('exGo'); btn.disabled = true;
@@ -1713,6 +1818,7 @@ async function init(){
   bindColorsAdmin();
   bindMyProducts();
   bindExport();
+  bindToStore();
   bindSheet();
   bindTurntable();
   if(typeof bindEditor === 'function') bindEditor();

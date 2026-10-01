@@ -1,18 +1,26 @@
 /* ============================================================
-   SEIF STUDIO — accounts, free trial, payments, saved designs, owner dashboard
-   Cloudflare Pages advanced mode: build.sh copies this file to dist/_worker.js.
+   DESIGN BY SEIF — accounts, membership, saved designs, the owner's dashboard,
+   and (worker/stores.js) every merchant's store.
+   Cloudflare Pages advanced mode: tools/build.js joins the storefront renderer,
+   worker/stores.js and this file into dist/_worker.js.
 
-   Anyone can use the studio on the T-shirt for free (the client enforces the trial; it
-   keeps that design in the browser). Everything else needs a Google account with an
-   active subscription. Customers sign in with Google (Firebase Authentication in the
-   browser); the ID token is exchanged once for a signed httpOnly cookie carrying the uid.
-   The owner is whoever signs in with an address in OWNER_EMAIL: always active, and the
-   only one who can open /admin (everyone else gets 404) or call /api/admin/*.
+   Anyone can browse the site and try the 3D studio. Signing in (Google, free) lets people
+   save designs, export, and build stores. Publishing a store — taking it live for shoppers —
+   needs an active membership (PRICE_EGP a month). Accounts sign in with Google (Firebase
+   Authentication in the browser); the ID token is exchanged once for a signed httpOnly cookie
+   carrying the uid. The owner is whoever signs in with an address in OWNER_EMAIL: always
+   active, and the only one who can open /admin (everyone else gets 404) or call /api/admin/*.
+
+   Pages: /, /pricing, /design (the studio), /dashboard[/…] (merchant app), /terms, /privacy,
+   /contact, /admin (owner) — static files from dist/ with the live config written in;
+   /<store-slug>[/…] — store pages rendered here; /m/<id> — store photos.
 
      POST /api/login {idToken, vid}      -> verifies the Firebase ID token, sets the session cookie
      GET  /api/session                   -> {signedIn, email, name, active, owner, plan, expiresAt}
      POST /api/logout
-     POST /api/event {type, vid, product, detail}   visit | trial_design | wall | export (activity log)
+     POST /api/event {type, vid, product, detail}   visit | trial_design | wall | export | pricing (activity log)
+     POST /api/sub/request {note}        (signed in) asks the owner to switch membership on (until online payment)
+     POST /api/contact {name, email, message}   the contact page (shows in the owner's activity)
      POST /api/checkout {method}         (signed in) Paymob iframe URL (card) / redirect (wallet) / reference (Fawry)
      POST /api/webhook                   <- Paymob transaction callback, HMAC verified, activates the account (31 days)
 
@@ -25,7 +33,7 @@
      PUT    <base>/<key>?v=V&i=I         body = one chunk of a larger value
      PUT    <base>/<key>?v=V&n=N         publishes version V once its N chunks exist
      DELETE <base>/<key>
-   Personal writes need an active subscription; shared writes need the owner. Large values
+   Personal writes need a signed-in account; shared writes need the owner. Large values
    (images) travel in chunks so no request holds more than ~1 MB: Firestore caps a document
    at 1 MiB and Pages Functions get little CPU per request.
 
@@ -34,6 +42,7 @@
      GET  /api/admin/accounts            -> {accounts}
      GET  /api/admin/accounts/<uid>      -> {account, events, before (as a visitor), orders, designs}
      POST /api/admin/accounts/<uid> {action:'grant', days} | {action:'revoke'}
+     GET  /api/admin/stores              -> {stores} every store on the platform
      GET  /api/admin/accounts/<uid>/data/<key>   read a customer's stored value (same protocol)
 
    Firestore layout (REST API, service account; rules stay deny-all):
@@ -51,7 +60,7 @@
    Pages → Settings → Variables and Secrets:
      secrets  FIREBASE_SERVICE_ACCOUNT (whole JSON), SESSION_SECRET (32+ chars),
               PAYMOB_API_KEY, PAYMOB_HMAC, PAYMOB_IFRAME_ID, PAYMOB_INTEGRATION_CARD / _WALLET / _KIOSK
-     text     FIREBASE_API_KEY (Firebase web app config — public), OWNER_EMAIL (comma-separated), PRICE_EGP (default 100)
+     text     FIREBASE_API_KEY (Firebase web app config — public), OWNER_EMAIL (comma-separated), PRICE_EGP (default 500)
      local    INSECURE_COOKIES, FIRESTORE_EMULATOR_HOST, FIREBASE_AUTH_EMULATOR_HOST, FIREBASE_PROJECT_ID
 
    With neither SESSION_SECRET nor FIREBASE_SERVICE_ACCOUNT set, the site is served as the
@@ -63,7 +72,7 @@ var CHUNK_MAX = 900000;           /* chars per chunk document */
 var MAX_CHUNKS = 64;              /* ~57 MB per value */
 var COOKIE_DAYS = 40;
 
-var CLIENT_EVENTS = { visit: 1, trial_design: 1, wall: 1, export: 1 };
+var CLIENT_EVENTS = { visit: 1, trial_design: 1, wall: 1, export: 1, pricing: 1, store_add: 1 };
 var VID_RE = /^[A-Za-z0-9_-]{8,40}$/;
 
 /* ---------- config ---------- */
@@ -79,7 +88,7 @@ function config(env){
   if(!env.FIREBASE_API_KEY) return { live: true, error: 'FIREBASE_API_KEY must be set (Firebase → Project settings → Your apps → Web app → apiKey).' };
   return { live: true };
 }
-function priceEgp(env){ return +env.PRICE_EGP || 100; }
+function priceEgp(env){ return +env.PRICE_EGP || 500; }
 /* addresses compared the way Google treats them: case, stray quotes and spaces ignored, and for
    Gmail the dots and +tags too (seif.slama@gmail.com and SeifSlama+x@gmail.com are one inbox) */
 function normEmail(e){
@@ -96,29 +105,41 @@ function projectId(env){ return env.FIRESTORE_EMULATOR_HOST ? (env.FIREBASE_PROJ
 /* ---------- entry ---------- */
 export default {
   async fetch(request, env, ctx){
-    var u = new URL(request.url), cfg = config(env);
-    if(u.pathname.indexOf('/api/') === 0){
+    var u = new URL(request.url), cfg = config(env), path = u.pathname, ready = cfg.live && !cfg.error;
+    if(path.indexOf('/api/') === 0){
       if(!cfg.live) return json(503, { error: 'demo build: no server configured' });
       if(cfg.error) return json(500, { error: cfg.error });
       return api(request, env, ctx);
     }
-    /* the owner dashboard: the studio page, served only to a signed-in owner — 404 for everyone else */
-    var admin = u.pathname === '/admin' || u.pathname === '/admin/';
+    if(path.indexOf('/m/') === 0){
+      if(!ready) return new Response('Not found', { status: 404 });
+      try { return await mediaRoute(request, env, ctx, path.slice(3)); } catch(e){ return new Response('Unavailable', { status: 503 }); }
+    }
+    /* a store: /<slug>/… */
+    var seg = path.split('/')[1] || '';
+    if(ready && SLUG_RE.test(seg) && RESERVED.indexOf(seg) < 0 && (request.method === 'GET' || request.method === 'HEAD')){
+      try { return await storefront(request, env, ctx, u); }
+      catch(e){ return new Response('This store could not load just now. Refresh in a moment.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } }); }
+    }
+    /* the owner dashboard: the dashboard app in owner mode, served only to a signed-in owner — 404 for everyone else */
+    var admin = path === '/admin' || path === '/admin/';
     if(admin){
       var ok = false;
-      if(cfg.live && !cfg.error){
+      if(ready){
         try { var ouid = await cookieUid(env, request), od = ouid ? await db(env).get('accounts', ouid) : null; ok = !!od && isOwner(env, od.data); } catch(e){}
       }
       if(!ok) return new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
-      request = new Request(new URL('/', request.url), request);
+      request = new Request(new URL('/dashboard', request.url), request);
     }
+    /* the dashboard is one page that draws its own sections */
+    else if(path.indexOf('/dashboard/') === 0) request = new Request(new URL('/dashboard', request.url), request);
     var res = await env.ASSETS.fetch(request);
     if(!cfg.live || !(res.headers.get('Content-Type') || '').startsWith('text/html')) return res;
     if(cfg.error) return new Response(cfg.error, { status: 500, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
     /* every HTML page gets the live config, so no URL serves the demo build once secrets are set.
        The bundle's first <script> is p0_config.js, which only sets a default when nothing is defined. */
     var pid = projectId(env);
-    var cfgJs = { demo: false, price: priceEgp(env) + ' EGP', pricePeriod: '/month', apiBase: '', assetBase: '/assets/',
+    var cfgJs = { demo: false, price: priceEgp(env) + ' EGP', priceNum: priceEgp(env), pricePeriod: '/month', apiBase: '', assetBase: '/assets/',
                   firebase: { apiKey: env.FIREBASE_API_KEY, authDomain: pid + '.firebaseapp.com', projectId: pid } };
     if(env.FIREBASE_AUTH_EMULATOR_HOST) cfgJs.authEmulator = 'http://' + env.FIREBASE_AUTH_EMULATOR_HOST;
     if(admin) cfgJs.admin = true;
@@ -344,7 +365,7 @@ function sessionJson(env, uid, a){
   if(!uid) return { signedIn: false, active: false, owner: false };
   a = a || {};
   var owner = isOwner(env, a);
-  return { signedIn: true, email: a.email || '', name: a.name || '', active: owner || isActive(a), owner: owner, plan: owner ? 'owner' : (a.plan || null), expiresAt: a.expiresAt || null };
+  return { signedIn: true, email: a.email || '', name: a.name || '', active: owner || isActive(a), owner: owner, plan: owner ? 'owner' : (a.plan || null), expiresAt: a.expiresAt || null, subRequestedAt: a.subRequestedAt || null };
 }
 
 /* ---------- activity log: global feed, the customer's own timeline, daily counters ---------- */
@@ -604,6 +625,17 @@ async function api(request, env, ctx){
       return valueRoute(request, store, Object.assign({ write: null }, SHARED), keyFromPath(p, '/api/shared/'), u);
     }
 
+    /* the contact form: lands in the owner's activity feed */
+    if(p === '/api/contact' && m === 'POST'){
+      if(limited(ip, 'contact', 5, 3600e3)) return json(429, { error: 'too many messages — try again later' });
+      var cm = await body(request), cmsg = String(cm.message || '').trim().slice(0, 1500), cmail = String(cm.email || '').trim().slice(0, 120);
+      if(!cmsg || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cmail)) return json(400, { error: 'add your email and a message' });
+      await logEvent(null, store, { type: 'contact', email: cmail, vid: VID_RE.test(String(cm.vid || '')) ? cm.vid : null, detail: (String(cm.name || '').trim().slice(0, 80) || 'someone') + ': ' + cmsg.slice(0, 280) });
+      return json(200, { ok: true });
+    }
+    /* shoppers in a store: no account */
+    if(p.indexOf('/api/s/') === 0) return await shopperRoute(request, env, ctx, store, p, u, ip);
+
     var uid = await cookieUid(env, request);
     var acctDoc = uid ? await store.get('accounts', uid) : null, account = acctDoc ? acctDoc.data : null;
     if(!account) uid = null;
@@ -633,7 +665,16 @@ async function api(request, env, ctx){
 
     if(p.indexOf('/api/admin/') === 0){
       if(!owner) return json(403, { error: 'owner only' });
+      if(p === '/api/admin/stores' && m === 'GET') return json(200, { stores: await adminStores(store) });
       return await adminRoute(request, env, ctx, store, account, p, u);
+    }
+    if(p === '/api/slug' || p === '/api/stores' || p.indexOf('/api/stores/') === 0) return await merchantRoute(request, env, ctx, store, uid, account, p, u, ip);
+    if(p === '/api/sub/request' && m === 'POST'){
+      if(limited(ip, 'subreq', 5, 3600e3)) return json(429, { error: 'too many requests' });
+      var sr = await body(request);
+      await store.commit([{ col: 'accounts', id: uid, data: { subRequestedAt: Date.now() }, fields: ['subRequestedAt'] }]);
+      logEvent(ctx, store, { type: 'sub_request', uid: uid, email: account.email, vid: account.vid, detail: String(sr.note || '').slice(0, 200) || null });
+      return json(200, { ok: true });
     }
     if(p === '/api/checkout' && m === 'POST'){
       if(limited(ip, 'checkout', 20, 3600e3)) return json(429, { error: 'too many attempts' });
@@ -650,7 +691,7 @@ async function api(request, env, ctx){
     if(p === '/api/data' && m === 'GET') return json(200, { keys: await listKeys(store, personalCols(uid).dcol, u.searchParams.get('prefix')) });
     if(p.indexOf('/api/data/') === 0){
       return await valueRoute(request, store, Object.assign({
-        write: owner || isActive(account) ? true : 'subscription inactive — designs are read-only',
+        write: true,
         /* a project saved for the first time, or after 15 quiet minutes, is a moment worth logging */
         onWrite: function(key, prev, deleted){
           var mp = /^seifstudio:project:(?!index$)(.+)$/.exec(key);

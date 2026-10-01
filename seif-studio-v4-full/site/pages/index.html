@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--@head title="Design by Seif — design clothes, build your store, sell" desc="Design T-shirts in 3D, put them in your own online store in one click, and take cash-on-delivery orders from all over Egypt."-->
+<style>
+/* ---------- hero ---------- */
+.hero{display:grid;gap:44px;padding-top:clamp(10px,4vw,46px)}
+@media (min-width:1024px){.hero{grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;min-height:calc(100vh - 120px)}}
+.hero h1{margin-top:22px}
+.hero h1 .it{display:block}
+.hero .lead{margin-top:24px;max-width:540px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero .already{margin-top:16px;font-size:14.5px;color:var(--muted)}
+.hero .already button{font-weight:500;color:var(--fg);text-decoration:underline;text-underline-offset:3px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px;padding-top:24px;border-top:1px solid var(--line);max-width:540px}
+.facts b{display:block;font-family:var(--serif);font-weight:400;font-size:34px;line-height:1;letter-spacing:-.02em}
+.facts span{display:block;font-size:12.5px;color:var(--subtle);margin-top:8px;line-height:1.35}
+
+/* the stack of little app screens beside the headline */
+.ui{position:relative;display:grid;gap:16px;max-width:470px;margin:0 auto;width:100%}
+.ui::before{content:'';position:absolute;inset:-12% -6%;z-index:-1;background:radial-gradient(closest-side,rgba(154,106,60,.12),transparent 70%)}
+.uic{background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow-card);padding:18px 18px 16px}
+.uic.tilt-r{transform:translateX(5%) rotate(.6deg)}
+.uic.tilt-l{transform:translateX(-3%) rotate(-.5deg)}
+.uic .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.uic .t{font-family:var(--serif);font-size:23px;letter-spacing:-.02em;line-height:1.1}
+.uic .t .it{color:var(--muted)}
+.ord{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;margin-top:14px}
+.ord img{width:54px;height:66px;object-fit:cover;border-radius:12px;background:var(--surface-2)}
+.ord b{display:block;font-weight:500;font-size:14.5px}
+.ord small{display:block;font-size:12.5px;color:var(--muted)}
+.ord .p{font-weight:600;font-size:14.5px}
+.steps4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px}
+.steps4 i{height:5px;border-radius:3px;background:rgba(36,28,20,.09)}
+.steps4 i.on{background:var(--olive)}
+.uic .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--subtle);margin-top:8px}
+.storecard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.storecard figure{border-radius:16px;overflow:hidden;background:#F1ECE3;aspect-ratio:3/4;position:relative}
+.storecard figure img{width:100%;height:100%;object-fit:cover}
+.storecard figcaption{position:absolute;left:8px;right:8px;bottom:8px;display:flex;justify-content:space-between;font-size:11.5px;font-weight:500;background:rgba(251,248,242,.85);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:6px 9px;border-radius:10px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:14px}
+.bars i{flex:1;border-radius:6px 6px 3px 3px;background:rgba(154,106,60,.22)}
+.bars i.on{background:var(--accent)}
+.money{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.money b{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing:-.02em}
+.money span{font-size:13px;color:var(--olive);font-weight:600}
+.ping{justify-self:end;display:inline-flex;align-items:center;gap:10px;padding:9px 14px 9px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card);font-size:13.5px}
+.ping .av{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:12px}
+.ping .tag{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--olive);background:var(--olive-soft);padding:3px 8px;border-radius:999px}
+
+/* ---------- sections ---------- */
+.sec{padding-top:clamp(80px,12vw,150px)}
+.sec-head{max-width:720px}
+.sec-head h2{margin-top:14px}
+.sec-head .lead{margin-top:18px}
+
+/* features: a bento of small product moments */
+.bento{display:grid;gap:16px;margin-top:44px}
+@media (min-width:760px){.bento{grid-template-columns:repeat(6,1fr)}.f-2{grid-column:span 2}.f-3{grid-column:span 3}.f-4{grid-column:span 4}.f-6{grid-column:span 6}}
+.feat{position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:300px}
+.feat .copy{padding:24px 24px 0}
+.feat h3{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:-.02em;line-height:1.05;margin-top:10px}
+.feat h3 .it{color:var(--muted)}
+.feat p{color:var(--muted);font-size:14.5px;margin-top:10px;max-width:46ch}
+.feat .art{margin-top:auto;padding:20px 24px 24px}
+.tee3d{height:240px;margin:6px -24px -24px;overflow:hidden;border-top:1px solid var(--line)}
+.tee3d img{width:100%;height:100%;object-fit:cover;object-position:50% 40%;transition:transform 1.2s var(--ease)}
+.feat:hover .tee3d img{transform:scale(1.04)}
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.flow .chip{background:var(--surface-2)}
+.flow svg{width:16px;height:16px;color:var(--subtle)}
+.mini-variants{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.mini-variants span{height:30px;border-radius:9px;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--muted)}
+.mini-variants span.on{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.sw{display:flex;gap:7px;margin-top:12px}
+.sw i{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.sw i.on{outline:2px solid var(--fg);outline-offset:2px}
+.cod{display:grid;gap:8px}
+.cod .row1{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted)}
+.cod .row1 b{color:var(--fg);font-weight:500}
+.cod .tot{padding-top:10px;border-top:1px solid var(--line);font-size:15px;color:var(--fg)}
+.govs{display:flex;flex-wrap:wrap;gap:6px}
+.govs span{font-size:12px;padding:5px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.govs span b{color:var(--fg);font-weight:600;margin-left:4px}
+.olist{display:grid;gap:8px}
+.olist div{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;font-size:13.5px;padding:9px 12px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.olist .n{font-family:var(--mono);font-size:12px;color:var(--subtle)}
+.olist .wa{width:26px;height:26px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center}
+.olist .wa svg{width:15px;height:15px}
+.people{display:grid;gap:8px}
+.people div{display:flex;align-items:center;gap:10px;font-size:13.5px}
+.people .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12.5px;flex:none}
+.people small{color:var(--subtle);margin-left:auto}
+.ticket{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;border:1.5px dashed var(--line-strong);background:var(--surface-2)}
+.ticket b{font-family:var(--mono);font-size:18px;letter-spacing:.08em}
+.cdown{display:flex;gap:6px;margin-top:10px}
+.cdown span{flex:1;text-align:center;padding:8px 0;border-radius:12px;background:var(--fg);color:var(--surface);font-size:10.5px;letter-spacing:.06em}
+.cdown span b{display:block;font-family:var(--serif);font-weight:400;font-size:24px;letter-spacing:0}
+.lang{display:flex;gap:10px}
+.lang div{flex:1;padding:14px;border-radius:16px;background:var(--surface-2);border:1px solid var(--line)}
+.lang .ar{direction:rtl;font-family:'Cairo',var(--sans)}
+.lang b{display:block;font-family:var(--serif);font-weight:400;font-size:22px}
+.lang .ar b{font-family:'Reem Kufi','Cairo',serif;font-weight:700;font-size:20px}
+.lang small{font-size:12px;color:var(--muted)}
+.phone{width:150px;height:240px;margin:0 auto;border-radius:30px;border:6px solid var(--fg);background:var(--bg);position:relative;overflow:hidden;box-shadow:var(--shadow-pop)}
+.phone .glassbar{position:absolute;left:10px;right:10px;bottom:10px;height:30px;border-radius:15px;background:rgba(251,248,242,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 .5px rgba(36,28,20,.1),0 4px 10px -4px rgba(0,0,0,.2);display:flex;justify-content:space-around;align-items:center}
+.phone .glassbar i{width:12px;height:12px;border-radius:4px;background:rgba(36,28,20,.5)}
+.phone .glassbar i:first-child{background:var(--accent)}
+.phone .ic{position:absolute;top:28px;left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:14px;overflow:hidden;box-shadow:0 6px 14px -6px rgba(0,0,0,.4)}
+.phone .ic img{width:100%;height:100%}
+.phone .lbl{position:absolute;top:88px;left:0;right:0;text-align:center;font-size:10px;font-weight:600}
+
+/* themes: a live store you can click through */
+.th-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-top:34px;padding-bottom:4px}
+.th-tabs::-webkit-scrollbar{display:none}
+.th-tabs button{flex:none;height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);font-size:14px;font-weight:500;color:var(--muted);display:inline-flex;align-items:center;gap:8px;background:rgba(251,248,242,.5)}
+.th-tabs button i{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.th-tabs button.on{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.stage{position:relative;margin-top:22px}
+.browser{border-radius:22px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-pop)}
+.browser .bar{height:40px;display:flex;align-items:center;gap:7px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.browser .bar i{width:10px;height:10px;border-radius:50%;background:rgba(36,28,20,.14)}
+.browser .bar span{margin:0 auto;font-size:12px;color:var(--subtle);font-family:var(--mono);background:var(--surface);padding:4px 14px;border-radius:8px;border:1px solid var(--line)}
+.vp{position:relative;overflow:hidden;background:#fff}
+.vp iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:#fff}
+.vp-d{aspect-ratio:16/10}
+.handset{position:absolute;right:-10px;bottom:-34px;width:min(31%,230px);border-radius:34px;padding:8px;background:var(--fg);box-shadow:var(--shadow-pop)}
+.handset .vp{border-radius:27px;aspect-ratio:390/800}
+@media (max-width:759px){.vp-d{aspect-ratio:4/5}.handset{display:none}}
+.th-foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-top:54px}
+.th-foot .tag{font-family:var(--serif);font-size:26px;letter-spacing:-.02em}
+.th-foot .tag .it{color:var(--muted)}
+
+/* how it works */
+.how{display:grid;gap:16px;margin-top:40px}
+@media (min-width:760px){.how{grid-template-columns:repeat(3,1fr)}}
+.how .card{padding:24px}
+.how .n{font-family:var(--serif);font-size:54px;line-height:1;color:var(--accent);letter-spacing:-.03em}
+.how h3{font-size:18px;font-weight:600;margin-top:14px}
+.how p{color:var(--muted);font-size:14.5px;margin-top:6px}
+
+/* membership teaser */
+.member{display:grid;gap:26px;padding:clamp(26px,4vw,48px);margin-top:40px;background:linear-gradient(145deg,#FBF8F2 0%,#F1E7D7 100%);border:1px solid rgba(154,106,60,.25);border-radius:32px;box-shadow:var(--shadow-card);position:relative;overflow:hidden}
+.member::after{content:'';position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;border:1px dashed rgba(154,106,60,.35)}
+@media (min-width:900px){.member{grid-template-columns:1fr 1fr;align-items:center}}
+.price{display:flex;align-items:baseline;gap:10px;margin-top:16px}
+.price b{font-family:var(--serif);font-weight:400;font-size:clamp(64px,9vw,96px);line-height:.9;letter-spacing:-.03em}
+.price span{font-size:15px;color:var(--muted)}
+.inc{display:grid;gap:12px}
+.inc div{display:flex;gap:12px;align-items:flex-start;font-size:15px}
+.inc i{width:22px;height:22px;border-radius:50%;background:var(--olive);color:#fff;display:grid;place-items:center;flex:none;margin-top:1px}
+.inc i svg{width:13px;height:13px}
+.inc small{display:block;color:var(--muted);font-size:13px}
+
+/* faq */
+.faq{margin-top:30px;max-width:780px}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:20px;padding:20px 0;font-size:17px;font-weight:500}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary i{width:14px;height:14px;position:relative;flex:none;margin-top:5px}
+.faq summary i::before,.faq summary i::after{content:'';position:absolute;left:0;right:0;top:6px;height:1.6px;background:currentColor;transition:transform .25s}
+.faq summary i::after{transform:rotate(90deg)}
+.faq details[open] summary i::after{transform:rotate(0)}
+.faq p{color:var(--muted);padding-bottom:20px;max-width:64ch}
+
+.final{text-align:center;padding-top:clamp(90px,13vw,160px)}
+.final h2{max-width:900px;margin:18px auto 0}
+.final .ctas{display:flex;justify-content:center;flex-wrap:wrap;gap:12px;margin-top:30px}
+</style>
+</head>
+<body>
+<div id="dsTop"></div>
+<main class="page wrap">
+
+  <!-- hero -->
+  <section class="hero">
+    <div>
+      <span class="chip"><span class="dot"></span>Free to build · go live for <span data-price>500 EGP</span>/month</span>
+      <h1 class="display h-hero">Design it in 3D.<span class="it">Sell it from your own store.</span></h1>
+      <p class="lead">Draw your T-shirts on a real 3D model, send them to your store in one tap, and take <b>cash-on-delivery</b> orders from all 27 governorates — with a dashboard that shows who bought what, and where to ship it.</p>
+      <div class="ctas">
+        <button class="btn btn-primary" data-start>Create your store <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        <a class="btn btn-ghost" href="/design">Try the 3D studio</a>
+      </div>
+      <p class="already" data-already>Already have a store? <button data-signin>Sign in</button></p>
+      <div class="facts">
+        <div><b>6</b><span>store themes — remix them endlessly</span></div>
+        <div><b>27</b><span>governorates, each with its own delivery price</span></div>
+        <div><b>0%</b><span>commission on what you sell</span></div>
+      </div>
+    </div>
+
+    <div class="ui" aria-hidden="true">
+      <div class="uic tilt-r reveal">
+        <div class="top"><span class="eyebrow c-accent">New order · #1042</span><span class="badge b-new">New</span></div>
+        <div class="ord"><img src="/demo/tee-black.jpg" alt=""><div><b>Seif Kufi Tee × 2</b><small>Black / L · Mona A. · Giza</small></div><span class="p">1,560 EGP</span></div>
+        <div class="steps4"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+        <div class="meta"><span>Confirmed on WhatsApp</span><span>Cash on delivery</span></div>
+      </div>
+      <div class="uic tilt-l reveal" style="transition-delay:.08s">
+        <div class="top"><span class="t">maison-nour<span class="it">/shop</span></span><span class="badge b-live">Live</span></div>
+        <div class="storecard"><figure><img src="/demo/tee-sand.jpg" alt=""><figcaption><span>Cairo Tee</span><span>650</span></figcaption></figure><figure><img src="/demo/tee-olive.jpg" alt=""><figcaption><span>Soft Club</span><span>600</span></figcaption></figure></div>
+      </div>
+      <div class="uic reveal" style="transition-delay:.16s">
+        <div class="top"><span class="eyebrow">This week</span><span class="tiny">23 orders</span></div>
+        <div class="money"><b>17,450</b><span>EGP · +32%</span></div>
+        <div class="bars"><i style="height:38%"></i><i style="height:52%"></i><i style="height:44%"></i><i style="height:70%"></i><i style="height:58%"></i><i class="on" style="height:92%"></i><i style="height:30%"></i></div>
+      </div>
+      <div class="ping reveal" style="transition-delay:.24s"><span class="av">M</span><span>Mona from Giza just ordered</span><span class="tag">COD</span></div>
+    </div>
+  </section>
+
+  <!-- features -->
+  <section class="sec" id="features">
+    <div class="sec-head reveal">
+      <span class="eyebrow c-accent">Everything in one place</span>
+      <h2 class="display h-1">From the first sketch <span class="it">to the doorbell.</span></h2>
+      <p class="lead">No plugins, no apps to stitch together. Design, store, orders and customers live in one calm place — on your laptop and on your phone.</p>
+    </div>
+    <div class="bento">
+      <article class="card feat f-4 reveal">
+        <div class="copy"><span class="eyebrow c-clay">3D studio</span><h3>Draw straight on the shirt. <span class="it">Turn it, zoom in, print-ready.</span></h3><p>Text in Arabic and English, stickers, brushes, fills — on every panel and sleeve, then export print files.</p></div>
+        <div class="art"><div class="tee3d"><img src="/demo/hero-light.jpg" alt=""></div></div>
+      </article>
+      <article class="card feat f-2 reveal">
+        <div class="copy"><span class="eyebrow c-olive">One tap</span><h3>From design <span class="it">to product.</span></h3><p>“Add to my store” renders every colour and makes the sizes for you.</p></div>
+        <div class="art"><div class="sw"><i style="background:#141414" class="on"></i><i style="background:#F1ECE1"></i><i style="background:#6B6B45"></i><i style="background:#E8AFC2"></i><i style="background:#1D2A44"></i></div><div class="mini-variants"><span>S</span><span class="on">M</span><span>L</span><span>XL</span></div></div>
+      </article>
+      <article class="card feat f-2 reveal">
+        <div class="copy"><span class="eyebrow c-amber">Checkout</span><h3>Cash on delivery, <span class="it">done right.</span></h3><p>Egyptian numbers checked, address by governorate, totals that always add up.</p></div>
+        <div class="art cod"><div class="row1"><span>Subtotal</span><b>1,300 EGP</b></div><div class="row1"><span>Delivery · Alexandria</span><b>70 EGP</b></div><div class="row1"><span>WELCOME10</span><b>−130 EGP</b></div><div class="row1 tot"><span>Pay on delivery</span><b>1,240 EGP</b></div></div>
+      </article>
+      <article class="card feat f-2 reveal">
+        <div class="copy"><span class="eyebrow c-sky">Orders</span><h3>Every order, <span class="it">one swipe from shipped.</span></h3><p>New → confirmed → shipped → delivered. Message the buyer on WhatsApp in a tap.</p></div>
+        <div class="art olist"><div><span class="n">#1042</span><span>Mona · Giza</span><span class="badge b-confirmed">Confirmed</span><span class="wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2A9.8 9.8 0 0 0 3.6 17l-1.3 4.8 4.9-1.3A9.8 9.8 0 1 0 12 2.2z"/></svg></span></div><div><span class="n">#1041</span><span>Omar · Cairo</span><span class="badge b-shipped">Shipped</span><span class="wa"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2A9.8 9.8 0 0 0 3.6 17l-1.3 4.8 4.9-1.3A9.8 9.8 0 1 0 12 2.2z"/></svg></span></div></div>
+      </article>
+      <article class="card feat f-2 reveal">
+        <div class="copy"><span class="eyebrow c-plum">Customers</span><h3>Know who <span class="it">keeps coming back.</span></h3><p>Names, numbers, addresses and what each person spent — exportable any time.</p></div>
+        <div class="art people"><div><span class="av" style="background:var(--clay-soft);color:var(--clay)">N</span><span>Nour · Cairo</span><small>4 orders</small></div><div><span class="av" style="background:var(--sky-soft);color:var(--sky)">Y</span><span>Youssef · Alexandria</span><small>2 orders</small></div><div><span class="av" style="background:var(--olive-soft);color:var(--olive)">M</span><span>Mariam · Giza</span><small>1 order</small></div></div>
+      </article>
+      <article class="card feat f-3 reveal">
+        <div class="copy"><span class="eyebrow c-clay">Delivery</span><h3>Your prices, <span class="it">governorate by governorate.</span></h3><p>A flat fee, a different one for Upper Egypt, free over an amount — or no delivery somewhere at all.</p></div>
+        <div class="art govs"><span>Cairo<b>50</b></span><span>Giza<b>50</b></span><span>Alexandria<b>70</b></span><span>Dakahlia<b>70</b></span><span>Luxor<b>90</b></span><span>Aswan<b>90</b></span><span>Red Sea<b>110</b></span><span>Free over<b>1,500</b></span></div>
+      </article>
+      <article class="card feat f-3 reveal">
+        <div class="copy"><span class="eyebrow c-accent">Drops &amp; codes</span><h3>Make launches <span class="it">feel like events.</span></h3><p>Countdown sections, limited codes, free-delivery codes, minimum orders.</p></div>
+        <div class="art"><div class="ticket"><span class="tiny">Code</span><b>DROP07</b><span class="badge b-ok">−20%</span></div><div class="cdown"><span><b>02</b>DAYS</span><span><b>14</b>HRS</span><span><b>36</b>MIN</span><span><b>09</b>SEC</span></div></div>
+      </article>
+      <article class="card feat f-3 reveal">
+        <div class="copy"><span class="eyebrow c-olive">Arabic &amp; English</span><h3>A store that speaks <span class="it">like your customers.</span></h3><p>Every store works in English or Arabic, right-to-left, with Arabic type that looks designed.</p></div>
+        <div class="art lang"><div><b>Shop now</b><small>English store</small></div><div class="ar"><b>تسوّق دلوقتي</b><small>متجر عربي</small></div></div>
+      </article>
+      <article class="card feat f-3 reveal">
+        <div class="copy"><span class="eyebrow c-sky">On your phone</span><h3>Add it to your home screen — <span class="it">it feels like an app.</span></h3><p>Orders, products and your store, under a liquid-glass tab bar.</p></div>
+        <div class="art"><div class="phone"><div class="ic"><img src="/icons/icon-180.png" alt=""></div><div class="lbl">Design</div><div class="glassbar"><i></i><i></i><i></i><i></i><i></i></div></div></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- themes -->
+  <section class="sec" id="themes">
+    <div class="sec-head reveal">
+      <span class="eyebrow c-clay">Themes</span>
+      <h2 class="display h-1">Six starting points. <span class="it">Endless stores.</span></h2>
+      <p class="lead">Every colour, font, shape and section is yours to change — or press <b>Remix</b> and get a fresh combination that still feels right. This is a real store: click around.</p>
+    </div>
+    <div class="th-tabs" id="thTabs" role="tablist"></div>
+    <div class="stage reveal">
+      <div class="browser"><div class="bar"><i></i><i></i><i></i><span id="thUrl">designbyseif.com/your-store</span></div><div class="vp vp-d" id="vpD"><iframe id="ifD" title="Theme preview — computer" loading="lazy" tabindex="-1"></iframe></div></div>
+      <div class="handset"><div class="vp" id="vpM"><iframe id="ifM" title="Theme preview — phone" loading="lazy" tabindex="-1"></iframe></div></div>
+    </div>
+    <div class="th-foot">
+      <span class="tag" id="thTag"></span>
+      <div class="row wrap-ok"><button class="btn btn-ghost btn-sm" id="thRemix">Remix colours &amp; fonts</button><button class="btn btn-primary btn-sm" id="thUse">Start with this theme</button></div>
+    </div>
+  </section>
+
+  <!-- how -->
+  <section class="sec">
+    <div class="sec-head reveal"><span class="eyebrow c-olive">How it works</span><h2 class="display h-1">Open this week. <span class="it">Not next season.</span></h2></div>
+    <div class="how">
+      <div class="card reveal"><div class="n">01</div><h3>Name your store</h3><p>Sign in with Google, pick an address like <span class="mono"><span data-host>designbyseif.com</span>/your-name</span> and a theme. Free.</p></div>
+      <div class="card reveal" style="transition-delay:.06s"><div class="n">02</div><h3>Design and add products</h3><p>Upload photos or design in 3D and send it over. Set sizes, colours, stock and prices.</p></div>
+      <div class="card reveal" style="transition-delay:.12s"><div class="n">03</div><h3>Go live and take orders</h3><p>Switch your membership on, share the link, and watch orders arrive — paid in cash at the door.</p></div>
+    </div>
+  </section>
+
+  <!-- membership -->
+  <section class="sec" id="pricing">
+    <div class="member reveal">
+      <div>
+        <span class="eyebrow c-accent">Membership</span>
+        <h2 class="display h-2" style="margin-top:12px">One price. <span class="it">Everything included.</span></h2>
+        <div class="price"><b data-price-num>500</b><span>EGP / month</span></div>
+        <p class="muted" style="margin-top:8px">Build and design for free. Pay only when you're ready to take orders. No commission, ever.</p>
+        <div class="row wrap-ok" style="margin-top:22px"><a class="btn btn-primary" href="/pricing">See the membership <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      </div>
+      <div class="inc">
+        <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><span>Your live store<small>Up to 3 stores, 500 products each, unlimited orders</small></span></div>
+        <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><span>The full 3D studio<small>Every garment, export at print resolution</small></span></div>
+        <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><span>Orders, customers, discounts, drops<small>On the web and as an iPhone web app</small></span></div>
+        <div><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><span>All six themes and every future one<small>Remix, edit every section, Arabic or English</small></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- faq -->
+  <section class="sec">
+    <div class="sec-head reveal"><span class="eyebrow">Questions</span><h2 class="display h-2" style="margin-top:12px">Good to know.</h2></div>
+    <div class="faq">
+      <details><summary>Do I pay before I can try it?<i></i></summary><p>No. Signing in is free, and so is building your store, adding products and designing in 3D. You pay the monthly membership only when you want to publish — the moment shoppers can see your store and order.</p></details>
+      <details><summary>How do my customers pay?<i></i></summary><p>Cash on delivery. They fill in their name, Egyptian mobile number and address; you confirm the order (a WhatsApp button is right there), ship it, and collect the cash on delivery.</p></details>
+      <details><summary>Do you take a cut of my sales?<i></i></summary><p>No commission at all. Your membership is the only thing you pay us.</p></details>
+      <details><summary>What will my store's address be?<i></i></summary><p>For now every store lives at <span class="mono"><span data-host>designbyseif.com</span>/your-name</span> — pick any free name and change it later. Your own domain is coming.</p></details>
+      <details><summary>Can I sell things that aren't T-shirts?<i></i></summary><p>Yes. Upload photos of anything — hoodies, bags, accessories — with any options you like (size, colour, material). The 3D studio is there for the pieces you design yourself.</p></details>
+      <details><summary>Does it work on my phone?<i></i></summary><p>Everything does. On iPhone, open the site in Safari, tap Share → Add to Home Screen, and it opens like an app with its own tab bar.</p></details>
+    </div>
+  </section>
+
+  <section class="final">
+    <span class="eyebrow c-accent reveal">Design by Seif</span>
+    <h2 class="display h-hero reveal">Your brand, <span class="it">live this week.</span></h2>
+    <div class="ctas reveal"><button class="btn btn-primary" data-start>Create your store</button><a class="btn btn-ghost" href="/design">Open the 3D studio</a></div>
+  </section>
+</main>
+<div id="dsFoot"></div>
+<div id="dsTabs"></div>
+<!--@shell-->
+<!--@engine-->
+<script>
+(function(){
+  var signedIn = false, chosen = 'atelier';
+  function start(theme){
+    if(signedIn){ location.href = '/dashboard' + (theme ? '?theme=' + encodeURIComponent(theme) : ''); return; }
+    DS.openSignIn('/dashboard' + (theme ? '?theme=' + encodeURIComponent(theme) : ''), 'Create your store — it’s free to build.');
+  }
+  document.querySelectorAll('[data-start]').forEach(function(b){ b.onclick = function(){ start(null); }; });
+  document.querySelectorAll('[data-signin]').forEach(function(b){ b.onclick = function(){ DS.openSignIn('/dashboard'); }; });
+  document.querySelectorAll('[data-host]').forEach(function(e){ e.textContent = location.host; });
+  if(DS.CFG.priceNum){ document.querySelectorAll('[data-price]').forEach(function(e){ e.textContent = DS.CFG.priceNum + ' EGP'; }); document.querySelectorAll('[data-price-num]').forEach(function(e){ e.textContent = DS.CFG.priceNum; }); }
+
+  /* ---------- the theme gallery: one real store, drawn by the store renderer ---------- */
+  var names = { atelier: 'maison-nour', concrete: 'second-take', bloom: 'sunny-days', noir: 'noir-cairo', souk: 'souk-seif', gallery: 'gallery-9' };
+  var titles = { atelier: 'Maison Nour', concrete: 'SECOND TAKE', bloom: 'Sunny Days', noir: 'Noir Cairo', souk: 'سوق سيف', gallery: 'Gallery 9' };
+  var settings = { contact: { whatsapp: '01000000000', instagram: 'designbyseif' }, about: 'Heavyweight tees designed in 3D and printed by hand in Cairo.',
+                   policies: { returns: 'Exchange within 14 days.', shipping: 'Delivery in 2–4 working days, cash on delivery.' }, shipping: { flat: 60, freeOver: 1500, govs: {} }, checkout: {} };
+  var themes = {}, D = null, M = null;
+  SK_THEME_ORDER.forEach(function(id){ themes[id] = skNewTheme(id); });
+  var tabs = document.getElementById('thTabs');
+  tabs.innerHTML = SK_THEME_ORDER.map(function(id){ var t = SK_THEMES[id], c = t.s.colors; return '<button role="tab" data-th="' + id + '"><i style="background:linear-gradient(135deg,' + c.bg + ' 50%,' + c.accent + ' 50%)"></i>' + t.name + '</button>'; }).join('');
+  function fit(vp, ifr, w){
+    var k = vp.clientWidth / w;
+    ifr.style.width = w + 'px'; ifr.style.height = Math.ceil(vp.clientHeight / k) + 'px'; ifr.style.transform = 'scale(' + k + ')';
+  }
+  function layout(){
+    var vpD = document.getElementById('vpD'), vpM = document.getElementById('vpM');
+    fit(vpD, document.getElementById('ifD'), vpD.clientWidth < 700 ? 420 : 1280);
+    fit(vpM, document.getElementById('ifM'), 390);
+  }
+  function opts(id){ var lang = SK_THEMES[id].lang || 'en'; return { theme: themes[id], settings: settings, lang: lang, products: SK_DEMO.products(lang), storeName: titles[id], demo: true }; }
+  function show(id){
+    chosen = id;
+    tabs.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.dataset.th === id); });
+    document.getElementById('thUrl').textContent = location.host + '/' + names[id];
+    var t = SK_THEMES[id];
+    document.getElementById('thTag').innerHTML = DS.esc(t.name) + ' — <span class="it">' + DS.esc(t.tag) + '</span>';
+    if(!D){ D = SKP.make(document.getElementById('ifD'), opts(id)); M = SKP.make(document.getElementById('ifM'), opts(id)); }
+    else { D.update(opts(id), false); D.go({ page: 'home' }); M.update(opts(id), false); M.go({ page: 'home' }); }
+  }
+  tabs.addEventListener('click', function(e){ var b = e.target.closest('[data-th]'); if(b) show(b.dataset.th); });
+  document.getElementById('thRemix').onclick = function(){ themes[chosen] = skRemix(themes[chosen]); D.update({ theme: themes[chosen] }, true); M.update({ theme: themes[chosen] }, true); };
+  document.getElementById('thUse').onclick = function(){ start(chosen); };
+  /* draw the stores only when the section comes near */
+  var started = false;
+  function go(){ if(started) return; started = true; layout(); show('atelier'); }
+  if('IntersectionObserver' in window){ var io = new IntersectionObserver(function(es){ if(es.some(function(e){ return e.isIntersecting; })){ go(); io.disconnect(); } }, { rootMargin: '600px 0px' }); io.observe(document.getElementById('themes')); }
+  else go();
+  window.addEventListener('resize', function(){ if(started) layout(); });
+
+  DS.boot({ page: 'home', tab: 'home', nav: 'home', next: '/dashboard', onSession: function(s){
+    signedIn = !!(s && s.signedIn);
+    if(signedIn){ document.querySelectorAll('[data-already]').forEach(function(e){ e.innerHTML = 'Signed in as ' + DS.esc(s.email) + ' · <a class="link" href="/dashboard">Open your dashboard</a>'; }); document.querySelectorAll('[data-start]').forEach(function(b){ b.firstChild.textContent = 'Open your dashboard '; }); }
+  } });
+  /* the section links in the tab bar scroll within this page */
+  window.addEventListener('hashchange', function(){ var id = location.hash.slice(1); if(id === 'features' || id === 'themes') DS.setTab(id); });
+})();
+</script>
+</body>
+</html>
