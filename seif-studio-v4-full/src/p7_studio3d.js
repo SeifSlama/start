@@ -792,7 +792,7 @@ function s3dRenderView(view, px, opts){
   if(opts.bg && opts.bg !== 'transparent'){
     var out = document.createElement('canvas'); out.width = out.height = px;
     var o = out.getContext('2d'), gr = o.createRadialGradient(px / 2, px * 0.4, px * 0.05, px / 2, px * 0.45, px * 0.75);
-    gr.addColorStop(0, '#F8F3EA'); gr.addColorStop(1, '#E6DDCF'); o.fillStyle = gr; o.fillRect(0, 0, px, px);
+    gr.addColorStop(0, '#FFFFFF'); gr.addColorStop(1, '#EFEEEA'); o.fillStyle = gr; o.fillRect(0, 0, px, px);
     o.drawImage(c, 0, 0); c = out;
   }
   if(opts.watermark && typeof drawWatermark === 'function') drawWatermark(c.getContext('2d'), px);
@@ -1133,13 +1133,13 @@ async function s3dContactSheet(){
     var c = document.createElement('canvas');
     c.width = cols * (cell + pad) + pad; c.height = rows * (cell + label + pad) + pad;
     var ctx = c.getContext('2d');
-    ctx.fillStyle = '#EFE8DC'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = '#F7F6F3'; ctx.fillRect(0, 0, c.width, c.height);
     var base = S3D.src.base;
     try {
       GARMENT_COLORS.forEach(function(col, i){
         var x = pad + (i % cols) * (cell + pad), y = pad + Math.floor(i / cols) * (cell + label + pad);
         S3D.src.base = function(){ return col.hex; };
-        ctx.fillStyle = '#FBF8F2'; ctx.fillRect(x, y, cell, cell + label);
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x, y, cell, cell + label);
         ctx.drawImage(s3dRenderView(view, cell, { bg: 'studio' }), x, y);
         ctx.fillStyle = col.hex; ctx.fillRect(x + 12, y + cell + 12, 20, 20);
         ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.strokeRect(x + 12.5, y + cell + 12.5, 19, 19);

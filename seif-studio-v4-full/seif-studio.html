@@ -9,7 +9,7 @@ window.SEIF_CONFIG = window.SEIF_CONFIG || { demo: true };
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3D Design — Design by Seif</title>
-<meta name="theme-color" content="#EFE8DC">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Design">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -23,8 +23,8 @@ window.SEIF_CONFIG = window.SEIF_CONFIG || { demo: true };
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Bungee&family=Black+Ops+One&family=Rubik+Mono+One&family=Righteous&family=Monoton&family=Press+Start+2P&family=Permanent+Marker&family=Pacifico&family=Lobster&family=Caveat:wght@400;700&family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Lalezar&family=Reem+Kufi:wght@400;700&family=Changa:wght@400;700;800&family=El+Messiri:wght@400;700&family=Rakkas&family=Aref+Ruqaa:wght@400;700&family=Amiri:wght@400;700&family=Marhey:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#EFE8DC; --panel:#FBF8F2; --ink:#241C14; --ink2:#6E6354;
-  --red:#C2573A; --chalk:#A0937F; --line:#DCD1BF; --line2:#E7DDCC;
+  --paper:#F7F6F3; --panel:#FFFFFF; --ink:#241C14; --ink2:#6B655C;
+  --red:#C2573A; --chalk:#A39C91; --line:#E3E0DA; --line2:#EEECE7;
   --amber:#B88320; --green:#5C7A47; --accent:#9A6A3C;
   --disp:'Instrument Serif',Georgia,serif;
   --body:'Geist',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
@@ -135,7 +135,7 @@ main{flex:1;display:grid;grid-template-columns:230px 1fr 320px;min-height:0}
 .menu button{display:block;width:100%;text-align:left;background:none;border:none;padding:7px 10px;font-size:13px;color:var(--ink);border-radius:5px}
 .menu button:hover{background:#F1F1EA}
 .menu hr{border:none;border-top:1px dashed var(--line);margin:4px 0}
-#abStage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:radial-gradient(ellipse at 50% 42%,#F8F3EA 0%,#EAE2D4 80%)}
+#abStage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none;background:radial-gradient(ellipse at 50% 42%,#FFFFFF 0%,#F1F0EC 80%)}
 #abCanvas{display:block;width:100%;height:100%;cursor:default;touch-action:none}
 #abCanvas.grab{cursor:grabbing}
 #abCanvas.move{cursor:move}
@@ -240,7 +240,7 @@ input[type=range]{accent-color:var(--red)}
 #lockBar.shake{animation:lockshake .35s ease}
 
 /* ---------- 3D studio ---------- */
-#studio3d{background:radial-gradient(ellipse at 50% 40%,#FDFBF6 0%,#F3EDE2 58%,#E6DDCE 100%);overflow:hidden}
+#studio3d{background:radial-gradient(ellipse at 50% 40%,#FFFFFF 0%,#F7F6F3 58%,#ECEAE5 100%);overflow:hidden}
 .gl3dhost{position:absolute;inset:0;touch-action:none}
 .gl3dhost canvas{display:block;outline:none;touch-action:none;cursor:grab}
 .s3dnote{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);text-align:center;max-width:80%;line-height:1.6}
@@ -6088,13 +6088,12 @@ async function openToStore(){
   }; });
   $('tsGo').onclick = addToStore;
 }
-/* the product photo: the render on the same warm backdrop as the sample stores, 3:4 */
+/* the product photo: the render on white, like the placeholder photos, 3:4 */
 function productShot(src){
   var W = 900, H = 1200, o = document.createElement('canvas'); o.width = W; o.height = H;
   var g = o.getContext('2d');
-  var gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#F1ECE3'); gr.addColorStop(1, '#E4DCCF'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
-  var rg = g.createRadialGradient(W / 2, H * 0.42, 40, W / 2, H * 0.42, W * 0.8); rg.addColorStop(0, 'rgba(255,255,255,.55)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, H);
-  g.save(); g.filter = 'blur(26px)'; g.fillStyle = 'rgba(60,45,30,.18)'; g.beginPath(); g.ellipse(W / 2, H * 0.9, W * 0.34, 34, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+  g.save(); g.filter = 'blur(26px)'; g.fillStyle = 'rgba(0,0,0,.09)'; g.beginPath(); g.ellipse(W / 2, H * 0.9, W * 0.34, 34, 0, 0, Math.PI * 2); g.fill(); g.restore();
   var k = Math.min(1190 / src.width, 1190 / src.height), w = src.width * k, h = src.height * k;
   g.drawImage(src, (W - w) / 2, (H - h) / 2 - 24, w, h);
   return o.toDataURL('image/jpeg', 0.86);
@@ -7857,7 +7856,7 @@ function s3dRenderView(view, px, opts){
   if(opts.bg && opts.bg !== 'transparent'){
     var out = document.createElement('canvas'); out.width = out.height = px;
     var o = out.getContext('2d'), gr = o.createRadialGradient(px / 2, px * 0.4, px * 0.05, px / 2, px * 0.45, px * 0.75);
-    gr.addColorStop(0, '#F8F3EA'); gr.addColorStop(1, '#E6DDCF'); o.fillStyle = gr; o.fillRect(0, 0, px, px);
+    gr.addColorStop(0, '#FFFFFF'); gr.addColorStop(1, '#EFEEEA'); o.fillStyle = gr; o.fillRect(0, 0, px, px);
     o.drawImage(c, 0, 0); c = out;
   }
   if(opts.watermark && typeof drawWatermark === 'function') drawWatermark(c.getContext('2d'), px);
@@ -8198,13 +8197,13 @@ async function s3dContactSheet(){
     var c = document.createElement('canvas');
     c.width = cols * (cell + pad) + pad; c.height = rows * (cell + label + pad) + pad;
     var ctx = c.getContext('2d');
-    ctx.fillStyle = '#EFE8DC'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = '#F7F6F3'; ctx.fillRect(0, 0, c.width, c.height);
     var base = S3D.src.base;
     try {
       GARMENT_COLORS.forEach(function(col, i){
         var x = pad + (i % cols) * (cell + pad), y = pad + Math.floor(i / cols) * (cell + label + pad);
         S3D.src.base = function(){ return col.hex; };
-        ctx.fillStyle = '#FBF8F2'; ctx.fillRect(x, y, cell, cell + label);
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x, y, cell, cell + label);
         ctx.drawImage(s3dRenderView(view, cell, { bg: 'studio' }), x, y);
         ctx.fillStyle = col.hex; ctx.fillRect(x + 12, y + cell + 12, 20, 20);
         ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.strokeRect(x + 12.5, y + cell + 12.5, 19, 19);

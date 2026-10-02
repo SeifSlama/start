@@ -4,9 +4,9 @@
 <!--@head title="Design by Seif — design clothes, build your store, sell" desc="Design T-shirts in 3D, put them in your own online store in one click, and take cash-on-delivery orders from all over Egypt."-->
 <style>
 /* ---------- hero ---------- */
-.hero{display:grid;gap:44px;padding-top:clamp(10px,4vw,46px)}
-@media (min-width:1024px){.hero{grid-template-columns:1.08fr .92fr;gap:56px;align-items:center;min-height:calc(100vh - 120px)}}
-.hero h1{margin-top:22px}
+.hero{display:grid;gap:36px;padding-top:6px}
+@media (min-width:1024px){.hero{grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;padding-top:20px}}
+.hero h1{margin-top:18px}
 .hero h1 .it{display:block}
 .hero .lead{margin-top:24px;max-width:540px}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
@@ -17,34 +17,34 @@
 .facts span{display:block;font-size:12.5px;color:var(--subtle);margin-top:8px;line-height:1.35}
 
 /* the stack of little app screens beside the headline */
-.ui{position:relative;display:grid;gap:16px;max-width:470px;margin:0 auto;width:100%}
-.ui::before{content:'';position:absolute;inset:-12% -6%;z-index:-1;background:radial-gradient(closest-side,rgba(154,106,60,.12),transparent 70%)}
-.uic{background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow-card);padding:18px 18px 16px}
+.ui{position:relative;display:grid;gap:12px;max-width:370px;margin:0 auto;width:100%}
+.ui::before{content:'';position:absolute;inset:-10% -6%;z-index:-1;background:radial-gradient(closest-side,rgba(154,106,60,.08),transparent 70%)}
+.uic{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-card);padding:14px 15px 13px}
 .uic.tilt-r{transform:translateX(5%) rotate(.6deg)}
 .uic.tilt-l{transform:translateX(-3%) rotate(-.5deg)}
 .uic .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.uic .t{font-family:var(--serif);font-size:23px;letter-spacing:-.02em;line-height:1.1}
+.uic .t{font-family:var(--serif);font-size:20px;letter-spacing:-.02em;line-height:1.1}
 .uic .t .it{color:var(--muted)}
-.ord{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;margin-top:14px}
-.ord img{width:54px;height:66px;object-fit:cover;border-radius:12px;background:var(--surface-2)}
-.ord b{display:block;font-weight:500;font-size:14.5px}
-.ord small{display:block;font-size:12.5px;color:var(--muted)}
-.ord .p{font-weight:600;font-size:14.5px}
-.steps4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px}
+.ord{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;margin-top:10px}
+.ord img{width:44px;height:52px;object-fit:cover;border-radius:10px;background:#fff;border:1px solid var(--line)}
+.ord b{display:block;font-weight:500;font-size:13.5px}
+.ord small{display:block;font-size:12px;color:var(--muted)}
+.ord .p{font-weight:600;font-size:13.5px}
+.steps4{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:11px}
 .steps4 i{height:5px;border-radius:3px;background:rgba(36,28,20,.09)}
 .steps4 i.on{background:var(--olive)}
 .uic .meta{display:flex;justify-content:space-between;font-size:12px;color:var(--subtle);margin-top:8px}
-.storecard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.storecard figure{border-radius:16px;overflow:hidden;background:#F1ECE3;aspect-ratio:3/4;position:relative}
+.storecard{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.storecard figure{border-radius:12px;overflow:hidden;background:#fff;border:1px solid var(--line);aspect-ratio:1/1;position:relative}
 .storecard figure img{width:100%;height:100%;object-fit:cover}
-.storecard figcaption{position:absolute;left:8px;right:8px;bottom:8px;display:flex;justify-content:space-between;font-size:11.5px;font-weight:500;background:rgba(251,248,242,.85);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:6px 9px;border-radius:10px}
-.bars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:14px}
+.storecard figcaption{position:absolute;left:8px;right:8px;bottom:8px;display:flex;justify-content:space-between;font-size:11.5px;font-weight:500;background:rgba(255,255,255,.88);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:5px 8px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:48px;margin-top:10px}
 .bars i{flex:1;border-radius:6px 6px 3px 3px;background:rgba(154,106,60,.22)}
 .bars i.on{background:var(--accent)}
 .money{display:flex;align-items:baseline;gap:8px;margin-top:6px}
-.money b{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing:-.02em}
+.money b{font-family:var(--serif);font-size:28px;font-weight:400;letter-spacing:-.02em}
 .money span{font-size:13px;color:var(--olive);font-weight:600}
-.ping{justify-self:end;display:inline-flex;align-items:center;gap:10px;padding:9px 14px 9px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card);font-size:13.5px}
+.ping{justify-self:end;display:inline-flex;align-items:center;gap:9px;padding:7px 12px 7px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-card);font-size:12.5px}
 .ping .av{width:26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:12px}
 .ping .tag{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--olive);background:var(--olive-soft);padding:3px 8px;border-radius:999px}
 
@@ -63,7 +63,7 @@
 .feat h3 .it{color:var(--muted)}
 .feat p{color:var(--muted);font-size:14.5px;margin-top:10px;max-width:46ch}
 .feat .art{margin-top:auto;padding:20px 24px 24px}
-.tee3d{height:240px;margin:6px -24px -24px;overflow:hidden;border-top:1px solid var(--line)}
+.tee3d{height:240px;margin:6px -24px -24px;overflow:hidden;border-top:1px solid var(--line);background:#fff}
 .tee3d img{width:100%;height:100%;object-fit:cover;object-position:50% 40%;transition:transform 1.2s var(--ease)}
 .feat:hover .tee3d img{transform:scale(1.04)}
 .flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -103,7 +103,7 @@
 .lang .ar b{font-family:'Reem Kufi','Cairo',serif;font-weight:700;font-size:20px}
 .lang small{font-size:12px;color:var(--muted)}
 .phone{width:150px;height:240px;margin:0 auto;border-radius:30px;border:6px solid var(--fg);background:var(--bg);position:relative;overflow:hidden;box-shadow:var(--shadow-pop)}
-.phone .glassbar{position:absolute;left:10px;right:10px;bottom:10px;height:30px;border-radius:15px;background:rgba(251,248,242,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 .5px rgba(36,28,20,.1),0 4px 10px -4px rgba(0,0,0,.2);display:flex;justify-content:space-around;align-items:center}
+.phone .glassbar{position:absolute;left:10px;right:10px;bottom:10px;height:30px;border-radius:15px;background:rgba(255,255,255,.7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 .5px rgba(36,28,20,.1),0 4px 10px -4px rgba(0,0,0,.2);display:flex;justify-content:space-around;align-items:center}
 .phone .glassbar i{width:12px;height:12px;border-radius:4px;background:rgba(36,28,20,.5)}
 .phone .glassbar i:first-child{background:var(--accent)}
 .phone .ic{position:absolute;top:28px;left:50%;transform:translateX(-50%);width:54px;height:54px;border-radius:14px;overflow:hidden;box-shadow:0 6px 14px -6px rgba(0,0,0,.4)}
@@ -113,7 +113,7 @@
 /* themes: a live store you can click through */
 .th-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-top:34px;padding-bottom:4px}
 .th-tabs::-webkit-scrollbar{display:none}
-.th-tabs button{flex:none;height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);font-size:14px;font-weight:500;color:var(--muted);display:inline-flex;align-items:center;gap:8px;background:rgba(251,248,242,.5)}
+.th-tabs button{flex:none;height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);font-size:14px;font-weight:500;color:var(--muted);display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.5)}
 .th-tabs button i{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .th-tabs button.on{background:var(--fg);color:var(--surface);border-color:var(--fg)}
 .stage{position:relative;margin-top:22px}
@@ -140,7 +140,7 @@
 .how p{color:var(--muted);font-size:14.5px;margin-top:6px}
 
 /* membership teaser */
-.member{display:grid;gap:26px;padding:clamp(26px,4vw,48px);margin-top:40px;background:linear-gradient(145deg,#FBF8F2 0%,#F1E7D7 100%);border:1px solid rgba(154,106,60,.25);border-radius:32px;box-shadow:var(--shadow-card);position:relative;overflow:hidden}
+.member{display:grid;gap:26px;padding:clamp(26px,4vw,48px);margin-top:40px;background:linear-gradient(145deg,#FFFFFF 0%,#F7F4EF 100%);border:1px solid rgba(154,106,60,.25);border-radius:32px;box-shadow:var(--shadow-card);position:relative;overflow:hidden}
 .member::after{content:'';position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;border:1px dashed rgba(154,106,60,.35)}
 @media (min-width:900px){.member{grid-template-columns:1fr 1fr;align-items:center}}
 .price{display:flex;align-items:baseline;gap:10px;margin-top:16px}
@@ -193,13 +193,13 @@
     <div class="ui" aria-hidden="true">
       <div class="uic tilt-r reveal">
         <div class="top"><span class="eyebrow c-accent">New order · #1042</span><span class="badge b-new">New</span></div>
-        <div class="ord"><img src="/demo/tee-black.jpg" alt=""><div><b>Seif Kufi Tee × 2</b><small>Black / L · Mona A. · Giza</small></div><span class="p">1,560 EGP</span></div>
+        <div class="ord"><img src="/demo/placeholder.jpg" alt=""><div><b>Seif Kufi Tee × 2</b><small>Black / L · Mona A. · Giza</small></div><span class="p">1,560 EGP</span></div>
         <div class="steps4"><i class="on"></i><i class="on"></i><i></i><i></i></div>
         <div class="meta"><span>Confirmed on WhatsApp</span><span>Cash on delivery</span></div>
       </div>
       <div class="uic tilt-l reveal" style="transition-delay:.08s">
         <div class="top"><span class="t">maison-nour<span class="it">/shop</span></span><span class="badge b-live">Live</span></div>
-        <div class="storecard"><figure><img src="/demo/tee-sand.jpg" alt=""><figcaption><span>Cairo Tee</span><span>650</span></figcaption></figure><figure><img src="/demo/tee-olive.jpg" alt=""><figcaption><span>Soft Club</span><span>600</span></figcaption></figure></div>
+        <div class="storecard"><figure><img src="/demo/placeholder.jpg" alt=""><figcaption><span>Cairo Tee</span><span>650</span></figcaption></figure><figure><img src="/demo/placeholder.jpg" alt=""><figcaption><span>Soft Club</span><span>600</span></figcaption></figure></div>
       </div>
       <div class="uic reveal" style="transition-delay:.16s">
         <div class="top"><span class="eyebrow">This week</span><span class="tiny">23 orders</span></div>
@@ -220,7 +220,7 @@
     <div class="bento">
       <article class="card feat f-4 reveal">
         <div class="copy"><span class="eyebrow c-clay">3D studio</span><h3>Draw straight on the shirt. <span class="it">Turn it, zoom in, print-ready.</span></h3><p>Text in Arabic and English, stickers, brushes, fills — on every panel and sleeve, then export print files.</p></div>
-        <div class="art"><div class="tee3d"><img src="/demo/hero-light.jpg" alt=""></div></div>
+        <div class="art"><div class="tee3d"><img src="/demo/placeholder-wide.jpg" alt=""></div></div>
       </article>
       <article class="card feat f-2 reveal">
         <div class="copy"><span class="eyebrow c-olive">One tap</span><h3>From design <span class="it">to product.</span></h3><p>“Add to my store” renders every colour and makes the sizes for you.</p></div>

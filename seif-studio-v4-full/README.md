@@ -19,13 +19,13 @@ liquid-glass tab bar on phones; add it to the iPhone home screen and it opens li
 | `site/store/themes.js` | Six themes (Atelier, Concrete, Bloom, Noir, Souk, Gallery), palettes, fonts, section types, Remix, and the checks that keep stored settings safe to put in CSS |
 | `site/store/render.js` | The storefront renderer: one pure function from (theme, settings, products, page) to HTML. The server uses it for every store page; the dashboard and landing page use it for live previews |
 | `site/store/store.css`, `runtime.js` | Every store's stylesheet and its one script: bag, options and stock, checkout, order tracking, countdowns, the preview bridge |
-| `site/store/demo.js`, `preview.js` | Sample products (photos in `site/static/demo/`, rendered with the studio) and the in-page preview |
+| `site/store/demo.js`, `preview.js` | Sample products (all showing the placeholder photo in `site/static/demo/` — a plain white tee on white) and the in-page preview |
 | `site/static/` | Icons, manifest, service worker, offline page, sample photos — copied into `dist/` |
 | `worker/stores.js` | Stores, products, photos, orders, customers, discounts, numbers, store pages |
 | `worker/index.js` | Accounts, sessions, membership, saved designs, the owner's API, routing |
 | `src/` | The 3D studio (see below) |
 | `tools/build.js` | Builds everything into `dist/` (also `seif-studio.html`, the studio on its own) |
-| `tools/render-demo.mjs`, `render-hero.mjs` | Re-render the sample product photos with the studio |
+| `tools/render-placeholder.mjs` | Re-render the placeholder product photos with the studio |
 
 ## Build
 

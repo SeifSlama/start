@@ -137,7 +137,7 @@ var SK = (function(){
     var img = imgs[0] || '';
     /* a full-width hero wants a wide photo: samples get a styled one, real stores a row of their products */
     if(lay === 'full' && !own){
-      if(ctx.demo) img = skInk(ctx.th.s.colors.bg) === '#FFFFFF' ? '/demo/hero-dark.jpg' : '/demo/hero-light.jpg';
+      if(ctx.demo) img = '/demo/placeholder-wide.jpg';
       else if(imgs.length >= 3) return '<section class="hero hero-full"' + ' data-h="' + attr(x.height || 'tall') + '"><div class="hero-bg trio">' + imgs.slice(0, 3).map(function(u){ return '<img src="' + attr(u) + '" alt="" decoding="async">'; }).join('') + '</div><div class="hero-shade"></div><div class="wrap">' + copyHtml(x, ctx) + '</div></section>';
     }
     var media = function(u, cls){ return u ? '<img class="' + (cls || '') + '" src="' + attr(u) + '" alt="" decoding="async" fetchpriority="high">' : '<div class="ph ' + (cls || '') + '">' + teeSvg(ctx.th.s.colors.surface, ctx.th.s.colors.text) + '</div>'; };

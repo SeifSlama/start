@@ -224,7 +224,7 @@ function htmlRes(html, status, priv){
 }
 function noStorePage(slug){
   return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not found</title><meta name="robots" content="noindex">'
-    + '<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#EFE8DC;color:#241C14;font:16px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px}'
+    + '<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#FFFFFF;color:#241C14;font:16px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;text-align:center;padding:24px}'
     + 'h1{font:400 44px/1 Georgia,serif;margin:0 0 12px}a{color:#9A6A3C}</style></head><body><div><h1>Nothing here.</h1><p>There is no store at /' + SK.esc(slug) + ' yet.</p>'
     + '<p><a href="/">Make one with Design by Seif →</a></p></div></body></html>';
 }

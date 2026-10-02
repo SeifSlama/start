@@ -1541,13 +1541,12 @@ async function openToStore(){
   }; });
   $('tsGo').onclick = addToStore;
 }
-/* the product photo: the render on the same warm backdrop as the sample stores, 3:4 */
+/* the product photo: the render on white, like the placeholder photos, 3:4 */
 function productShot(src){
   var W = 900, H = 1200, o = document.createElement('canvas'); o.width = W; o.height = H;
   var g = o.getContext('2d');
-  var gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#F1ECE3'); gr.addColorStop(1, '#E4DCCF'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
-  var rg = g.createRadialGradient(W / 2, H * 0.42, 40, W / 2, H * 0.42, W * 0.8); rg.addColorStop(0, 'rgba(255,255,255,.55)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, H);
-  g.save(); g.filter = 'blur(26px)'; g.fillStyle = 'rgba(60,45,30,.18)'; g.beginPath(); g.ellipse(W / 2, H * 0.9, W * 0.34, 34, 0, 0, Math.PI * 2); g.fill(); g.restore();
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+  g.save(); g.filter = 'blur(26px)'; g.fillStyle = 'rgba(0,0,0,.09)'; g.beginPath(); g.ellipse(W / 2, H * 0.9, W * 0.34, 34, 0, 0, Math.PI * 2); g.fill(); g.restore();
   var k = Math.min(1190 / src.width, 1190 / src.height), w = src.width * k, h = src.height * k;
   g.drawImage(src, (W - w) / 2, (H - h) / 2 - 24, w, h);
   return o.toDataURL('image/jpeg', 0.86);

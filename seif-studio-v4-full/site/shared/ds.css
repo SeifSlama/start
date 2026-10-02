@@ -1,16 +1,16 @@
 /* ============================================================
-   DESIGN BY SEIF — design system (light only, beige)
+   DESIGN BY SEIF — design system (light only, white)
    Tokens, type, buttons, cards, forms, the glass top bar, the liquid-glass
    tab bar, the menu sheet, sheets, toasts. Shared by every platform page.
    ============================================================ */
 :root{
-  --bg:#EFE8DC;          /* beige: the page */
-  --bg-2:#E7DDCC;        /* a deeper band */
-  --surface:#FBF8F2;     /* cream: cards */
-  --surface-2:#F4EEE4;   /* insets, inputs */
+  --bg:#FFFFFF;          /* white: the page */
+  --bg-2:#F6F5F2;        /* a soft band */
+  --surface:#FFFFFF;     /* cards (border + shadow set them apart) */
+  --surface-2:#F7F6F3;   /* insets, inputs */
   --fg:#241C14;          /* espresso ink */
-  --muted:#6E6354;
-  --subtle:#A0937F;
+  --muted:#6B655C;
+  --subtle:#A39C91;
   --line:rgba(36,28,20,.09);
   --line-strong:rgba(36,28,20,.17);
   --accent:#9A6A3C;      /* caramel */
@@ -24,7 +24,7 @@
   --sky:#4A6FA5;
   --sky-soft:rgba(74,111,165,.12);
   --plum:#7B5577;
-  --shadow-card:0 1px 2px rgba(60,40,20,.05), 0 10px 30px -18px rgba(60,40,20,.35);
+  --shadow-card:0 1px 2px rgba(30,24,16,.05), 0 10px 30px -18px rgba(30,24,16,.28);
   --shadow-pop:0 18px 50px -18px rgba(50,32,14,.45), 0 2px 8px rgba(50,32,14,.08);
   --r-lg:26px; --r:20px; --r-sm:14px;
   --serif:'Instrument Serif', 'Times New Roman', serif;
@@ -106,11 +106,11 @@ a{color:inherit;text-decoration:none}
 .icon-btn svg{width:20px;height:20px}
 
 /* ---------- glass ---------- */
-.glass{-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);background:rgba(251,248,242,.6);
+.glass{-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);background:rgba(255,255,255,.62);
   border:1px solid rgba(255,255,255,.7);box-shadow:inset 0 1px rgba(255,255,255,.75),inset 0 -1px rgba(36,28,20,.04),0 10px 30px -14px rgba(60,40,20,.32),0 2px 6px -2px rgba(60,40,20,.1)}
 
 /* ---------- chips, badges ---------- */
-.chip{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 13px;border-radius:999px;border:1px solid var(--line-strong);font-size:13px;color:var(--muted);background:rgba(251,248,242,.5)}
+.chip{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 13px;border-radius:999px;border:1px solid var(--line-strong);font-size:13px;color:var(--muted);background:rgba(255,255,255,.7)}
 .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--olive);box-shadow:0 0 0 3px var(--olive-soft)}
 .badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
 .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.85}
@@ -178,7 +178,7 @@ a{color:inherit;text-decoration:none}
 .topnav{display:none}
 @media (min-width:1024px){
   .topbar::before{background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);inset:0;border-bottom:1px solid var(--line)}
-  .topbar-in{grid-template-columns:auto 1fr auto;max-width:1240px;margin:0 auto;padding:0 32px;height:68px}
+  .topbar-in{grid-template-columns:1fr auto 1fr;max-width:1240px;margin:0 auto;padding:0 32px;height:68px}
   .topbar-in>.l{display:none}
   .topbar-in>.c{justify-self:start;order:-1}
   .topbar-in>.c .logo{align-items:flex-start}
@@ -198,7 +198,7 @@ a{color:inherit;text-decoration:none}
   height:calc(max(calc(var(--safe-b) - 13px), 12px) + 62px + 30px);
   background:linear-gradient(to top,color-mix(in srgb,var(--bg) 92%,transparent) 0%,color-mix(in srgb,var(--bg) 60%,transparent) 50%,transparent 100%)}
 .tabbar{position:fixed;z-index:50;left:max(21px,calc(50vw - 220px));right:max(21px,calc(50vw - 220px));bottom:max(calc(var(--safe-b) - 13px),12px);height:62px;border-radius:31px;
-  -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);background:rgba(251,248,242,.6);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);background:rgba(255,255,255,.62);
   box-shadow:inset 0 0 0 .5px rgba(36,28,20,.07),inset 0 1px rgba(255,255,255,.88),inset 0 -1px rgba(255,255,255,.5),0 8px 28px -6px rgba(70,46,22,.22),0 1px 4px rgba(70,46,22,.07);
   view-transition-name:tabbar}
 .tabbar::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(110deg,rgba(255,255,255,.42) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 72%,rgba(255,255,255,.22) 100%)}
@@ -220,7 +220,7 @@ a{color:inherit;text-decoration:none}
 .menu .scrim{position:absolute;inset:0;background:rgba(36,28,20,.18);opacity:0;transition:opacity .3s}
 .menu .panel{position:absolute;left:10px;right:10px;top:calc(var(--safe-t) + 10px);border-radius:30px;padding:16px 18px 20px;transform:translateY(-14px) scale(.98);opacity:0;
   transition:transform .38s var(--ease),opacity .25s;max-height:calc(100dvh - var(--safe-t) - 20px);overflow-y:auto;
-  -webkit-backdrop-filter:blur(30px) saturate(190%);backdrop-filter:blur(30px) saturate(190%);background:rgba(251,248,242,.86);border:1px solid rgba(255,255,255,.8);box-shadow:var(--shadow-pop)}
+  -webkit-backdrop-filter:blur(30px) saturate(190%);backdrop-filter:blur(30px) saturate(190%);background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.8);box-shadow:var(--shadow-pop)}
 .menu.on{pointer-events:auto}
 .menu.on .scrim{opacity:1}
 .menu.on .panel{transform:none;opacity:1}
@@ -252,7 +252,7 @@ a{color:inherit;text-decoration:none}
 /* ---------- toasts ---------- */
 .toasts{position:fixed;left:0;right:0;top:calc(var(--safe-t) + 12px);z-index:120;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
 .toast{pointer-events:auto;max-width:min(92vw,460px);padding:12px 18px;border-radius:18px;font-size:14.5px;display:flex;gap:10px;align-items:center;
-  animation:toastIn .38s var(--ease) both;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);background:rgba(36,28,20,.86);color:#FBF8F2;box-shadow:var(--shadow-pop)}
+  animation:toastIn .38s var(--ease) both;-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);background:rgba(36,28,20,.86);color:#FFFFFF;box-shadow:var(--shadow-pop)}
 .toast.ok::before{content:'';width:8px;height:8px;border-radius:50%;background:#9BC48A;flex:none}
 .toast.bad::before{content:'';width:8px;height:8px;border-radius:50%;background:#F08A6C;flex:none}
 .toast.out{animation:toastOut .3s ease both}
